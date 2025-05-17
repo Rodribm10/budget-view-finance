@@ -25,7 +25,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
     quando: item.quando || new Date().toISOString(),
     detalhes: item.detalhes || '',
     estabelecimento: item.estabelecimento || '',
-    tipo: item.tipo || 'saida',
+    tipo: item.tipo || 'despesa',
     categoria: item.categoria || 'Outros'
   }));
 }
@@ -79,10 +79,11 @@ export async function getCategorySummary() {
   const categorias: Record<string, number> = {};
   data.forEach(item => {
     if (item.categoria && item.valor) {
-      if (!categorias[item.categoria]) {
-        categorias[item.categoria] = 0;
+      const categoriaKey = item.categoria || 'Outros';
+      if (!categorias[categoriaKey]) {
+        categorias[categoriaKey] = 0;
       }
-      categorias[item.categoria] += Math.abs(item.valor);
+      categorias[categoriaKey] += Math.abs(item.valor);
     }
   });
   

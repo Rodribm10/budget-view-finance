@@ -6,6 +6,14 @@ import { getCategorySummary } from '@/services/transacaoService';
 import { CategorySummary } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 const CategoriasPage = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);
@@ -41,6 +49,8 @@ const CategoriasPage = () => {
       currency: 'BRL',
     }).format(value);
   };
+  
+  const totalGastos = categories.reduce((total, category) => total + category.valor, 0);
 
   return (
     <Layout>
@@ -70,36 +80,78 @@ const CategoriasPage = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <Card key={category.categoria}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center">
-                    <span
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    {category.categoria}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold mb-2">
-                    {formatCurrency(category.valor)}
-                  </div>
-                  <div className="space-y-2">
-                    <Progress 
-                      value={category.percentage * 100} 
-                      className="h-2"
-                      indicatorColor={category.color}
-                    />
-                    <div className="text-xs text-muted-foreground">
-                      {(category.percentage * 100).toFixed(1)}% do total de despesas
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <Card key={category.categoria}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center">
+                      <span
+                        className="w-3 h-3 rounded-full mr-2"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      {category.categoria}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold mb-2">
+                      {formatCurrency(category.valor)}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <div className="space-y-2">
+                      <Progress 
+                        value={category.percentage * 100} 
+                        className="h-2"
+                        style={{ 
+                          backgroundColor: 'rgba(0,0,0,0.1)',  
+                          '--progress-background': category.color 
+                        } as React.CSSProperties}
+                      />
+                      <div className="text-xs text-muted-foreground">
+                        {(category.percentage * 100).toFixed(1)}% do total de despesas
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Resumo de Categorias</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Valor</TableHead>
+                      <TableHead>Percentual</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {categories.map((category) => (
+                      <TableRow key={category.categoria}>
+                        <TableCell className="font-medium flex items-center">
+                          <span
+                            className="w-3 h-3 rounded-full mr-2" 
+                            style={{ backgroundColor: category.color }}
+                          />
+                          {category.categoria}
+                        </TableCell>
+                        <TableCell>{formatCurrency(category.valor)}</TableCell>
+                        <TableCell>{(category.percentage * 100).toFixed(1)}%</TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow className="bg-muted/50">
+                      <TableCell className="font-bold">Total</TableCell>
+                      <TableCell className="font-bold">{formatCurrency(totalGastos)}</TableCell>
+                      <TableCell>100%</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
     </Layout>

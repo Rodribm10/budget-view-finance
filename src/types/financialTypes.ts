@@ -7,7 +7,7 @@ export interface Transaction {
   quando: string;
   detalhes: string;
   estabelecimento: string;
-  tipo: 'entrada' | 'saida';
+  tipo: string;
   categoria: string;
 }
 
