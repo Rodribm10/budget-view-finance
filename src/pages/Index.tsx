@@ -22,6 +22,7 @@ const Dashboard = () => {
     async function loadData() {
       try {
         setIsLoading(true);
+        console.log("Iniciando carregamento de dados...");
         
         // Buscar todos os dados necessários
         const [transacoesData, totalsData, categoriesData, monthlyDataResult] = await Promise.all([
@@ -30,6 +31,13 @@ const Dashboard = () => {
           getCategorySummary(),
           getMonthlyData()
         ]);
+        
+        console.log("Dados obtidos com sucesso:", {
+          transacoes: transacoesData.length,
+          totals: totalsData,
+          categories: categoriesData.length,
+          monthlyData: monthlyDataResult.length
+        });
         
         setTransactions(transacoesData);
         setTotals(totalsData);

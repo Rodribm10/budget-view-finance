@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Transaction } from "@/types/financialTypes";
 
 export async function getTransacoes(): Promise<Transaction[]> {
+  console.log("Buscando transações do Supabase...");
   const { data, error } = await supabase
     .from('transacoes')
     .select('*')
@@ -12,6 +13,8 @@ export async function getTransacoes(): Promise<Transaction[]> {
     console.error('Erro ao buscar transações:', error);
     throw new Error('Não foi possível carregar as transações');
   }
+
+  console.log("Transações encontradas:", data);
 
   // Transformar os dados recebidos para o formato esperado
   return data.map((item) => ({
@@ -28,6 +31,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
 }
 
 export async function getTransactionSummary() {
+  console.log("Buscando resumo das transações...");
   const { data, error } = await supabase
     .from('transacoes')
     .select('tipo, valor');
@@ -37,6 +41,8 @@ export async function getTransactionSummary() {
     throw new Error('Não foi possível carregar o resumo das transações');
   }
 
+  console.log("Dados para resumo encontrados:", data);
+
   const totalReceitas = data
     .filter(item => item.tipo === 'entrada')
     .reduce((sum, item) => sum + (item.valor || 0), 0);
@@ -45,14 +51,18 @@ export async function getTransactionSummary() {
     .filter(item => item.tipo === 'saida')
     .reduce((sum, item) => sum + (item.valor || 0), 0);
 
-  return {
+  const resultado = {
     receitas: totalReceitas,
     despesas: totalDespesas,
     saldo: totalReceitas - totalDespesas
   };
+
+  console.log("Resumo calculado:", resultado);
+  return resultado;
 }
 
 export async function getCategorySummary() {
+  console.log("Buscando resumo de categorias...");
   const { data, error } = await supabase
     .from('transacoes')
     .select('categoria, valor, tipo')
@@ -62,6 +72,8 @@ export async function getCategorySummary() {
     console.error('Erro ao buscar resumo de categorias:', error);
     throw new Error('Não foi possível carregar o resumo por categoria');
   }
+  
+  console.log("Dados de categorias encontrados:", data);
   
   // Agrupar por categoria
   const categorias: Record<string, number> = {};
@@ -81,15 +93,19 @@ export async function getCategorySummary() {
   const cores = ["#F59E0B", "#60A5FA", "#8B5CF6", "#EF4444", "#10B981", "#6366F1", "#EC4899", "#14B8A6"];
   
   // Mapear para o formato esperado
-  return Object.entries(categorias).map(([categoria, valor], index) => ({
+  const resultado = Object.entries(categorias).map(([categoria, valor], index) => ({
     categoria,
     valor,
     percentage: total > 0 ? valor / total : 0,
     color: cores[index % cores.length]
   }));
+
+  console.log("Resumo de categorias calculado:", resultado);
+  return resultado;
 }
 
 export async function getMonthlyData() {
+  console.log("Buscando dados mensais...");
   const { data, error } = await supabase
     .from('transacoes')
     .select('quando, valor, tipo');
@@ -98,6 +114,8 @@ export async function getMonthlyData() {
     console.error('Erro ao buscar dados mensais:', error);
     throw new Error('Não foi possível carregar os dados mensais');
   }
+
+  console.log("Dados mensais encontrados:", data);
 
   const meses: Record<string, { receitas: number, despesas: number }> = {};
   const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -123,9 +141,12 @@ export async function getMonthlyData() {
   });
 
   // Converter para o formato esperado
-  return Object.entries(meses).map(([month, values]) => ({
+  const resultado = Object.entries(meses).map(([month, values]) => ({
     month,
     receitas: values.receitas,
     despesas: values.despesas
   }));
+
+  console.log("Dados mensais calculados:", resultado);
+  return resultado;
 }
