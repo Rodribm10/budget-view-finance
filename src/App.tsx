@@ -5,6 +5,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import Transacoes from "./pages/Transacoes";
+import Categorias from "./pages/Categorias";
+import Calendario from "./pages/Calendario";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -24,6 +27,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/transacoes" element={<Transacoes />} />
+          <Route path="/categorias" element={<Categorias />} />
+          <Route path="/calendario" element={<Calendario />} />
           {/* Adicione novas rotas acima desta linha */}
           <Route path="*" element={<NotFound />} />
         </Routes>

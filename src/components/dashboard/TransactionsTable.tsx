@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { ChevronDown, Search } from 'lucide-react';
+import { ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Transaction } from '@/types/financialTypes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,12 +24,19 @@ import { cn } from '@/lib/utils';
 interface TransactionsTableProps {
   transactions: Transaction[];
   isLoading?: boolean;
+  showPagination?: boolean;
 }
 
-const TransactionsTable = ({ transactions, isLoading = false }: TransactionsTableProps) => {
+const TransactionsTable = ({ 
+  transactions, 
+  isLoading = false,
+  showPagination = false 
+}: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('quando');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = showPagination ? 10 : 5;
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -43,9 +50,9 @@ const TransactionsTable = ({ transactions, isLoading = false }: TransactionsTabl
   const filteredTransactions = transactions.filter((transaction) => {
     const query = searchQuery.toLowerCase();
     return (
-      transaction.estabelecimento.toLowerCase().includes(query) ||
-      transaction.detalhes.toLowerCase().includes(query) ||
-      transaction.categoria.toLowerCase().includes(query)
+      transaction.estabelecimento?.toLowerCase().includes(query) ||
+      transaction.detalhes?.toLowerCase().includes(query) ||
+      transaction.categoria?.toLowerCase().includes(query)
     );
   });
 
@@ -67,6 +74,13 @@ const TransactionsTable = ({ transactions, isLoading = false }: TransactionsTabl
       ? aValue.localeCompare(bValue)
       : bValue.localeCompare(aValue);
   });
+
+  // Paginação
+  const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+  const paginatedTransactions = sortedTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -154,14 +168,14 @@ const TransactionsTable = ({ transactions, isLoading = false }: TransactionsTabl
                   ))}
                 </TableRow>
               ))
-            ) : sortedTransactions.length === 0 ? (
+            ) : paginatedTransactions.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? 'Nenhuma transação encontrada' : 'Não há transações disponíveis'}
                 </TableCell>
               </TableRow>
             ) : (
-              sortedTransactions.slice(0, 5).map((transaction) => (
+              paginatedTransactions.map((transaction) => (
                 <TableRow key={transaction.id}>
                   <TableCell className="font-medium">
                     {format(new Date(transaction.quando), 'dd/MM/yyyy')}
@@ -186,11 +200,50 @@ const TransactionsTable = ({ transactions, isLoading = false }: TransactionsTabl
         </Table>
       </div>
       
-      <div className="flex justify-center pt-2">
-        <Button variant="outline" size="sm">
-          Ver todas as transações
-        </Button>
-      </div>
+      {showPagination && totalPages > 0 && (
+        <div className="flex items-center justify-between pt-2">
+          <div className="text-sm text-muted-foreground">
+            Mostrando <span className="font-medium">{Math.min(paginatedTransactions.length, itemsPerPage)}</span> de{" "}
+            <span className="font-medium">{filteredTransactions.length}</span> transações
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+            <div className="text-sm">
+              Página <span className="font-medium">{currentPage}</span> de{" "}
+              <span className="font-medium">{totalPages}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Próxima
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {!showPagination && filteredTransactions.length > itemsPerPage && (
+        <div className="flex justify-center pt-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.location.href = '/transacoes'}
+          >
+            Ver todas as transações
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
