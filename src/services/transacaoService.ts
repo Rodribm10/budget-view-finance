@@ -21,11 +21,11 @@ export async function getTransacoes(): Promise<Transaction[]> {
     id: item.id.toString(),
     user: item.user || '',
     created_at: item.created_at,
-    valor: item.tipo === 'entrada' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
+    valor: item.tipo === 'receita' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
     quando: item.quando || new Date().toISOString(),
     detalhes: item.detalhes || '',
     estabelecimento: item.estabelecimento || '',
-    tipo: (item.tipo === 'entrada' || item.tipo === 'saida') ? item.tipo : 'saida',
+    tipo: item.tipo || 'saida',
     categoria: item.categoria || 'Outros'
   }));
 }
@@ -44,11 +44,11 @@ export async function getTransactionSummary() {
   console.log("Dados para resumo encontrados:", data);
 
   const totalReceitas = data
-    .filter(item => item.tipo === 'entrada')
+    .filter(item => item.tipo === 'receita')
     .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const totalDespesas = data
-    .filter(item => item.tipo === 'saida')
+    .filter(item => item.tipo === 'despesa')
     .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const resultado = {
@@ -66,7 +66,7 @@ export async function getCategorySummary() {
   const { data, error } = await supabase
     .from('transacoes')
     .select('categoria, valor, tipo')
-    .eq('tipo', 'saida');
+    .eq('tipo', 'despesa');
 
   if (error) {
     console.error('Erro ao buscar resumo de categorias:', error);
@@ -132,7 +132,7 @@ export async function getMonthlyData() {
       const mesIndex = data.getMonth();
       const nomeMes = nomesMeses[mesIndex];
       
-      if (item.tipo === 'entrada') {
+      if (item.tipo === 'receita') {
         meses[nomeMes].receitas += Math.abs(item.valor);
       } else {
         meses[nomeMes].despesas += Math.abs(item.valor);

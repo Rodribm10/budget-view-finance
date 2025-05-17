@@ -111,10 +111,10 @@ const TransactionsTable = ({
             <DropdownMenuItem onClick={() => setSearchQuery('')}>
               Todas
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSearchQuery('entrada')}>
+            <DropdownMenuItem onClick={() => setSearchQuery('receita')}>
               Receitas
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSearchQuery('saida')}>
+            <DropdownMenuItem onClick={() => setSearchQuery('despesa')}>
               Despesas
             </DropdownMenuItem>
           </DropdownMenuContent>
