@@ -6,24 +6,53 @@ import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
-import { mockTransactions, mockCategories, mockMonthlyData, mockTotals } from '@/data/mockData';
+import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
+import { getTransacoes, getTransactionSummary, getCategorySummary, getMonthlyData } from '@/services/transacaoService';
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0 });
   const { toast } = useToast();
 
   useEffect(() => {
-    // Simulando carregamento de dados
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Dados carregados com sucesso",
-        description: "Conecte ao Supabase para ver seus dados reais"
-      });
-    }, 1500);
-
-    return () => clearTimeout(timer);
+    async function loadData() {
+      try {
+        setIsLoading(true);
+        
+        // Buscar todos os dados necessários
+        const [transacoesData, totalsData, categoriesData, monthlyDataResult] = await Promise.all([
+          getTransacoes(),
+          getTransactionSummary(),
+          getCategorySummary(),
+          getMonthlyData()
+        ]);
+        
+        setTransactions(transacoesData);
+        setTotals(totalsData);
+        setCategories(categoriesData);
+        setMonthlyData(monthlyDataResult);
+        
+        toast({
+          title: "Dados carregados com sucesso",
+          description: "Seus dados financeiros foram atualizados"
+        });
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        toast({
+          title: "Erro ao carregar dados",
+          description: "Verifique a conexão com o Supabase",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    loadData();
   }, [toast]);
 
   const formatCurrency = (value: number) => {
@@ -46,7 +75,7 @@ const Dashboard = () => {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             title="Receitas"
-            value={formatCurrency(mockTotals.receitas)}
+            value={formatCurrency(totals.receitas)}
             icon={<DollarSign className="h-4 w-4 text-finance-green" />}
             trend={5}
             iconClass="bg-finance-green/10"
@@ -54,7 +83,7 @@ const Dashboard = () => {
           />
           <SummaryCard
             title="Despesas"
-            value={formatCurrency(mockTotals.despesas)}
+            value={formatCurrency(totals.despesas)}
             icon={<TrendingDown className="h-4 w-4 text-finance-red" />}
             trend={-2}
             iconClass="bg-finance-red/10"
@@ -62,14 +91,14 @@ const Dashboard = () => {
           />
           <SummaryCard
             title="Saldo"
-            value={formatCurrency(mockTotals.saldo)}
+            value={formatCurrency(totals.saldo)}
             icon={<TrendingUp className="h-4 w-4 text-finance-blue" />}
             iconClass="bg-finance-blue/10"
             valueClass="text-finance-blue"
           />
           <SummaryCard
             title="Economia"
-            value={`${((mockTotals.saldo / mockTotals.receitas) * 100).toFixed(1)}%`}
+            value={`${totals.receitas > 0 ? ((totals.saldo / totals.receitas) * 100).toFixed(1) : 0}%`}
             icon={<PiggyBank className="h-4 w-4 text-finance-purple" />}
             iconClass="bg-finance-purple/10"
             valueClass="text-finance-purple"
@@ -77,13 +106,13 @@ const Dashboard = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <CategoryChart categories={mockCategories} isLoading={isLoading} />
-          <MonthlyChart data={mockMonthlyData} isLoading={isLoading} />
+          <CategoryChart categories={categories} isLoading={isLoading} />
+          <MonthlyChart data={monthlyData} isLoading={isLoading} />
         </div>
 
         <div className="space-y-2">
           <h2 className="text-xl font-semibold">Transações Recentes</h2>
-          <TransactionsTable transactions={mockTransactions} isLoading={isLoading} />
+          <TransactionsTable transactions={transactions} isLoading={isLoading} />
         </div>
       </div>
     </Layout>
