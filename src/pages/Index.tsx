@@ -5,7 +5,7 @@ import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
-import { DollarSign, TrendingUp, TrendingDown, PiggyBank } from 'lucide-react';
+import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { getTransacoes, getTransactionSummary, getCategorySummary, getMonthlyData } from '@/services/transacaoService';
@@ -84,7 +84,7 @@ const Dashboard = () => {
           <SummaryCard
             title="Receitas"
             value={formatCurrency(totals.receitas)}
-            icon={<DollarSign className="h-4 w-4 text-finance-green" />}
+            icon={<ArrowUp size={20} className="text-finance-green" />}
             trend={5}
             iconClass="bg-finance-green/10"
             valueClass="text-finance-green"
@@ -92,7 +92,7 @@ const Dashboard = () => {
           <SummaryCard
             title="Despesas"
             value={formatCurrency(totals.despesas)}
-            icon={<TrendingDown className="h-4 w-4 text-finance-red" />}
+            icon={<ArrowDown size={20} className="text-finance-red" />}
             trend={-2}
             iconClass="bg-finance-red/10"
             valueClass="text-finance-red"
@@ -100,14 +100,14 @@ const Dashboard = () => {
           <SummaryCard
             title="Saldo"
             value={formatCurrency(totals.saldo)}
-            icon={<TrendingUp className="h-4 w-4 text-finance-blue" />}
+            icon={<Wallet size={20} className="text-finance-blue" />}
             iconClass="bg-finance-blue/10"
             valueClass="text-finance-blue"
           />
           <SummaryCard
             title="Economia"
             value={`${totals.receitas > 0 ? ((totals.saldo / totals.receitas) * 100).toFixed(1) : 0}%`}
-            icon={<PiggyBank className="h-4 w-4 text-finance-purple" />}
+            icon={<PiggyBank size={20} className="text-finance-purple" />}
             iconClass="bg-finance-purple/10"
             valueClass="text-finance-purple"
           />

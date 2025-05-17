@@ -24,8 +24,8 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
 }) => {
   return (
     <Card className={cn("dashboard-card animate-fade-in", className)}>
-      <CardContent className="p-0">
-        <div className="flex items-center justify-between mb-2">
+      <CardContent className="flex flex-col gap-2 p-6">
+        <div className="flex items-center justify-between">
           <div className={cn("p-2 rounded-md", iconClass || "bg-primary/10")}>
             {icon}
           </div>

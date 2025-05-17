@@ -189,9 +189,9 @@ const TransactionsTable = ({
                   </TableCell>
                   <TableCell className={cn(
                     "text-right font-medium",
-                    transaction.tipo === 'entrada' ? "text-finance-green" : "text-finance-red"
+                    transaction.valor > 0 ? "text-finance-green" : "text-finance-red"
                   )}>
-                    {transaction.tipo === 'entrada' ? '+' : '-'}{formatCurrency(Math.abs(transaction.valor))}
+                    {formatCurrency(transaction.valor)}
                   </TableCell>
                 </TableRow>
               ))

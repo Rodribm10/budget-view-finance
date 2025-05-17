@@ -21,7 +21,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
     id: item.id.toString(),
     user: item.user || '',
     created_at: item.created_at,
-    valor: item.valor || 0,
+    valor: item.tipo === 'entrada' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
     quando: item.quando || new Date().toISOString(),
     detalhes: item.detalhes || '',
     estabelecimento: item.estabelecimento || '',
@@ -45,11 +45,11 @@ export async function getTransactionSummary() {
 
   const totalReceitas = data
     .filter(item => item.tipo === 'entrada')
-    .reduce((sum, item) => sum + (item.valor || 0), 0);
+    .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const totalDespesas = data
     .filter(item => item.tipo === 'saida')
-    .reduce((sum, item) => sum + (item.valor || 0), 0);
+    .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const resultado = {
     receitas: totalReceitas,
@@ -82,7 +82,7 @@ export async function getCategorySummary() {
       if (!categorias[item.categoria]) {
         categorias[item.categoria] = 0;
       }
-      categorias[item.categoria] += item.valor;
+      categorias[item.categoria] += Math.abs(item.valor);
     }
   });
   
@@ -133,9 +133,9 @@ export async function getMonthlyData() {
       const nomeMes = nomesMeses[mesIndex];
       
       if (item.tipo === 'entrada') {
-        meses[nomeMes].receitas += item.valor;
+        meses[nomeMes].receitas += Math.abs(item.valor);
       } else {
-        meses[nomeMes].despesas += item.valor;
+        meses[nomeMes].despesas += Math.abs(item.valor);
       }
     }
   });
