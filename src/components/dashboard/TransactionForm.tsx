@@ -91,9 +91,10 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       // Cria o nome da tabela dinâmica para este usuário
       const tabelaTransacoes = `transacoes_${userId}`;
       
-      // Insere a transação na tabela específica do usuário
+      // Insere a transação na tabela específica do usuário usando cast para any
+      // para contornar a verificação estática de tipos
       const { error } = await supabase
-        .from(tabelaTransacoes)
+        .from(tabelaTransacoes as any)
         .insert([
           {
             user: userId,

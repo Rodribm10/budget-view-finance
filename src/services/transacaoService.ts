@@ -13,8 +13,9 @@ export async function getTransacoes(): Promise<Transaction[]> {
   
   const tabelaTransacoes = `transacoes_${userId}`;
   
+  // Usando .rpc para chamar uma função SQL ou .from() com cast para any para contornar a checagem de tipos
   const { data, error } = await supabase
-    .from(tabelaTransacoes)
+    .from(tabelaTransacoes as any)
     .select('*')
     .order('quando', { ascending: false });
 
@@ -26,7 +27,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Transações encontradas:", data);
 
   // Transformar os dados recebidos para o formato esperado, normalizando os tipos
-  return data.map((item) => ({
+  return data.map((item: any) => ({
     id: item.id.toString(),
     user: item.user || '',
     created_at: item.created_at,
@@ -51,7 +52,7 @@ export async function getTransactionSummary() {
   const tabelaTransacoes = `transacoes_${userId}`;
   
   const { data, error } = await supabase
-    .from(tabelaTransacoes)
+    .from(tabelaTransacoes as any)
     .select('tipo, valor');
 
   if (error) {
@@ -62,12 +63,12 @@ export async function getTransactionSummary() {
   console.log("Dados para resumo encontrados:", data);
 
   const totalReceitas = data
-    .filter(item => item.tipo?.toLowerCase() === 'receita')
-    .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
+    .filter((item: any) => item.tipo?.toLowerCase() === 'receita')
+    .reduce((sum: number, item: any) => sum + Math.abs(item.valor || 0), 0);
 
   const totalDespesas = data
-    .filter(item => (item.tipo?.toLowerCase() === 'despesa'))
-    .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
+    .filter((item: any) => (item.tipo?.toLowerCase() === 'despesa'))
+    .reduce((sum: number, item: any) => sum + Math.abs(item.valor || 0), 0);
 
   const resultado = {
     receitas: totalReceitas,
@@ -92,7 +93,7 @@ export async function getCategorySummary() {
   
   // Buscar todas as transações que são despesas, independente da capitalização
   const { data, error } = await supabase
-    .from(tabelaTransacoes)
+    .from(tabelaTransacoes as any)
     .select('categoria, valor, tipo');
 
   if (error) {
@@ -103,7 +104,7 @@ export async function getCategorySummary() {
   console.log("Dados de categorias encontrados:", data);
   
   // Filtrar usando JavaScript para pegar todas as despesas (case insensitive)
-  const despesasData = data.filter(item => 
+  const despesasData = data.filter((item: any) => 
     item.tipo?.toLowerCase() === 'despesa'
   );
   
@@ -111,7 +112,7 @@ export async function getCategorySummary() {
   
   // Agrupar por categoria
   const categorias: Record<string, number> = {};
-  despesasData.forEach(item => {
+  despesasData.forEach((item: any) => {
     if (item.categoria && item.valor) {
       const categoriaKey = item.categoria || 'Outros';
       if (!categorias[categoriaKey]) {
@@ -151,7 +152,7 @@ export async function getMonthlyData() {
   const tabelaTransacoes = `transacoes_${userId}`;
   
   const { data, error } = await supabase
-    .from(tabelaTransacoes)
+    .from(tabelaTransacoes as any)
     .select('quando, valor, tipo');
 
   if (error) {
@@ -170,7 +171,7 @@ export async function getMonthlyData() {
   });
 
   // Agrupar por mês, normalizando o tipo
-  data.forEach(item => {
+  data.forEach((item: any) => {
     if (item.quando && item.valor) {
       const data = new Date(item.quando);
       const mesIndex = data.getMonth();
