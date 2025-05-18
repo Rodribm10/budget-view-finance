@@ -97,7 +97,7 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
         .from(tabelaTransacoes as any)
         .insert([
           {
-            user: userId,
+            usuario_id: userId, // Alterado de user para usuario_id
             estabelecimento: data.estabelecimento,
             valor: valorFinal,
             detalhes: data.detalhes,

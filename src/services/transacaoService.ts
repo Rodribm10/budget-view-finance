@@ -29,7 +29,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
   // Transformar os dados recebidos para o formato esperado, normalizando os tipos
   return data.map((item: any) => ({
     id: item.id.toString(),
-    user: item.user || '',
+    user: item.usuario_id || '', // Alterado de user para usuario_id
     created_at: item.created_at,
     valor: item.tipo?.toLowerCase() === 'receita' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
     quando: item.quando || new Date().toISOString(),
