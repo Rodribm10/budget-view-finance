@@ -16,16 +16,16 @@ export async function getTransacoes(): Promise<Transaction[]> {
 
   console.log("Transações encontradas:", data);
 
-  // Transformar os dados recebidos para o formato esperado
+  // Transformar os dados recebidos para o formato esperado, normalizando os tipos
   return data.map((item) => ({
     id: item.id.toString(),
     user: item.user || '',
     created_at: item.created_at,
-    valor: item.tipo === 'receita' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
+    valor: item.tipo?.toLowerCase() === 'receita' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
     quando: item.quando || new Date().toISOString(),
     detalhes: item.detalhes || '',
     estabelecimento: item.estabelecimento || '',
-    tipo: item.tipo || 'despesa',
+    tipo: item.tipo?.toLowerCase() || 'despesa',
     categoria: item.categoria || 'Outros'
   }));
 }
@@ -44,11 +44,11 @@ export async function getTransactionSummary() {
   console.log("Dados para resumo encontrados:", data);
 
   const totalReceitas = data
-    .filter(item => item.tipo === 'receita')
+    .filter(item => item.tipo?.toLowerCase() === 'receita')
     .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const totalDespesas = data
-    .filter(item => item.tipo === 'despesa')
+    .filter(item => item.tipo?.toLowerCase() === 'despesa')
     .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const resultado = {
@@ -66,7 +66,7 @@ export async function getCategorySummary() {
   const { data, error } = await supabase
     .from('transacoes')
     .select('categoria, valor, tipo')
-    .eq('tipo', 'despesa');
+    .eq('tipo', 'Despesa');
 
   if (error) {
     console.error('Erro ao buscar resumo de categorias:', error);
@@ -74,6 +74,19 @@ export async function getCategorySummary() {
   }
   
   console.log("Dados de categorias encontrados:", data);
+  
+  // Vamos buscar tanto "Despesa" quanto "despesa" para garantir
+  const { data: dataLowerCase, error: errorLowerCase } = await supabase
+    .from('transacoes')
+    .select('categoria, valor, tipo')
+    .eq('tipo', 'despesa');
+  
+  if (errorLowerCase) {
+    console.error('Erro ao buscar despesas minúsculas:', errorLowerCase);
+  } else if (dataLowerCase) {
+    data.push(...dataLowerCase);
+    console.log("Dados adicionais encontrados:", dataLowerCase);
+  }
   
   // Agrupar por categoria
   const categorias: Record<string, number> = {};
@@ -126,14 +139,14 @@ export async function getMonthlyData() {
     meses[mes] = { receitas: 0, despesas: 0 };
   });
 
-  // Agrupar por mês
+  // Agrupar por mês, normalizando o tipo
   data.forEach(item => {
     if (item.quando && item.valor) {
       const data = new Date(item.quando);
       const mesIndex = data.getMonth();
       const nomeMes = nomesMeses[mesIndex];
       
-      if (item.tipo === 'receita') {
+      if (item.tipo?.toLowerCase() === 'receita') {
         meses[nomeMes].receitas += Math.abs(item.valor);
       } else {
         meses[nomeMes].despesas += Math.abs(item.valor);

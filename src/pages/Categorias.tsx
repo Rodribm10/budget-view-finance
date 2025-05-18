@@ -77,6 +77,7 @@ const CategoriasPage = () => {
           <Card>
             <CardContent className="py-10 text-center">
               <p className="text-muted-foreground">Nenhuma categoria encontrada</p>
+              <p className="mt-2 text-sm">Verifique se existem transações do tipo 'despesa' cadastradas</p>
             </CardContent>
           </Card>
         ) : (
