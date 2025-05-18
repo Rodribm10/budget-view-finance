@@ -156,11 +156,42 @@ export type Database = {
         }
         Relationships: []
       }
+      usuarios: {
+        Row: {
+          created_at: string
+          email: string
+          empresa: string | null
+          id: string
+          nome: string
+          senha: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          empresa?: string | null
+          id?: string
+          nome: string
+          senha: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          empresa?: string | null
+          id?: string
+          nome?: string
+          senha?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      autenticar_usuario: {
+        Args: { email_login: string; senha_login: string }
+        Returns: string
+      }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
         Returns: unknown
@@ -224,6 +255,10 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
+      }
+      registrar_usuario: {
+        Args: { nome: string; empresa: string; email: string; senha: string }
         Returns: string
       }
       sparsevec_out: {

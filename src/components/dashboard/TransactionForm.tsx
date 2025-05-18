@@ -71,15 +71,32 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
         return;
       }
       
+      // Obtém o ID do usuário logado
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Você precisa estar logado para adicionar transações",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Ajusta o valor para ser positivo ou negativo com base no tipo
       const valorFinal = data.tipo.toLowerCase() === 'receita' 
         ? Math.abs(valorNumerico) 
         : Math.abs(valorNumerico);
       
+      // Cria o nome da tabela dinâmica para este usuário
+      const tabelaTransacoes = `transacoes_${userId}`;
+      
+      // Insere a transação na tabela específica do usuário
       const { error } = await supabase
-        .from('transacoes')
+        .from(tabelaTransacoes)
         .insert([
           {
+            user: userId,
             estabelecimento: data.estabelecimento,
             valor: valorFinal,
             detalhes: data.detalhes,

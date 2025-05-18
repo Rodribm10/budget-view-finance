@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
+import Header from '@/components/layout/Header';
 import { useToast } from "@/components/ui/use-toast";
 import { Menu } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -44,9 +45,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       ) : (
         <Sidebar />
       )}
-      <main className="flex-1 overflow-auto p-4 md:p-6 pt-10 md:pt-6">
-        {children}
-      </main>
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

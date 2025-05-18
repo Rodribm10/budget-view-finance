@@ -4,8 +4,17 @@ import { Transaction } from "@/types/financialTypes";
 
 export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Buscando transações do Supabase...");
+  
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    console.error('Usuário não autenticado');
+    return [];
+  }
+  
+  const tabelaTransacoes = `transacoes_${userId}`;
+  
   const { data, error } = await supabase
-    .from('transacoes')
+    .from(tabelaTransacoes)
     .select('*')
     .order('quando', { ascending: false });
 
@@ -32,8 +41,17 @@ export async function getTransacoes(): Promise<Transaction[]> {
 
 export async function getTransactionSummary() {
   console.log("Buscando resumo das transações...");
+  
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    console.error('Usuário não autenticado');
+    return { receitas: 0, despesas: 0, saldo: 0 };
+  }
+  
+  const tabelaTransacoes = `transacoes_${userId}`;
+  
   const { data, error } = await supabase
-    .from('transacoes')
+    .from(tabelaTransacoes)
     .select('tipo, valor');
 
   if (error) {
@@ -64,9 +82,17 @@ export async function getTransactionSummary() {
 export async function getCategorySummary() {
   console.log("Buscando resumo de categorias...");
   
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    console.error('Usuário não autenticado');
+    return [];
+  }
+  
+  const tabelaTransacoes = `transacoes_${userId}`;
+  
   // Buscar todas as transações que são despesas, independente da capitalização
   const { data, error } = await supabase
-    .from('transacoes')
+    .from(tabelaTransacoes)
     .select('categoria, valor, tipo');
 
   if (error) {
@@ -115,8 +141,17 @@ export async function getCategorySummary() {
 
 export async function getMonthlyData() {
   console.log("Buscando dados mensais...");
+  
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    console.error('Usuário não autenticado');
+    return [];
+  }
+  
+  const tabelaTransacoes = `transacoes_${userId}`;
+  
   const { data, error } = await supabase
-    .from('transacoes')
+    .from(tabelaTransacoes)
     .select('quando, valor, tipo');
 
   if (error) {
