@@ -88,16 +88,31 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
         ? Math.abs(valorNumerico) 
         : Math.abs(valorNumerico);
       
+      // Obtém a sessão atual para acessar o token JWT
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error('Erro ao obter sessão:', sessionError);
+        toast({
+          title: "Erro de autenticação",
+          description: "Não foi possível validar sua sessão. Tente fazer login novamente.",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Cria o nome da tabela dinâmica para este usuário
       const tabelaTransacoes = `transacoes_${userId}`;
       
-      // Insere a transação na tabela específica do usuário usando cast para any
-      // para contornar a verificação estática de tipos
+      console.log(`Inserindo transação na tabela ${tabelaTransacoes} para o usuário ${userId}`);
+      
+      // Insere a transação na tabela específica do usuário
       const { error } = await supabase
         .from(tabelaTransacoes as any)
         .insert([
           {
-            usuario_id: userId, // Alterado de user para usuario_id
+            usuario_id: userId,
             estabelecimento: data.estabelecimento,
             valor: valorFinal,
             detalhes: data.detalhes,
@@ -111,7 +126,7 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
         console.error('Erro ao salvar transação:', error);
         toast({
           title: "Erro ao salvar",
-          description: "Não foi possível salvar a transação",
+          description: `Não foi possível salvar a transação: ${error.message}`,
           variant: "destructive"
         });
       } else {
