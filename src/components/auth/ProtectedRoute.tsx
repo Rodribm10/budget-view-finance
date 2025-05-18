@@ -1,6 +1,6 @@
 
 import { ReactNode, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
 
 interface ProtectedRouteProps {
@@ -10,20 +10,22 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isAutenticado, setIsAutenticado] = useState<boolean | null>(null);
   const { toast } = useToast();
+  const location = useLocation();
 
   useEffect(() => {
     // Verifica se o usuário está autenticado
     const autenticado = localStorage.getItem('autenticado') === 'true';
-    setIsAutenticado(autenticado);
+    const userId = localStorage.getItem('userId');
+    setIsAutenticado(autenticado && !!userId);
     
-    if (!autenticado) {
+    if (!autenticado || !userId) {
       toast({
         title: "Acesso restrito",
         description: "Faça login para acessar esta página",
         variant: "destructive"
       });
     }
-  }, [toast]);
+  }, [toast, location.pathname]);
 
   // Mostra um carregamento enquanto verifica a autenticação
   if (isAutenticado === null) {

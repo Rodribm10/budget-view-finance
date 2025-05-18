@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +24,15 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
+  const [isAutenticado, setIsAutenticado] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Verifica se o usuário está autenticado
+    const autenticado = localStorage.getItem('autenticado') === 'true';
+    const userId = localStorage.getItem('userId');
+    setIsAutenticado(autenticado && !!userId);
+  }, []);
+
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -32,11 +41,29 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Rota inicial redireciona para autenticação ou dashboard */}
-              <Route path="/" element={<Navigate to="/auth" replace />} />
+              {/* Rota inicial redireciona para dashboard ou autenticação */}
+              <Route 
+                path="/" 
+                element={
+                  isAutenticado ? (
+                    <Navigate to="/transacoes" replace />
+                  ) : (
+                    <Navigate to="/auth" replace />
+                  )
+                } 
+              />
               
-              {/* Rota de autenticação */}
-              <Route path="/auth" element={<Auth />} />
+              {/* Rota de autenticação - redireciona para transações se já estiver autenticado */}
+              <Route 
+                path="/auth" 
+                element={
+                  isAutenticado ? (
+                    <Navigate to="/transacoes" replace />
+                  ) : (
+                    <Auth />
+                  )
+                } 
+              />
               
               {/* Rotas protegidas que exigem autenticação */}
               <Route path="/transacoes" element={

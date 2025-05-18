@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart } f
 const navItems = [
   { 
     name: 'Dashboard', 
-    path: '/', 
+    path: '/transacoes', // Alterado de '/' para '/transacoes'
     icon: <Home className="mr-2 h-5 w-5" /> 
   },
   { 
