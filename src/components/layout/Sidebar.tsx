@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
@@ -34,12 +34,12 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
 
   return (
     <div
       className={cn(
-        "flex flex-col h-screen bg-sidebar border-r border-border transition-all duration-300 ease-in-out",
+        "flex flex-col h-full bg-sidebar border-r border-border transition-all duration-300 ease-in-out",
         collapsed ? "w-[60px]" : "w-[250px]",
         className
       )}

@@ -107,10 +107,20 @@
   }
   
   .dashboard-card {
-    @apply bg-card rounded-lg border p-5 shadow-sm transition-all hover:shadow-md;
+    @apply bg-card rounded-lg border p-4 md:p-5 shadow-sm transition-all hover:shadow-md;
   }
   
   .data-card {
-    @apply bg-card rounded-lg border p-4 shadow-sm transition-all;
+    @apply bg-card rounded-lg border p-3 md:p-4 shadow-sm transition-all;
+  }
+  
+  /* Responsive utilities */
+  .responsive-grid {
+    @apply grid gap-2 sm:gap-3 md:gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+  
+  .responsive-container {
+    @apply px-2 sm:px-4 md:px-6;
   }
 }
