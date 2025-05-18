@@ -123,15 +123,15 @@ const CalendarioPage = () => {
                     <div key={transaction.id} className="p-4 border rounded-md hover:bg-muted/50 transition-colors">
                       <div className="flex justify-between items-center mb-1">
                         <div className="font-medium">{transaction.estabelecimento}</div>
-                        <Badge variant={transaction.tipo === 'entrada' ? "success" : "destructive"}>
-                          {transaction.tipo === 'entrada' ? 'Receita' : 'Despesa'}
+                        <Badge variant={transaction.tipo.toLowerCase() === 'entrada' ? "success" : "destructive"}>
+                          {transaction.tipo.toLowerCase() === 'entrada' ? 'Receita' : 'Despesa'}
                         </Badge>
                       </div>
                       <div className="text-sm text-muted-foreground mb-2">{transaction.detalhes}</div>
                       <div className="flex justify-between">
                         <Badge variant="outline">{transaction.categoria}</Badge>
-                        <span className={transaction.tipo === 'entrada' ? "text-finance-green font-medium" : "text-finance-red font-medium"}>
-                          {transaction.tipo === 'entrada' ? '+' : '-'}{formatCurrency(Math.abs(transaction.valor))}
+                        <span className={transaction.tipo.toLowerCase() === 'entrada' ? "text-finance-green font-medium" : "text-finance-red font-medium"}>
+                          {transaction.tipo.toLowerCase() === 'entrada' ? '+' : '-'}{formatCurrency(Math.abs(transaction.valor))}
                         </span>
                       </div>
                     </div>
