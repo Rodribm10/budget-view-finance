@@ -12,6 +12,7 @@ import Calendario from "./pages/Calendario";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -25,13 +26,105 @@ const queryClient = new QueryClient({
 
 const App = () => {
   const [isAutenticado, setIsAutenticado] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Verifica se o usuário está autenticado
-    const autenticado = localStorage.getItem('autenticado') === 'true';
-    const userId = localStorage.getItem('userId');
-    setIsAutenticado(autenticado && !!userId);
+    const verificarAutenticacao = async () => {
+      try {
+        // Verificar se temos um userId armazenado
+        const userId = localStorage.getItem('userId');
+        const autenticadoStorage = localStorage.getItem('autenticado') === 'true';
+        
+        // Verificar se temos uma sessão válida com o Supabase
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Erro ao verificar sessão:', sessionError);
+          setIsAutenticado(false);
+          localStorage.setItem('autenticado', 'false');
+          setIsLoading(false);
+          return;
+        }
+        
+        if (!sessionData.session) {
+          // Se não temos userId ou sessão, não está autenticado
+          if (!userId || !autenticadoStorage) {
+            setIsAutenticado(false);
+            localStorage.setItem('autenticado', 'false');
+            setIsLoading(false);
+            return;
+          }
+          
+          // Tentar atualizar a sessão
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshData.session) {
+            console.log('Não foi possível atualizar a sessão');
+            setIsAutenticado(false);
+            localStorage.setItem('autenticado', 'false');
+            setIsLoading(false);
+            return;
+          }
+          
+          console.log('Sessão atualizada com sucesso');
+          setIsAutenticado(true);
+          localStorage.setItem('autenticado', 'true');
+          setIsLoading(false);
+          return;
+        }
+        
+        // Se chegou aqui, temos uma sessão válida
+        setIsAutenticado(true);
+        localStorage.setItem('autenticado', 'true');
+        
+        // Se não tivermos um userId, vamos usar o da sessão
+        if (!userId && sessionData.session.user.id) {
+          localStorage.setItem('userId', sessionData.session.user.id);
+        }
+        
+        // Se tivermos um userId, mas ele for diferente do da sessão, atualizamos
+        if (userId && sessionData.session.user.id && userId !== sessionData.session.user.id) {
+          localStorage.setItem('userId', sessionData.session.user.id);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+        setIsAutenticado(false);
+        localStorage.setItem('autenticado', 'false');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    verificarAutenticacao();
+    
+    // Configurar listener para mudanças de autenticação
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Evento de autenticação:', event);
+      
+      if (event === 'SIGNED_IN' && session) {
+        setIsAutenticado(true);
+        localStorage.setItem('autenticado', 'true');
+        localStorage.setItem('userId', session.user.id);
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setIsAutenticado(false);
+        localStorage.setItem('autenticado', 'false');
+        localStorage.removeItem('userId');
+      }
+    });
+    
+    // Limpar listener ao desmontar o componente
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
 
   return (
     <React.StrictMode>
@@ -46,9 +139,7 @@ const App = () => {
                 path="/" 
                 element={
                   isAutenticado ? (
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
+                    <Navigate to="/transacoes" replace />
                   ) : (
                     <Navigate to="/auth" replace />
                   )
@@ -60,7 +151,7 @@ const App = () => {
                 path="/auth" 
                 element={
                   isAutenticado ? (
-                    <Navigate to="/" replace />
+                    <Navigate to="/transacoes" replace />
                   ) : (
                     <Auth />
                   )
@@ -83,6 +174,14 @@ const App = () => {
                   <Calendario />
                 </ProtectedRoute>
               } />
+              
+              {/* Rota para o dashboard, para manter compatibilidade */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <Navigate to="/transacoes" replace />
+                }
+              />
               
               {/* Rota 404 */}
               <Route path="*" element={<NotFound />} />
