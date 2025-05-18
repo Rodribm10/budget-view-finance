@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart } from 'lucide-react';
 
+// Modificado para separar Dashboard e Transações como itens distintos
 const navItems = [
   { 
     name: 'Dashboard', 
-    path: '/transacoes', // Alterado de '/' para '/transacoes'
+    path: '/', // Caminho separado para o Dashboard
     icon: <Home className="mr-2 h-5 w-5" /> 
   },
   { 
@@ -35,6 +36,12 @@ interface SidebarProps {
 const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = React.useState(false);
+
+  // Função para verificar se o item está ativo baseado no caminho atual
+  const isItemActive = (path: string) => {
+    // Verificação exata do caminho
+    return location.pathname === path;
+  };
 
   return (
     <div
@@ -65,7 +72,7 @@ const Sidebar = ({ className }: SidebarProps) => {
             to={item.path}
             className={cn(
               "flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors",
-              location.pathname === item.path
+              isItemActive(item.path)
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
                 : "text-sidebar-foreground hover:bg-sidebar-accent/50",
               collapsed ? "justify-center" : "justify-start"

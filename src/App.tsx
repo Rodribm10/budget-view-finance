@@ -46,19 +46,21 @@ const App = () => {
                 path="/" 
                 element={
                   isAutenticado ? (
-                    <Navigate to="/transacoes" replace />
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
                   ) : (
                     <Navigate to="/auth" replace />
                   )
                 } 
               />
               
-              {/* Rota de autenticação - redireciona para transações se já estiver autenticado */}
+              {/* Rota de autenticação - redireciona para dashboard se já estiver autenticado */}
               <Route 
                 path="/auth" 
                 element={
                   isAutenticado ? (
-                    <Navigate to="/transacoes" replace />
+                    <Navigate to="/" replace />
                   ) : (
                     <Auth />
                   )
