@@ -10,6 +10,9 @@ interface CategoryChartProps {
 }
 
 const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = false }) => {
+  // Filter out any categories with zero value to prevent rendering issues
+  const validCategories = categories.filter(cat => cat.valor > 0);
+  
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
     if (percent === 0) return null;
     
@@ -48,16 +51,17 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
           <div className="flex items-center justify-center h-[250px]">
             <div className="h-32 w-32 rounded-full border-4 border-t-primary border-opacity-20 animate-spin" />
           </div>
-        ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center h-[250px] text-muted-foreground">
-            Sem dados disponíveis
+        ) : validCategories.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[250px] text-muted-foreground">
+            <p>Sem dados disponíveis</p>
+            <p className="text-sm mt-2">Verifique se existem transações do tipo 'despesa' cadastradas</p>
           </div>
         ) : (
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={categories}
+                  data={validCategories}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -66,13 +70,13 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
                   fill="#8884d8"
                   dataKey="valor"
                 >
-                  {categories.map((entry, index) => (
+                  {validCategories.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip 
                   formatter={(value: number) => formatCurrency(value)}
-                  labelFormatter={(index) => categories[index].categoria}
+                  labelFormatter={(index) => validCategories[index].categoria}
                 />
                 <Legend />
               </PieChart>

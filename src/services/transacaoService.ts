@@ -48,7 +48,7 @@ export async function getTransactionSummary() {
     .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const totalDespesas = data
-    .filter(item => item.tipo?.toLowerCase() === 'despesa')
+    .filter(item => (item.tipo?.toLowerCase() === 'despesa'))
     .reduce((sum, item) => sum + Math.abs(item.valor || 0), 0);
 
   const resultado = {
@@ -63,10 +63,11 @@ export async function getTransactionSummary() {
 
 export async function getCategorySummary() {
   console.log("Buscando resumo de categorias...");
+  
+  // Buscar todas as transações que são despesas, independente da capitalização
   const { data, error } = await supabase
     .from('transacoes')
-    .select('categoria, valor, tipo')
-    .eq('tipo', 'Despesa');
+    .select('categoria, valor, tipo');
 
   if (error) {
     console.error('Erro ao buscar resumo de categorias:', error);
@@ -75,22 +76,16 @@ export async function getCategorySummary() {
   
   console.log("Dados de categorias encontrados:", data);
   
-  // Vamos buscar tanto "Despesa" quanto "despesa" para garantir
-  const { data: dataLowerCase, error: errorLowerCase } = await supabase
-    .from('transacoes')
-    .select('categoria, valor, tipo')
-    .eq('tipo', 'despesa');
+  // Filtrar usando JavaScript para pegar todas as despesas (case insensitive)
+  const despesasData = data.filter(item => 
+    item.tipo?.toLowerCase() === 'despesa'
+  );
   
-  if (errorLowerCase) {
-    console.error('Erro ao buscar despesas minúsculas:', errorLowerCase);
-  } else if (dataLowerCase) {
-    data.push(...dataLowerCase);
-    console.log("Dados adicionais encontrados:", dataLowerCase);
-  }
+  console.log("Despesas filtradas:", despesasData.length);
   
   // Agrupar por categoria
   const categorias: Record<string, number> = {};
-  data.forEach(item => {
+  despesasData.forEach(item => {
     if (item.categoria && item.valor) {
       const categoriaKey = item.categoria || 'Outros';
       if (!categorias[categoriaKey]) {
