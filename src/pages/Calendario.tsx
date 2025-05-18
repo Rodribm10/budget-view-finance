@@ -131,7 +131,7 @@ const CalendarioPage = () => {
                       <div className="flex justify-between">
                         <Badge variant="outline">{transaction.categoria}</Badge>
                         <span className={transaction.tipo.toLowerCase() === 'entrada' ? "text-finance-green font-medium" : "text-finance-red font-medium"}>
-                          {transaction.tipo.toLowerCase() === 'entrada' ? '+' : '-'}{formatCurrency(Math.abs(transaction.valor))}
+                          {transaction.tipo.toLowerCase() === 'entrada' ? '' : '-'}{formatCurrency(Math.abs(transaction.valor))}
                         </span>
                       </div>
                     </div>
