@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { MessageCircle, QrCode, RefreshCw, Smartphone, Eye } from 'lucide-react';
+import { MessageCircle, QrCode, RefreshCw, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -149,7 +149,8 @@ const WhatsApp = () => {
       const serverUrl = "evolutionapi2.innova1001.com.br";
       const apiKey = "beeb77fbd7f48f91db2cd539a573c130";
 
-      const response = await fetch(`https://${serverUrl}/instance/qrcode/${instance.instanceId}`, {
+      // Updated endpoint to use instance name instead of instanceId
+      const response = await fetch(`https://${serverUrl}/instance/connect/${encodeURIComponent(instance.instanceName)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -163,14 +164,15 @@ const WhatsApp = () => {
         throw new Error(data.message || 'Erro ao obter QR Code');
       }
 
-      if (data && data.qrcode) {
-        setQrCodeData(data.qrcode);
+      // Using the "code" field from the response as the QR code data
+      if (data && data.code) {
+        setQrCodeData(data.code);
       } else {
-        setQrError("QR Code não disponível. A instância pode já estar conectada.");
+        setQrError("QR Code não disponível. A instância pode já estar conectada ou houve um erro na API.");
       }
     } catch (error) {
       console.error("Error fetching QR code:", error);
-      setQrError("Falha ao obter QR Code. Tente novamente.");
+      setQrError("Falha ao obter QR Code. Verifique a conexão ou tente novamente mais tarde.");
       toast({
         title: "Erro ao obter QR Code",
         description: "Não foi possível obter o QR Code. Tente novamente mais tarde.",
