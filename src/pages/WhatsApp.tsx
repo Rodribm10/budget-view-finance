@@ -56,6 +56,9 @@ const WhatsApp = () => {
           (instance: WhatsAppInstance) => instance.userId === currentUserId
         );
         setInstances(userInstances);
+        
+        // Log for debugging
+        console.log('Loaded user instances:', userInstances);
       } catch (error) {
         console.error("Error parsing saved instances:", error);
       }
@@ -84,6 +87,9 @@ const WhatsApp = () => {
       // Add current user's instances to the array
       const updatedInstances = [...allInstances, ...instances];
       localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
+      
+      // Log for debugging
+      console.log('Saved all instances to localStorage:', updatedInstances);
     }
   }, [instances, currentUserId]);
 
@@ -235,16 +241,20 @@ const WhatsApp = () => {
         throw new Error(data.message || 'Erro ao criar instância');
       }
 
+      console.log('API response for create instance:', data);
+
       // Create new instance object with user ID
       const newInstance: WhatsAppInstance = {
         instanceName,
-        instanceId: data.instance.instanceId,
+        instanceId: data.instance?.instanceId || Date.now().toString(), // Fallback if instanceId not provided
         phoneNumber,
         userId: currentUserId, // Associate with current user
-        status: data.instance.status,
-        qrcode: data.qrcode,
+        status: data.instance?.status || 'created',
+        qrcode: data.qrcode?.base64 || null,
         connectionState: 'connecting'
       };
+      
+      console.log('New instance created:', newInstance);
       
       // Add new instance to the list
       setInstances(prevInstances => [...prevInstances, newInstance]);
@@ -259,7 +269,7 @@ const WhatsApp = () => {
       setPhoneNumber('');
       
       // If there's a QR code in the response, show it
-      if (data.qrcode) {
+      if (data.qrcode && data.qrcode.base64) {
         setActiveInstance(newInstance);
         setQrCodeData(data.qrcode.base64);
         setQrDialogOpen(true);
@@ -299,12 +309,13 @@ const WhatsApp = () => {
       });
 
       const data = await response.json();
+      console.log('QR Code API response:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Erro ao obter QR Code');
       }
 
-      // Using the "code" field from the response as the QR code data
+      // Using the "base64" field from the response as the QR code data
       if (data && data.base64) {
         // Save the base64 image data directly - it already contains the data:image prefix
         setQrCodeData(data.base64);
