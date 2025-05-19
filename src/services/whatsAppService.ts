@@ -4,6 +4,9 @@ import { WhatsAppInstance } from '@/types/whatsAppTypes';
 const SERVER_URL = "evolutionapi2.innova1001.com.br";
 const API_KEY = "beeb77fbd7f48f91db2cd539a573c130";
 
+// Local storage key
+const STORAGE_KEY = 'whatsappInstances';
+
 export const createWhatsAppInstance = async (
   instanceName: string, 
   phoneNumber: string
@@ -188,48 +191,59 @@ export const saveInstancesToLocalStorage = (
   instances: WhatsAppInstance[], 
   currentUserId: string
 ): void => {
-  // We need to save ALL instances (not just current user's) to maintain everyone's data
-  const savedInstances = localStorage.getItem('whatsappInstances');
-  let allInstances: WhatsAppInstance[] = [];
-  
-  if (savedInstances) {
-    try {
-      const parsedInstances = JSON.parse(savedInstances);
-      // Filter out current user's instances from saved data (we'll add updated ones)
-      allInstances = parsedInstances.filter(
-        (instance: WhatsAppInstance) => instance.userId !== currentUserId
-      );
-    } catch (error) {
-      console.error("Error parsing saved instances:", error);
+  try {
+    // Get existing instances from localStorage
+    const savedInstancesStr = localStorage.getItem(STORAGE_KEY);
+    let allInstances: WhatsAppInstance[] = [];
+    
+    if (savedInstancesStr) {
+      // Parse saved instances
+      const savedInstances = JSON.parse(savedInstancesStr);
+      
+      // If it's an array, filter out current user's old instances
+      if (Array.isArray(savedInstances)) {
+        allInstances = savedInstances.filter(
+          (instance: WhatsAppInstance) => instance.userId !== currentUserId
+        );
+      }
     }
+    
+    // Add current user's instances to the array
+    const updatedInstances = [...allInstances, ...instances];
+    
+    // Save back to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedInstances));
+    console.log('All WhatsApp instances saved to localStorage:', updatedInstances);
+  } catch (error) {
+    console.error('Error saving instances to localStorage:', error);
   }
-  
-  // Add current user's instances to the array
-  const updatedInstances = [...allInstances, ...instances];
-  localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
-  console.log('All WhatsApp instances saved to localStorage:', updatedInstances);
 };
 
 export const loadInstancesFromLocalStorage = (
   userId: string
 ): WhatsAppInstance[] => {
-  const savedInstances = localStorage.getItem('whatsappInstances');
-  console.log('Raw saved instances from localStorage:', savedInstances);
-  
-  if (savedInstances && userId) {
-    try {
-      const allInstances = JSON.parse(savedInstances);
-      // Filter instances to only show those belonging to the current user
-      const userInstances = allInstances.filter(
-        (instance: WhatsAppInstance) => instance.userId === userId
-      );
-      console.log(`Found ${userInstances.length} instances for user ${userId}:`, userInstances);
-      return userInstances;
-    } catch (error) {
-      console.error("Error parsing saved instances:", error);
-      return [];
+  try {
+    const savedInstancesStr = localStorage.getItem(STORAGE_KEY);
+    console.log('Raw saved instances from localStorage:', savedInstancesStr);
+    
+    if (savedInstancesStr && userId) {
+      // Parse saved instances
+      const allInstances = JSON.parse(savedInstancesStr);
+      
+      // If it's an array, filter by user ID
+      if (Array.isArray(allInstances)) {
+        // Filter instances to only show those belonging to the current user
+        const userInstances = allInstances.filter(
+          (instance: WhatsAppInstance) => instance.userId === userId
+        );
+        console.log(`Found ${userInstances.length} instances for user ${userId}:`, userInstances);
+        return userInstances;
+      }
     }
+    console.log(`No instances found for user ${userId}`);
+    return [];
+  } catch (error) {
+    console.error("Error loading instances from localStorage:", error);
+    return [];
   }
-  console.log(`No instances found for user ${userId}`);
-  return [];
 };

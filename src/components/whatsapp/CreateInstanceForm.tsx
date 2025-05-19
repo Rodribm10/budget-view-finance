@@ -63,7 +63,7 @@ const CreateInstanceForm = ({ onInstanceCreated }: CreateInstanceFormProps) => {
       // Create new instance object with user ID
       const newInstance: WhatsAppInstance = {
         instanceName,
-        instanceId: data.instance?.instanceId || Date.now().toString(), // Fallback if instanceId not provided
+        instanceId: data.instance?.instanceId || instanceName, // Use instanceName as fallback ID
         phoneNumber,
         userId: currentUserId, // Associate with current user
         status: data.instance?.status || 'created',

@@ -30,7 +30,7 @@ export const useWhatsAppInstances = () => {
 
   // Save instances to localStorage whenever they change
   useEffect(() => {
-    if (currentUserId) {
+    if (currentUserId && instances.length > 0) {
       console.log('Saving instances to localStorage:', instances);
       saveInstancesToLocalStorage(instances, currentUserId);
     }
@@ -38,6 +38,8 @@ export const useWhatsAppInstances = () => {
   
   // Function to check connection status for all instances
   const checkAllInstancesStatus = async () => {
+    if (instances.length === 0) return;
+    
     try {
       const updatedInstances = await Promise.all(
         instances.map(async (instance) => {

@@ -51,10 +51,11 @@ const WhatsApp = () => {
         clearInterval(interval);
       }
     };
-  }, [instances.length]);
+  }, [instances.length, checkAllInstancesStatus]);
 
   // Handler for when a new instance is created
   const handleInstanceCreated = async (newInstance: WhatsAppInstance) => {
+    console.log('New instance to be added:', newInstance);
     addInstance(newInstance);
     
     // If there's a QR code in the response, show it
@@ -73,6 +74,8 @@ const WhatsApp = () => {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
     }
   };
+
+  console.log('Current instances in WhatsApp component:', instances);
 
   return (
     <Layout>
