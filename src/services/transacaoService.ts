@@ -5,11 +5,16 @@ import { Transaction } from "@/types/financialTypes";
 export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Buscando transações do Supabase...");
   
+  // Obter o ID do usuário atual do localStorage
+  const userId = localStorage.getItem('userId') || 'default';
+  console.log("Buscando transações para o usuário:", userId);
+  
   try {
-    // With RLS disabled, we can query the fixed table directly
+    // Buscar transações filtrando pelo usuário atual
     const { data, error } = await supabase
       .from('transacoes')
       .select('*')
+      .eq('user', userId) // Filtrar pelo ID do usuário
       .order('quando', { ascending: false });
 
     if (error) {
@@ -40,11 +45,15 @@ export async function getTransacoes(): Promise<Transaction[]> {
 export async function getTransactionSummary() {
   console.log("Buscando resumo das transações...");
   
+  // Obter o ID do usuário atual do localStorage
+  const userId = localStorage.getItem('userId') || 'default';
+  
   try {
-    // With RLS disabled, we can query the fixed table directly
+    // Buscar resumo filtrando pelo usuário atual
     const { data, error } = await supabase
       .from('transacoes')
-      .select('tipo, valor');
+      .select('tipo, valor')
+      .eq('user', userId); // Filtrar pelo ID do usuário
 
     if (error) {
       console.error('Erro ao buscar resumo das transações:', error);
@@ -78,11 +87,15 @@ export async function getTransactionSummary() {
 export async function getCategorySummary() {
   console.log("Buscando resumo de categorias...");
   
+  // Obter o ID do usuário atual do localStorage
+  const userId = localStorage.getItem('userId') || 'default';
+  
   try {
-    // With RLS disabled, we can query the fixed table directly
+    // Buscar resumo de categorias filtrando pelo usuário atual
     const { data, error } = await supabase
       .from('transacoes')
-      .select('categoria, valor, tipo');
+      .select('categoria, valor, tipo')
+      .eq('user', userId); // Filtrar pelo ID do usuário
 
     if (error) {
       console.error('Erro ao buscar resumo de categorias:', error);
@@ -135,11 +148,15 @@ export async function getCategorySummary() {
 export async function getMonthlyData() {
   console.log("Buscando dados mensais...");
   
+  // Obter o ID do usuário atual do localStorage
+  const userId = localStorage.getItem('userId') || 'default';
+  
   try {
-    // With RLS disabled, we can query the fixed table directly
+    // Buscar dados mensais filtrando pelo usuário atual
     const { data, error } = await supabase
       .from('transacoes')
-      .select('quando, valor, tipo');
+      .select('quando, valor, tipo')
+      .eq('user', userId); // Filtrar pelo ID do usuário
 
     if (error) {
       console.error('Erro ao buscar dados mensais:', error);

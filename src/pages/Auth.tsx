@@ -45,6 +45,10 @@ const Auth = () => {
         // Armazenar informações de sessão (simplificado para este exemplo)
         localStorage.setItem('autenticado', 'true');
         localStorage.setItem('userId', data);
+        
+        // Armazenamos também o email para identificação do usuário
+        localStorage.setItem('userEmail', loginEmail);
+        
         toast({
           title: "Login realizado com sucesso",
           description: "Bem-vindo de volta!"
@@ -122,6 +126,7 @@ const Auth = () => {
         if (loginData) {
           localStorage.setItem('autenticado', 'true');
           localStorage.setItem('userId', loginData);
+          localStorage.setItem('userEmail', email);
           navigate('/transacoes');
         }
       }
