@@ -69,6 +69,121 @@ export const fetchConnectionState = async (instanceName: string): Promise<'open'
   }
 };
 
+// Nova função para listar todas as instâncias
+export const fetchAllInstances = async (): Promise<any> => {
+  try {
+    const response = await fetch(`https://${SERVER_URL}/fetch-instances`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': API_KEY
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao buscar instâncias');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching all instances:", error);
+    throw error;
+  }
+};
+
+// Função para reiniciar uma instância
+export const restartInstance = async (instanceName: string): Promise<any> => {
+  try {
+    const response = await fetch(`https://${SERVER_URL}/instance/restart/${encodeURIComponent(instanceName)}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': API_KEY
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao reiniciar instância');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`Error restarting instance ${instanceName}:`, error);
+    throw error;
+  }
+};
+
+// Função para desconectar (logout) uma instância
+export const logoutInstance = async (instanceName: string): Promise<any> => {
+  try {
+    const response = await fetch(`https://${SERVER_URL}/instance/logout/${encodeURIComponent(instanceName)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': API_KEY
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao desconectar instância');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`Error logging out instance ${instanceName}:`, error);
+    throw error;
+  }
+};
+
+// Função para excluir uma instância
+export const deleteInstance = async (instanceName: string): Promise<any> => {
+  try {
+    const response = await fetch(`https://${SERVER_URL}/instance/${encodeURIComponent(instanceName)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': API_KEY
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao excluir instância');
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`Error deleting instance ${instanceName}:`, error);
+    throw error;
+  }
+};
+
+// Função para definir presença online/offline
+export const setInstancePresence = async (instanceName: string, presence: 'online' | 'offline'): Promise<any> => {
+  try {
+    const response = await fetch(`https://${SERVER_URL}/instance/setPresence/${encodeURIComponent(instanceName)}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': API_KEY
+      },
+      body: JSON.stringify({ presence })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `Erro ao definir presença para ${presence}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error(`Error setting presence to ${presence} for instance ${instanceName}:`, error);
+    throw error;
+  }
+};
+
 export const saveInstancesToLocalStorage = (
   instances: WhatsAppInstance[], 
   currentUserId: string

@@ -5,6 +5,7 @@ export interface WhatsAppInstance {
   phoneNumber: string;
   userId: string;
   status?: string;
-  qrcode?: string;
+  qrcode?: string | null;
   connectionState?: 'open' | 'closed' | 'connecting';
+  presence?: 'online' | 'offline';
 }
