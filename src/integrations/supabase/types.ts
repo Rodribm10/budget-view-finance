@@ -147,6 +147,42 @@ export type Database = {
         }
         Relationships: []
       }
+      rodrigo_audio_messages: {
+        Row: {
+          audio_url: string | null
+          created_at: string
+          duration: number | null
+          id: string
+          instance_id: string
+          message_id: string | null
+          metadata: Json | null
+          sender_id: string
+          sender_name: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string
+          duration?: number | null
+          id?: string
+          instance_id: string
+          message_id?: string | null
+          metadata?: Json | null
+          sender_id: string
+          sender_name?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string
+          duration?: number | null
+          id?: string
+          instance_id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          sender_id?: string
+          sender_name?: string | null
+        }
+        Relationships: []
+      }
       transacoes: {
         Row: {
           categoria: string | null
@@ -154,6 +190,7 @@ export type Database = {
           detalhes: string | null
           estabelecimento: string | null
           id: number
+          login: string | null
           quando: string | null
           tipo: string | null
           user: string | null
@@ -165,6 +202,7 @@ export type Database = {
           detalhes?: string | null
           estabelecimento?: string | null
           id?: number
+          login?: string | null
           quando?: string | null
           tipo?: string | null
           user?: string | null
@@ -176,6 +214,7 @@ export type Database = {
           detalhes?: string | null
           estabelecimento?: string | null
           id?: number
+          login?: string | null
           quando?: string | null
           tipo?: string | null
           user?: string | null
