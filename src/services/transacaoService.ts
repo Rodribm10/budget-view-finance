@@ -5,41 +5,10 @@ import { Transaction } from "@/types/financialTypes";
 export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Buscando transações do Supabase...");
   
-  const userId = localStorage.getItem('userId');
-  if (!userId) {
-    console.error('Usuário não autenticado');
-    return [];
-  }
-  
   try {
-    // Verificar se temos uma sessão válida
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('Erro ao obter sessão:', sessionError);
-      return [];
-    }
-    
-    if (!sessionData.session) {
-      console.log('Sessão não encontrada, tentando atualizar...');
-      
-      // Tentar atualizar a sessão
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError || !refreshData.session) {
-        console.error('Não foi possível atualizar a sessão:', refreshError);
-        return [];
-      }
-      
-      console.log('Sessão atualizada com sucesso');
-    }
-    
-    const tabelaTransacoes = `transacoes_${userId}`;
-    
-    console.log(`Consultando tabela: ${tabelaTransacoes}`);
-    
-    // Usando .from() com cast para any para contornar a checagem de tipos
+    // With RLS disabled, we can query the fixed table directly
     const { data, error } = await supabase
-      .from(tabelaTransacoes as any)
+      .from('transacoes')
       .select('*')
       .order('quando', { ascending: false });
 
@@ -53,7 +22,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
     // Transformar os dados recebidos para o formato esperado, normalizando os tipos
     return data.map((item: any) => ({
       id: item.id.toString(),
-      user: item.usuario_id || '',
+      user: item.user || '',
       created_at: item.created_at,
       valor: item.tipo?.toLowerCase() === 'receita' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
       quando: item.quando || new Date().toISOString(),
@@ -71,38 +40,10 @@ export async function getTransacoes(): Promise<Transaction[]> {
 export async function getTransactionSummary() {
   console.log("Buscando resumo das transações...");
   
-  const userId = localStorage.getItem('userId');
-  if (!userId) {
-    console.error('Usuário não autenticado');
-    return { receitas: 0, despesas: 0, saldo: 0 };
-  }
-  
   try {
-    // Verificar se temos uma sessão válida
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('Erro ao obter sessão:', sessionError);
-      return { receitas: 0, despesas: 0, saldo: 0 };
-    }
-    
-    if (!sessionData.session) {
-      console.log('Sessão não encontrada, tentando atualizar...');
-      
-      // Tentar atualizar a sessão
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError || !refreshData.session) {
-        console.error('Não foi possível atualizar a sessão:', refreshError);
-        return { receitas: 0, despesas: 0, saldo: 0 };
-      }
-      
-      console.log('Sessão atualizada com sucesso');
-    }
-    
-    const tabelaTransacoes = `transacoes_${userId}`;
-    
+    // With RLS disabled, we can query the fixed table directly
     const { data, error } = await supabase
-      .from(tabelaTransacoes as any)
+      .from('transacoes')
       .select('tipo, valor');
 
     if (error) {
@@ -137,39 +78,10 @@ export async function getTransactionSummary() {
 export async function getCategorySummary() {
   console.log("Buscando resumo de categorias...");
   
-  const userId = localStorage.getItem('userId');
-  if (!userId) {
-    console.error('Usuário não autenticado');
-    return [];
-  }
-  
   try {
-    // Verificar se temos uma sessão válida
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('Erro ao obter sessão:', sessionError);
-      return [];
-    }
-    
-    if (!sessionData.session) {
-      console.log('Sessão não encontrada, tentando atualizar...');
-      
-      // Tentar atualizar a sessão
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError || !refreshData.session) {
-        console.error('Não foi possível atualizar a sessão:', refreshError);
-        return [];
-      }
-      
-      console.log('Sessão atualizada com sucesso');
-    }
-    
-    const tabelaTransacoes = `transacoes_${userId}`;
-    
-    // Buscar todas as transações que são despesas, independente da capitalização
+    // With RLS disabled, we can query the fixed table directly
     const { data, error } = await supabase
-      .from(tabelaTransacoes as any)
+      .from('transacoes')
       .select('categoria, valor, tipo');
 
     if (error) {
@@ -223,38 +135,10 @@ export async function getCategorySummary() {
 export async function getMonthlyData() {
   console.log("Buscando dados mensais...");
   
-  const userId = localStorage.getItem('userId');
-  if (!userId) {
-    console.error('Usuário não autenticado');
-    return [];
-  }
-  
   try {
-    // Verificar se temos uma sessão válida
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError) {
-      console.error('Erro ao obter sessão:', sessionError);
-      return [];
-    }
-    
-    if (!sessionData.session) {
-      console.log('Sessão não encontrada, tentando atualizar...');
-      
-      // Tentar atualizar a sessão
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      
-      if (refreshError || !refreshData.session) {
-        console.error('Não foi possível atualizar a sessão:', refreshError);
-        return [];
-      }
-      
-      console.log('Sessão atualizada com sucesso');
-    }
-    
-    const tabelaTransacoes = `transacoes_${userId}`;
-    
+    // With RLS disabled, we can query the fixed table directly
     const { data, error } = await supabase
-      .from(tabelaTransacoes as any)
+      .from('transacoes')
       .select('quando, valor, tipo');
 
     if (error) {

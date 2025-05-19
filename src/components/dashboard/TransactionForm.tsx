@@ -61,34 +61,8 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
     setIsSubmitting(true);
     
     try {
-      // Obter a sessão atual primeiro
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Ocorreu um problema ao verificar sua autenticação. Por favor, faça login novamente.",
-          variant: "destructive"
-        });
-        navigate('/auth');
-        return;
-      }
-      
-      // Verificar se temos uma sessão válida
-      if (!sessionData.session) {
-        toast({
-          title: "Sessão expirada",
-          description: "Sua sessão expirou. Por favor, faça login novamente.",
-          variant: "destructive"
-        });
-        navigate('/auth');
-        return;
-      }
-      
-      const userId = sessionData.session.user.id;
-      
-      // Atualizar o userId no localStorage para garantir consistência
-      localStorage.setItem('userId', userId);
+      // Get user ID from localStorage - with RLS disabled, this is just for reference
+      const userId = localStorage.getItem('userId') || 'default';
       
       const valorNumerico = parseFloat(data.valor.replace(',', '.'));
       
@@ -101,22 +75,17 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
         return;
       }
       
-      // Ajusta o valor para ser positivo ou negativo com base no tipo
+      // Adjust the value based on transaction type
       const valorFinal = data.tipo.toLowerCase() === 'receita' 
         ? Math.abs(valorNumerico) 
         : Math.abs(valorNumerico);
       
-      // Cria o nome da tabela dinâmica para este usuário
-      const tabelaTransacoes = `transacoes_${userId}`;
-      
-      console.log(`Inserindo transação na tabela ${tabelaTransacoes} para o usuário ${userId}`);
-      
-      // Insere a transação na tabela específica do usuário usando o userId da sessão atual
+      // With RLS disabled, we can insert directly to the fixed table
       const { error } = await supabase
-        .from(tabelaTransacoes as any)
+        .from('transacoes') // Using a fixed table name instead of dynamic one
         .insert([
           {
-            usuario_id: userId,  // Usar o userId da sessão atual, não do localStorage
+            user: userId,  // Store user ID as reference only
             estabelecimento: data.estabelecimento,
             valor: valorFinal,
             detalhes: data.detalhes,
@@ -129,20 +98,11 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       if (error) {
         console.error('Erro ao salvar transação:', error);
         
-        if (error.message.includes('authentication')) {
-          toast({
-            title: "Erro de autenticação",
-            description: "Sua sessão expirou. Por favor, faça login novamente.",
-            variant: "destructive"
-          });
-          navigate('/auth');
-        } else {
-          toast({
-            title: "Erro ao salvar",
-            description: `Não foi possível salvar a transação: ${error.message}`,
-            variant: "destructive"
-          });
-        }
+        toast({
+          title: "Erro ao salvar",
+          description: `Não foi possível salvar a transação: ${error.message}`,
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "Transação salva",
