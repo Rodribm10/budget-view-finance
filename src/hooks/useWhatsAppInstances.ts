@@ -14,6 +14,7 @@ export const useWhatsAppInstances = () => {
   const [instances, setInstances] = useState<WhatsAppInstance[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
 
   // Get current user ID and load instances on component mount
   useEffect(() => {
@@ -38,9 +39,10 @@ export const useWhatsAppInstances = () => {
   
   // Function to check connection status for all instances
   const checkAllInstancesStatus = useCallback(async () => {
-    if (instances.length === 0) return;
+    if (instances.length === 0 || isCheckingStatus) return;
     
     console.log(`Checking connection status for ${instances.length} instances`);
+    setIsCheckingStatus(true);
     
     try {
       const updatedInstances = await Promise.all(
@@ -96,8 +98,10 @@ export const useWhatsAppInstances = () => {
       }
     } catch (error) {
       console.error("Error checking instances status:", error);
+    } finally {
+      setIsCheckingStatus(false);
     }
-  }, [instances]);
+  }, [instances, isCheckingStatus]);
 
   // Handler para atualizar a lista de instâncias do servidor
   const refreshInstances = async () => {
@@ -185,8 +189,6 @@ export const useWhatsAppInstances = () => {
       });
     } finally {
       setIsRefreshing(false);
-      // Verificar status após atualizar a lista
-      await checkAllInstancesStatus();
     }
   };
 

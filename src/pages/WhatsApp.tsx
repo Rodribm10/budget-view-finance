@@ -37,9 +37,13 @@ const WhatsApp = () => {
   useEffect(() => {
     console.log("Setting up periodic status checks, current instances:", instances.length);
     
-    // Check status initially
+    // Check status initially after a short delay to prevent immediate execution
+    let initialCheck: NodeJS.Timeout;
     if (instances.length > 0) {
-      checkAllInstancesStatus();
+      initialCheck = setTimeout(() => {
+        console.log("Running initial status check");
+        checkAllInstancesStatus();
+      }, 1000);
     }
 
     // Set up interval for periodic checks (every 30 seconds)
@@ -50,16 +54,18 @@ const WhatsApp = () => {
       }
     }, 30000); // 30 seconds
 
-    // Clean up interval when component unmounts
+    // Clean up interval and timeout when component unmounts
     return () => {
-      if (interval) {
-        clearInterval(interval);
+      clearInterval(interval);
+      if (initialCheck) {
+        clearTimeout(initialCheck);
       }
     };
   }, [instances.length, checkAllInstancesStatus]);
 
   // Run refresh instances on initial load to get server instances
   useEffect(() => {
+    // Only run on first render
     const initialLoad = async () => {
       if (instances.length === 0) {
         try {
@@ -71,6 +77,8 @@ const WhatsApp = () => {
     };
     
     initialLoad();
+    // This effect should only run once when the component mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handler for when a new instance is created
@@ -83,17 +91,19 @@ const WhatsApp = () => {
       handleViewQrCode(newInstance);
     }
 
-    // Trigger a status check for all instances
-    try {
-      await checkAllInstancesStatus();
-    } catch (error) {
-      console.error("Error checking status after instance creation:", error);
-      toast({
-        title: "Aviso",
-        description: "Instância criada, mas não foi possível verificar o status. Tente atualizar a lista manualmente.",
-        variant: "default",
-      });
-    }
+    // Trigger a status check for all instances with a delay
+    setTimeout(async () => {
+      try {
+        await checkAllInstancesStatus();
+      } catch (error) {
+        console.error("Error checking status after instance creation:", error);
+        toast({
+          title: "Aviso",
+          description: "Instância criada, mas não foi possível verificar o status. Tente atualizar a lista manualmente.",
+          variant: "default",
+        });
+      }
+    }, 2000);
   };
 
   // Handler for when an instance is deleted
