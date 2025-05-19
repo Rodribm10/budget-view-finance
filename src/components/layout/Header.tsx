@@ -41,6 +41,12 @@ const Header = () => {
     localStorage.removeItem('userName');
     localStorage.removeItem('userEmail');
     
+    // Dispatch a storage event to notify other components about logout
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'autenticado',
+      newValue: null
+    }));
+    
     toast({
       title: "Logout realizado",
       description: "Você foi desconectado com sucesso"

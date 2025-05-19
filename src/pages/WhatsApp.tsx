@@ -15,6 +15,7 @@ interface WhatsAppInstance {
   instanceName: string;
   instanceId: string;
   phoneNumber: string;
+  userId: string;
   status?: string;
   qrcode?: string;
   connectionState?: 'open' | 'closed' | 'connecting';
@@ -36,25 +37,76 @@ const WhatsApp = () => {
   const [qrError, setQrError] = useState<string | null>(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [statusCheckInterval, setStatusCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>('');
 
-  // Load saved instances from localStorage on component mount
+  // Get current user ID on component mount
+  useEffect(() => {
+    const userId = localStorage.getItem('userId') || '';
+    setCurrentUserId(userId);
+  }, []);
+
+  // Load saved instances from localStorage on component mount and filter by current user
   useEffect(() => {
     const savedInstances = localStorage.getItem('whatsappInstances');
-    if (savedInstances) {
+    if (savedInstances && currentUserId) {
       try {
-        setInstances(JSON.parse(savedInstances));
+        const allInstances = JSON.parse(savedInstances);
+        // Filter instances to only show those belonging to the current user
+        const userInstances = allInstances.filter(
+          (instance: WhatsAppInstance) => instance.userId === currentUserId
+        );
+        setInstances(userInstances);
       } catch (error) {
         console.error("Error parsing saved instances:", error);
       }
     }
-  }, []);
+  }, [currentUserId]); // Re-run when currentUserId changes
 
   // Save instances to localStorage whenever they change
   useEffect(() => {
     if (instances.length > 0) {
-      localStorage.setItem('whatsappInstances', JSON.stringify(instances));
+      // We need to save ALL instances (not just current user's) to maintain everyone's data
+      const savedInstances = localStorage.getItem('whatsappInstances');
+      let allInstances: WhatsAppInstance[] = [];
+      
+      if (savedInstances) {
+        try {
+          const parsedInstances = JSON.parse(savedInstances);
+          // Filter out current user's instances from saved data (we'll add updated ones)
+          allInstances = parsedInstances.filter(
+            (instance: WhatsAppInstance) => instance.userId !== currentUserId
+          );
+        } catch (error) {
+          console.error("Error parsing saved instances:", error);
+        }
+      }
+      
+      // Add current user's instances to the array
+      const updatedInstances = [...allInstances, ...instances];
+      localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
     }
-  }, [instances]);
+  }, [instances, currentUserId]);
+
+  // Handle user logout event to clear instances display
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'autenticado' && e.newValue === null) {
+        // User logged out, clear instances from display
+        setInstances([]);
+        setCurrentUserId('');
+      } else if (e.key === 'userId') {
+        // User ID changed (new login)
+        const newUserId = localStorage.getItem('userId') || '';
+        setCurrentUserId(newUserId);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   // Set up periodic status checks
   useEffect(() => {
@@ -82,18 +134,22 @@ const WhatsApp = () => {
 
   // Function to check connection status for all instances
   const checkAllInstancesStatus = async () => {
-    const updatedInstances = await Promise.all(
-      instances.map(async (instance) => {
-        try {
-          const state = await fetchConnectionState(instance.instanceName);
-          return { ...instance, connectionState: state };
-        } catch (error) {
-          console.error(`Error checking status for ${instance.instanceName}:`, error);
-          return { ...instance, connectionState: 'closed' };
-        }
-      })
-    );
-    setInstances(updatedInstances);
+    try {
+      const updatedInstances = await Promise.all(
+        instances.map(async (instance) => {
+          try {
+            const state = await fetchConnectionState(instance.instanceName);
+            return { ...instance, connectionState: state };
+          } catch (error) {
+            console.error(`Error checking status for ${instance.instanceName}:`, error);
+            return { ...instance, connectionState: 'closed' as const };
+          }
+        })
+      );
+      setInstances(updatedInstances);
+    } catch (error) {
+      console.error("Error checking instances status:", error);
+    }
   };
 
   // Function to fetch connection state for an instance
@@ -115,7 +171,7 @@ const WhatsApp = () => {
       }
 
       const data = await response.json();
-      return data.instance?.state || 'closed';
+      return data.instance?.state || 'closed' as 'open' | 'closed' | 'connecting';
     } catch (error) {
       console.error("Error fetching connection state:", error);
       return 'closed';
@@ -137,6 +193,16 @@ const WhatsApp = () => {
       toast({
         title: "Erro",
         description: "Insira um número válido com DDD e país (ex: 559999999999)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Ensure user is logged in
+    if (!currentUserId) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar uma instância",
         variant: "destructive",
       });
       return;
@@ -169,11 +235,12 @@ const WhatsApp = () => {
         throw new Error(data.message || 'Erro ao criar instância');
       }
 
-      // Create new instance object
+      // Create new instance object with user ID
       const newInstance: WhatsAppInstance = {
         instanceName,
         instanceId: data.instance.instanceId,
         phoneNumber,
+        userId: currentUserId, // Associate with current user
         status: data.instance.status,
         qrcode: data.qrcode,
         connectionState: 'connecting'
@@ -238,7 +305,7 @@ const WhatsApp = () => {
       }
 
       // Using the "code" field from the response as the QR code data
-      if (data && data.code) {
+      if (data && data.base64) {
         // Save the base64 image data directly - it already contains the data:image prefix
         setQrCodeData(data.base64);
       } else {
@@ -263,9 +330,20 @@ const WhatsApp = () => {
     if (activeInstance?.instanceId === instanceId) {
       setQrDialogOpen(false);
     }
-    // Update localStorage
-    const updatedInstances = instances.filter(instance => instance.instanceId !== instanceId);
-    localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
+    
+    // Update localStorage - need to preserve other users' instances
+    const savedInstances = localStorage.getItem('whatsappInstances');
+    if (savedInstances) {
+      try {
+        const allInstances = JSON.parse(savedInstances);
+        const updatedInstances = allInstances.filter(
+          (instance: WhatsAppInstance) => !(instance.instanceId === instanceId && instance.userId === currentUserId)
+        );
+        localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
+      } catch (error) {
+        console.error("Error updating instances in localStorage:", error);
+      }
+    }
     
     toast({
       title: "Instância removida",
@@ -327,7 +405,7 @@ const WhatsApp = () => {
         </Card>
         
         {/* List of created instances */}
-        {instances.length > 0 && (
+        {instances.length > 0 ? (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Instâncias Criadas</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -380,6 +458,15 @@ const WhatsApp = () => {
               ))}
             </div>
           </div>
+        ) : (
+          <Card>
+            <CardContent className="py-6">
+              <div className="text-center text-muted-foreground">
+                <p>Nenhuma instância criada ainda.</p>
+                <p className="mt-1">Crie uma instância usando o formulário acima.</p>
+              </div>
+            </CardContent>
+          </Card>
         )}
         
         {/* QR Code Dialog */}
