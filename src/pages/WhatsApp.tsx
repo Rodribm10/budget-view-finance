@@ -49,10 +49,9 @@ const WhatsApp = () => {
     setLoading(true);
 
     try {
-      // This is a placeholder for the actual API call to Evolution API
-      // In a real implementation, you would replace {server-url} and {sua-api-key} with actual values
-      const serverUrl = "evolution-api-server-url";
-      const apiKey = "your-evolution-api-key";
+      // Using the provided URL and API key for Evolution API
+      const serverUrl = "evolutionapi2.innova1001.com.br";
+      const apiKey = "beeb77fbd7f48f91db2cd539a573c130";
 
       const response = await fetch(`https://${serverUrl}/instance/create`, {
         method: 'POST',
@@ -70,46 +69,25 @@ const WhatsApp = () => {
 
       const data = await response.json();
 
-      // In a development environment, simulate a successful response
       if (!response.ok) {
-        // For demonstration purposes, show a simulated success response
-        console.log("Simulating successful API response in development environment");
-        const simulatedResponse = {
-          instanceId: `inst_${Date.now()}`,
-          status: "created",
-          message: "Instance created successfully"
-        };
-        
-        setInstance({
-          instanceName,
-          instanceId: simulatedResponse.instanceId,
-          status: simulatedResponse.status
-        });
-
-        // Save the instance ID for later use
-        localStorage.setItem('whatsappInstanceId', simulatedResponse.instanceId);
-        
-        toast({
-          title: "Sucesso!",
-          description: "Instância do WhatsApp criada com sucesso!"
-        });
-      } else {
-        // Handle actual API response
-        setInstance({
-          instanceName,
-          instanceId: data.instanceId,
-          status: data.status,
-          qrcode: data.qrcode
-        });
-
-        // Save the instance ID for later use
-        localStorage.setItem('whatsappInstanceId', data.instanceId);
-        
-        toast({
-          title: "Sucesso!",
-          description: "Instância do WhatsApp criada com sucesso!"
-        });
+        throw new Error(data.message || 'Erro ao criar instância');
       }
+
+      // Handle successful response
+      setInstance({
+        instanceName,
+        instanceId: data.instanceId,
+        status: data.status,
+        qrcode: data.qrcode
+      });
+
+      // Save the instance ID for later use
+      localStorage.setItem('whatsappInstanceId', data.instanceId);
+      
+      toast({
+        title: "Sucesso!",
+        description: "Instância do WhatsApp criada com sucesso!"
+      });
     } catch (error) {
       console.error("Error creating WhatsApp instance:", error);
       toast({
