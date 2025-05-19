@@ -1,17 +1,19 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
-import { MessageCircle, QrCode, RefreshCw } from 'lucide-react';
+import { MessageCircle, QrCode, RefreshCw, Smartphone, Eye } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface WhatsAppInstance {
   instanceName: string;
-  instanceId?: string;
+  instanceId: string;
+  phoneNumber: string;
   status?: string;
   qrcode?: string;
 }
@@ -26,21 +28,30 @@ const WhatsApp = () => {
     return userName;
   });
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [instance, setInstance] = useState<WhatsAppInstance | null>(() => {
-    // Check if we have a stored instance
-    const storedInstanceId = localStorage.getItem('whatsappInstanceId');
-    const storedInstanceName = localStorage.getItem('whatsappInstanceName');
-    
-    if (storedInstanceId && storedInstanceName) {
-      return {
-        instanceName: storedInstanceName,
-        instanceId: storedInstanceId
-      };
-    }
-    return null;
-  });
+  const [instances, setInstances] = useState<WhatsAppInstance[]>([]);
+  const [activeInstance, setActiveInstance] = useState<WhatsAppInstance | null>(null);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
+
+  // Load saved instances from localStorage on component mount
+  useEffect(() => {
+    const savedInstances = localStorage.getItem('whatsappInstances');
+    if (savedInstances) {
+      try {
+        setInstances(JSON.parse(savedInstances));
+      } catch (error) {
+        console.error("Error parsing saved instances:", error);
+      }
+    }
+  }, []);
+
+  // Save instances to localStorage whenever they change
+  useEffect(() => {
+    if (instances.length > 0) {
+      localStorage.setItem('whatsappInstances', JSON.stringify(instances));
+    }
+  }, [instances]);
 
   const createInstance = async () => {
     // Validate form fields
@@ -89,28 +100,32 @@ const WhatsApp = () => {
         throw new Error(data.message || 'Erro ao criar instância');
       }
 
-      // Handle successful response
-      const newInstance = {
+      // Create new instance object
+      const newInstance: WhatsAppInstance = {
         instanceName,
         instanceId: data.instanceId,
+        phoneNumber,
         status: data.status,
         qrcode: data.qrcode
       };
       
-      setInstance(newInstance);
-
-      // Save the instance details for later use
-      localStorage.setItem('whatsappInstanceId', data.instanceId);
-      localStorage.setItem('whatsappInstanceName', instanceName);
+      // Add new instance to the list
+      setInstances(prevInstances => [...prevInstances, newInstance]);
       
       toast({
         title: "Sucesso!",
         description: "Instância do WhatsApp criada com sucesso!"
       });
       
-      // If there's a QR code in the response, set it
+      // Reset form fields
+      setInstanceName(localStorage.getItem('userName') || '');
+      setPhoneNumber('');
+      
+      // If there's a QR code in the response, show it
       if (data.qrcode) {
+        setActiveInstance(newInstance);
         setQrCodeData(data.qrcode);
+        setQrDialogOpen(true);
       }
     } catch (error) {
       console.error("Error creating WhatsApp instance:", error);
@@ -119,24 +134,16 @@ const WhatsApp = () => {
         description: "Ocorreu um erro ao conectar com a API. Tente novamente mais tarde.",
         variant: "destructive",
       });
-      setQrError("Falha ao obter QR Code. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchQrCode = async () => {
-    if (!instance?.instanceId) {
-      toast({
-        title: "Erro",
-        description: "Nenhuma instância disponível. Crie uma instância primeiro.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const fetchQrCode = async (instance: WhatsAppInstance) => {
+    setActiveInstance(instance);
     setLoadingQR(true);
     setQrError(null);
+    setQrDialogOpen(true);
 
     try {
       const serverUrl = "evolutionapi2.innova1001.com.br";
@@ -174,6 +181,22 @@ const WhatsApp = () => {
     }
   };
 
+  const deleteInstance = (instanceId: string) => {
+    setInstances(prevInstances => prevInstances.filter(instance => instance.instanceId !== instanceId));
+    // If we're viewing QR code for this instance, close the dialog
+    if (activeInstance?.instanceId === instanceId) {
+      setQrDialogOpen(false);
+    }
+    // Update localStorage
+    const updatedInstances = instances.filter(instance => instance.instanceId !== instanceId);
+    localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
+    
+    toast({
+      title: "Instância removida",
+      description: "A instância do WhatsApp foi removida com sucesso.",
+    });
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -181,85 +204,118 @@ const WhatsApp = () => {
           <h1 className="text-2xl font-bold tracking-tight">Conectar WhatsApp</h1>
         </div>
         
-        {!instance?.instanceId ? (
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <div className="flex items-center mb-2">
-                <MessageCircle className="h-6 w-6 mr-2 text-green-600" />
-                <CardTitle>Vincular WhatsApp ao App</CardTitle>
-              </div>
-              <CardDescription>
-                Preencha os campos abaixo para conectar sua conta WhatsApp
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="instanceName">Nome da Instância</Label>
-                <Input
-                  id="instanceName"
-                  value={instanceName}
-                  onChange={(e) => setInstanceName(e.target.value)}
-                  placeholder="Digite um nome para a instância"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">O nome será usado para identificar esta conexão</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Número do WhatsApp</Label>
-                <Input
-                  id="phoneNumber"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="559999999999"
-                  required
-                />
-                <p className="text-xs text-muted-foreground">Digite o número com DDD e código do país</p>
-              </div>
-              
-              <Button 
-                className="w-full mt-4" 
-                onClick={createInstance}
-                disabled={loading}
-              >
-                {loading ? "Criando..." : "Criar Instância"}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <Card className="max-w-md mx-auto">
-            <CardHeader>
-              <div className="flex items-center mb-2">
-                <QrCode className="h-6 w-6 mr-2 text-green-600" />
-                <CardTitle>WhatsApp - {instance.instanceName}</CardTitle>
-              </div>
-              <CardDescription>
+        {/* Form to create a new instance */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center mb-2">
+              <MessageCircle className="h-6 w-6 mr-2 text-green-600" />
+              <CardTitle>Vincular WhatsApp ao App</CardTitle>
+            </div>
+            <CardDescription>
+              Preencha os campos abaixo para conectar sua conta WhatsApp
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="instanceName">Nome da Instância</Label>
+              <Input
+                id="instanceName"
+                value={instanceName}
+                onChange={(e) => setInstanceName(e.target.value)}
+                placeholder="Digite um nome para a instância"
+                required
+              />
+              <p className="text-xs text-muted-foreground">O nome será usado para identificar esta conexão</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Número do WhatsApp</Label>
+              <Input
+                id="phoneNumber"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="559999999999"
+                required
+              />
+              <p className="text-xs text-muted-foreground">Digite o número com DDD e código do país</p>
+            </div>
+            
+            <Button 
+              className="w-full mt-4" 
+              onClick={createInstance}
+              disabled={loading}
+            >
+              {loading ? "Criando..." : "Criar Instância"}
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* List of created instances */}
+        {instances.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">Instâncias Criadas</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {instances.map((instance) => (
+                <Card key={instance.instanceId} className="h-full">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">{instance.instanceName}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center text-sm">
+                        <Smartphone className="h-4 w-4 mr-2 text-gray-500" />
+                        <span>{instance.phoneNumber}</span>
+                      </div>
+                      {instance.status && (
+                        <div className="flex items-center text-sm">
+                          <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+                          <span>Status: {instance.status}</span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => fetchQrCode(instance)}
+                      className="flex items-center"
+                    >
+                      <QrCode className="h-4 w-4 mr-2" />
+                      Ver QR Code
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => deleteInstance(instance.instanceId)}
+                    >
+                      Remover
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* QR Code Dialog */}
+        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Conectar WhatsApp - {activeInstance?.instanceName}</DialogTitle>
+              <DialogDescription>
                 Escaneie o QR Code com seu WhatsApp para finalizar a conexão
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-3 bg-green-50 text-green-800 rounded-md text-sm">
-                <p><strong>Instância criada com sucesso!</strong></p>
-                <p className="text-xs mt-1">ID da instância: {instance.instanceId}</p>
-              </div>
-              
-              {!qrCodeData && !qrError && !loadingQR && (
-                <Button 
-                  className="w-full" 
-                  onClick={fetchQrCode}
-                  disabled={loadingQR}
-                >
-                  Ver QR Code
-                </Button>
-              )}
-              
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center space-y-4 py-4">
               {loadingQR && (
                 <div className="text-center py-8">
                   <p>Carregando QR Code...</p>
                 </div>
               )}
               
-              {qrCodeData && (
+              {qrCodeData && !loadingQR && (
                 <div className="flex flex-col items-center space-y-4">
                   <div className="border p-4 bg-white rounded-md">
                     <img 
@@ -271,35 +327,34 @@ const WhatsApp = () => {
                   <p className="text-sm text-center">
                     Escaneie este QR Code com seu WhatsApp para finalizar a conexão.
                   </p>
-                  <Button
-                    variant="outline"
-                    onClick={fetchQrCode}
-                    disabled={loadingQR}
-                    className="flex items-center"
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Atualizar QR Code
-                  </Button>
                 </div>
               )}
               
-              {qrError && (
-                <div className="space-y-4">
-                  <Alert variant="destructive">
-                    <AlertDescription>{qrError}</AlertDescription>
-                  </Alert>
-                  <Button 
-                    onClick={fetchQrCode}
-                    disabled={loadingQR}
-                    className="w-full"
-                  >
-                    Tentar Novamente
-                  </Button>
-                </div>
+              {qrError && !loadingQR && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertDescription>{qrError}</AlertDescription>
+                </Alert>
               )}
-            </CardContent>
-          </Card>
-        )}
+              
+              <div className="flex space-x-2">
+                {activeInstance && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => fetchQrCode(activeInstance)} 
+                    disabled={loadingQR}
+                    className="flex items-center"
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Atualizar QR Code
+                  </Button>
+                )}
+                <Button variant="ghost" onClick={() => setQrDialogOpen(false)}>
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
