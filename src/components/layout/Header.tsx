@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { LogOut, User } from 'lucide-react';
@@ -17,14 +17,29 @@ const Header = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userName, setUserName] = useState(() => {
-    return localStorage.getItem('userName') || 'Usuário';
+    // Obter o nome do usuário do localStorage ou usar seu email como fallback
+    return localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'Usuário';
   });
+
+  // Atualize o nome se mudar no localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setUserName(localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'Usuário');
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleLogout = () => {
     // Limpar informações de sessão
     localStorage.removeItem('autenticado');
     localStorage.removeItem('userId');
     localStorage.removeItem('userName');
+    localStorage.removeItem('userEmail');
     
     toast({
       title: "Logout realizado",

@@ -38,9 +38,10 @@ type TransactionFormValues = z.infer<typeof transactionSchema>;
 interface TransactionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  defaultTipo?: 'receita' | 'despesa';
 }
 
-export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
+export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa' }: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -52,7 +53,7 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       valor: '',
       detalhes: '',
       categoria: '',
-      tipo: 'despesa',
+      tipo: defaultTipo,
       quando: new Date().toISOString().split('T')[0]
     }
   });
@@ -63,6 +64,8 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
     try {
       // Get user ID from localStorage - with RLS disabled, this is just for reference
       const userId = localStorage.getItem('userId') || 'default';
+      const userEmail = localStorage.getItem('userEmail') || '';
+      const userName = localStorage.getItem('userName') || '';
       
       const valorNumerico = parseFloat(data.valor.replace(',', '.'));
       
@@ -79,6 +82,8 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       const valorFinal = data.tipo.toLowerCase() === 'receita' 
         ? Math.abs(valorNumerico) 
         : Math.abs(valorNumerico);
+      
+      console.log(`Salvando transação para usuário: ${userId} (${userEmail || userName})`);
       
       // With RLS disabled, we can insert directly to the fixed table
       const { error } = await supabase
@@ -229,7 +234,7 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
           <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className={defaultTipo === 'receita' ? 'bg-finance-green hover:bg-finance-green/90' : ''}>
             {isSubmitting ? "Salvando..." : "Salvar"}
           </Button>
         </div>

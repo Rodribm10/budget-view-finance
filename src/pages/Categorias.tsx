@@ -14,34 +14,46 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const CategoriasPage = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [tipoFiltro, setTipoFiltro] = useState<string>('despesa');
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function loadCategories() {
-      try {
-        setIsLoading(true);
-        console.log("Carregando dados de categorias...");
-        const data = await getCategorySummary();
-        console.log(`${data.length} categorias carregadas com sucesso`);
-        setCategories(data);
-      } catch (error) {
-        console.error("Erro ao carregar categorias:", error);
-        toast({
-          title: "Erro ao carregar categorias",
-          description: "Não foi possível obter os dados do Supabase",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
+  const loadCategories = async (tipo: string) => {
+    try {
+      setIsLoading(true);
+      console.log(`Carregando dados de categorias para ${tipo}...`);
+      const data = await getCategorySummary(tipo);
+      console.log(`${data.length} categorias carregadas com sucesso`);
+      setCategories(data);
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
+      toast({
+        title: "Erro ao carregar categorias",
+        description: "Não foi possível obter os dados do Supabase",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    loadCategories();
-  }, [toast]);
+  };
+
+  useEffect(() => {
+    loadCategories(tipoFiltro);
+  }, [tipoFiltro, toast]);
+
+  const handleTipoChange = (value: string) => {
+    setTipoFiltro(value);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -56,7 +68,20 @@ const CategoriasPage = () => {
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight">Categorias de Despesas</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Categorias</h1>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Filtrar por:</span>
+            <Select value={tipoFiltro} onValueChange={handleTipoChange}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Tipo de transação" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="despesa">Despesas</SelectItem>
+                <SelectItem value="receita">Receitas</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {isLoading ? (
@@ -77,7 +102,13 @@ const CategoriasPage = () => {
           <Card>
             <CardContent className="py-10 text-center">
               <p className="text-muted-foreground">Nenhuma categoria encontrada</p>
-              <p className="mt-2 text-sm">Verifique se existem transações do tipo 'despesa' cadastradas</p>
+              <p className="mt-2 text-sm">
+                {tipoFiltro === 'despesa' 
+                  ? 'Verifique se existem transações do tipo "despesa" cadastradas'
+                  : tipoFiltro === 'receita' 
+                    ? 'Verifique se existem transações do tipo "receita" cadastradas'
+                    : 'Verifique se existem transações cadastradas'}
+              </p>
             </CardContent>
           </Card>
         ) : (
@@ -108,7 +139,7 @@ const CategoriasPage = () => {
                         } as React.CSSProperties}
                       />
                       <div className="text-xs text-muted-foreground">
-                        {(category.percentage * 100).toFixed(1)}% do total de despesas
+                        {(category.percentage * 100).toFixed(1)}% do total
                       </div>
                     </div>
                   </CardContent>
@@ -118,7 +149,7 @@ const CategoriasPage = () => {
             
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle>Resumo de Categorias</CardTitle>
+                <CardTitle>Resumo de Categorias {tipoFiltro !== 'all' ? (tipoFiltro === 'despesa' ? '(Despesas)' : '(Receitas)') : ''}</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>

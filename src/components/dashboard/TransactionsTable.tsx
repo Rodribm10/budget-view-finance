@@ -52,7 +52,8 @@ const TransactionsTable = ({
     return (
       transaction.estabelecimento?.toLowerCase().includes(query) ||
       transaction.detalhes?.toLowerCase().includes(query) ||
-      transaction.categoria?.toLowerCase().includes(query)
+      transaction.categoria?.toLowerCase().includes(query) ||
+      transaction.tipo?.toLowerCase().includes(query)
     );
   });
 
@@ -189,9 +190,9 @@ const TransactionsTable = ({
                   </TableCell>
                   <TableCell className={cn(
                     "text-right font-medium",
-                    transaction.valor > 0 ? "text-finance-green" : "text-finance-red"
+                    transaction.tipo === 'receita' ? "text-finance-green" : "text-finance-red"
                   )}>
-                    {formatCurrency(transaction.valor)}
+                    {formatCurrency(Math.abs(transaction.valor))}
                   </TableCell>
                 </TableRow>
               ))

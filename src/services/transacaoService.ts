@@ -84,8 +84,8 @@ export async function getTransactionSummary() {
   }
 }
 
-export async function getCategorySummary() {
-  console.log("Buscando resumo de categorias...");
+export async function getCategorySummary(tipoFiltro: string = 'all') {
+  console.log(`Buscando resumo de categorias para tipo: ${tipoFiltro}`);
   
   // Obter o ID do usuário atual do localStorage
   const userId = localStorage.getItem('userId') || 'default';
@@ -104,16 +104,19 @@ export async function getCategorySummary() {
     
     console.log("Dados de categorias encontrados:", data);
     
-    // Filtrar usando JavaScript para pegar todas as despesas (case insensitive)
-    const despesasData = data.filter((item: any) => 
-      item.tipo?.toLowerCase() === 'despesa'
-    );
+    // Filtrar conforme o tipo solicitado (receitas, despesas ou ambos)
+    let filteredData = data;
+    if (tipoFiltro.toLowerCase() === 'despesa') {
+      filteredData = data.filter((item: any) => item.tipo?.toLowerCase() === 'despesa');
+    } else if (tipoFiltro.toLowerCase() === 'receita') {
+      filteredData = data.filter((item: any) => item.tipo?.toLowerCase() === 'receita');
+    }
     
-    console.log("Despesas filtradas:", despesasData.length);
+    console.log(`${filteredData.length} itens filtrados para tipo: ${tipoFiltro}`);
     
     // Agrupar por categoria
     const categorias: Record<string, number> = {};
-    despesasData.forEach((item: any) => {
+    filteredData.forEach((item: any) => {
       if (item.categoria && item.valor) {
         const categoriaKey = item.categoria || 'Outros';
         if (!categorias[categoriaKey]) {
