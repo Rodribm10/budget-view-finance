@@ -40,20 +40,20 @@ const Auth = () => {
         throw new Error(error?.message || "Falha ao autenticar. Verifique seu email e senha.");
       }
 
-      // Se encontrou um usuário válido, redireciona para a página de transações
+      // Se encontrou um usuário válido
       if (data) {
-        // Armazenar informações de sessão (simplificado para este exemplo)
+        // Armazenar informações de sessão
         localStorage.setItem('autenticado', 'true');
         localStorage.setItem('userId', data);
-        
-        // Armazenamos também o email para identificação do usuário
         localStorage.setItem('userEmail', loginEmail);
         
         toast({
           title: "Login realizado com sucesso",
           description: "Bem-vindo de volta!"
         });
-        navigate('/transacoes');
+        
+        // Redirecionamento para o dashboard após login bem-sucedido
+        navigate('/dashboard');
       } else {
         toast({
           title: "Falha no login",
@@ -127,7 +127,10 @@ const Auth = () => {
           localStorage.setItem('autenticado', 'true');
           localStorage.setItem('userId', loginData);
           localStorage.setItem('userEmail', email);
-          navigate('/transacoes');
+          localStorage.setItem('userName', nome);
+          
+          // Redirecionamento para o dashboard após cadastro bem-sucedido
+          navigate('/dashboard');
         }
       }
     } catch (error: any) {

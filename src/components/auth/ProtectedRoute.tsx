@@ -21,35 +21,18 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         
         // Check if we have stored authentication status
         const storedAuth = localStorage.getItem('autenticado') === 'true';
+        const userId = localStorage.getItem('userId');
         
-        if (storedAuth) {
-          console.log('Using stored authentication status: authenticated');
+        if (storedAuth && userId) {
+          console.log('Usando autenticação armazenada: autenticado');
           setIsAuthenticated(true);
-          setIsLoading(false);
-          return;
-        }
-        
-        // If no stored status, check for a session
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData?.session) {
-          console.log('Session found, setting as authenticated');
-          setIsAuthenticated(true);
-          localStorage.setItem('autenticado', 'true');
-          localStorage.setItem('userId', sessionData.session.user.id);
         } else {
-          // For RLS disabled mode, we set a default authentication
-          console.log('No session found, but setting as authenticated for RLS disabled mode');
-          setIsAuthenticated(true);
-          localStorage.setItem('autenticado', 'true');
-          localStorage.setItem('userId', 'default');
+          console.log('Nenhuma sessão encontrada, redirecionando para login');
+          setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Error checking authentication:', error);
-        // For RLS disabled, default to authenticated
-        setIsAuthenticated(true);
-        localStorage.setItem('autenticado', 'true');
-        localStorage.setItem('userId', 'default');
+        console.error('Erro ao verificar autenticação:', error);
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -58,12 +41,21 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     checkAuthentication();
   }, []);
 
-  // Show loading state
+  // Mostrar estado de carregamento
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
   
-  // With RLS disabled, we simply return the children without redirecting
+  // Se não estiver autenticado, redirecionar para a página de login
+  if (isAuthenticated === false) {
+    toast({
+      title: "Autenticação necessária",
+      description: "Por favor, faça login para acessar esta página"
+    });
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+  
+  // Se estiver autenticado, renderizar o conteúdo protegido
   return <>{children}</>;
 };
 
