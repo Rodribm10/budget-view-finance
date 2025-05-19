@@ -4,7 +4,7 @@ import { SERVER_URL, API_KEY } from './config';
 /**
  * Makes an API request to the WhatsApp server
  */
-export const makeRequest = async <T>(
+export const makeRequest = async <T = any>(
   endpoint: string, 
   method: 'GET' | 'POST' | 'PUT' | 'DELETE', 
   body?: object

@@ -1,6 +1,13 @@
 
 import { makeRequest } from './apiHelpers';
 
+// Define proper types for API responses
+interface InstanceConnectionState {
+  instance?: {
+    state: 'open' | 'closed' | 'connecting';
+  };
+}
+
 /**
  * Creates a new WhatsApp instance
  */
@@ -40,7 +47,7 @@ export const fetchConnectionState = async (instanceName: string): Promise<'open'
   try {
     console.log(`Fetching connection state for: ${instanceName}`);
     
-    const data = await makeRequest(`/instance/connectionState/${encodeURIComponent(instanceName)}`, 'GET');
+    const data = await makeRequest<InstanceConnectionState>(`/instance/connectionState/${encodeURIComponent(instanceName)}`, 'GET');
     
     console.log(`Connection state for ${instanceName}:`, data);
     return data.instance?.state || 'closed';
