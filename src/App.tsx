@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -92,65 +91,63 @@ const App = () => {
   }
 
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              {/* Root path redirects to dashboard */}
-              <Route 
-                path="/" 
-                element={<Navigate to="/dashboard" replace />} 
-              />
-              
-              {/* Dashboard route using Index component */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Index />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Auth page is still available, but we should never need to redirect here */}
-              <Route path="/auth" element={<Auth />} />
-              
-              {/* Protected routes - with RLS disabled, they're always accessible */}
-              <Route 
-                path="/transacoes" 
-                element={
-                  <ProtectedRoute>
-                    <Transacoes />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/categorias" 
-                element={
-                  <ProtectedRoute>
-                    <Categorias />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/calendario" 
-                element={
-                  <ProtectedRoute>
-                    <Calendario />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* 404 route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <Routes>
+            {/* Root path redirects to dashboard */}
+            <Route 
+              path="/" 
+              element={<Navigate to="/dashboard" replace />} 
+            />
+            
+            {/* Dashboard route using Index component */}
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Auth page is still available, but we should never need to redirect here */}
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Protected routes - with RLS disabled, they're always accessible */}
+            <Route 
+              path="/transacoes" 
+              element={
+                <ProtectedRoute>
+                  <Transacoes />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/categorias" 
+              element={
+                <ProtectedRoute>
+                  <Categorias />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/calendario" 
+              element={
+                <ProtectedRoute>
+                  <Calendario />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 

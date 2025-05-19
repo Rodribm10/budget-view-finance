@@ -200,6 +200,50 @@ export type Database = {
           },
         ]
       }
+      "transacoes_d2ca2174-fb8f-41d0-9897-a71a4af474a8": {
+        Row: {
+          categoria: string | null
+          created_at: string
+          detalhes: string | null
+          estabelecimento: string | null
+          id: number
+          quando: string | null
+          tipo: string | null
+          usuario_id: string | null
+          valor: number | null
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          detalhes?: string | null
+          estabelecimento?: string | null
+          id?: number
+          quando?: string | null
+          tipo?: string | null
+          usuario_id?: string | null
+          valor?: number | null
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          detalhes?: string | null
+          estabelecimento?: string | null
+          id?: number
+          quando?: string | null
+          tipo?: string | null
+          usuario_id?: string | null
+          valor?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_d2ca2174-fb8f-41d0-9897-a71a4af474a8_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios: {
         Row: {
           created_at: string
