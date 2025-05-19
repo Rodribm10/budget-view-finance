@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -98,10 +99,20 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Always redirect to dashboard since we're using RLS disabled mode */}
+              {/* Root path redirects to dashboard */}
               <Route 
                 path="/" 
-                element={<Navigate to="/transacoes" replace />} 
+                element={<Navigate to="/dashboard" replace />} 
+              />
+              
+              {/* Dashboard route using Index component */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } 
               />
               
               {/* Auth page is still available, but we should never need to redirect here */}
@@ -131,14 +142,6 @@ const App = () => {
                     <Calendario />
                   </ProtectedRoute>
                 } 
-              />
-              
-              {/* Redirect /dashboard to /transacoes */}
-              <Route 
-                path="/dashboard" 
-                element={
-                  <Navigate to="/transacoes" replace />
-                }
               />
               
               {/* 404 route */}

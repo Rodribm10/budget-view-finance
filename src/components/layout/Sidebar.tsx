@@ -5,11 +5,11 @@ import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart } from 'lucide-react';
 
-// Modificado para separar Dashboard e Transações como itens distintos
+// Updated navItems with correct paths
 const navItems = [
   { 
     name: 'Dashboard', 
-    path: '/', // Caminho separado para o Dashboard
+    path: '/dashboard', // Changed path to '/dashboard' to be distinct from root path
     icon: <Home className="mr-2 h-5 w-5" /> 
   },
   { 
@@ -37,9 +37,8 @@ const Sidebar = ({ className }: SidebarProps) => {
   const location = useLocation();
   const [collapsed, setCollapsed] = React.useState(false);
 
-  // Função para verificar se o item está ativo baseado no caminho atual
+  // Improved function to verify if the item is active based on exact path
   const isItemActive = (path: string) => {
-    // Verificação exata do caminho
     return location.pathname === path;
   };
 
