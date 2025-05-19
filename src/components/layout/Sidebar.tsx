@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag } from 'lucide-react';
 
 // Updated navItems with correct paths
 const navItems = [
@@ -21,6 +21,11 @@ const navItems = [
     name: 'Categorias', 
     path: '/categorias', 
     icon: <PieChart className="mr-2 h-5 w-5" /> 
+  },
+  { 
+    name: 'Metas', 
+    path: '/metas', 
+    icon: <Flag className="mr-2 h-5 w-5" /> 
   },
   { 
     name: 'Calendário', 

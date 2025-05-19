@@ -120,6 +120,33 @@ export type Database = {
         }
         Relationships: []
       }
+      metas: {
+        Row: {
+          ano: number
+          created_at: string | null
+          id: string
+          mes: number
+          user_id: string
+          valor_meta: number
+        }
+        Insert: {
+          ano: number
+          created_at?: string | null
+          id?: string
+          mes: number
+          user_id: string
+          valor_meta: number
+        }
+        Update: {
+          ano?: number
+          created_at?: string | null
+          id?: string
+          mes?: number
+          user_id?: string
+          valor_meta?: number
+        }
+        Relationships: []
+      }
       transacoes: {
         Row: {
           categoria: string | null

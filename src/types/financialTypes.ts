@@ -37,3 +37,21 @@ export interface TransactionFilters {
   tipo: string;
   categoria: string;
 }
+
+export interface Meta {
+  id: string;
+  user_id: string;
+  mes: number;
+  ano: number;
+  valor_meta: number;
+  created_at?: string;
+}
+
+export interface ResultadoMeta {
+  mes: number;
+  ano: number;
+  valor_meta: number;
+  economia_real: number;
+  percentual_atingido: number;
+  meta_batida: boolean;
+}

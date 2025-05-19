@@ -128,25 +128,14 @@ const TransacoesPage = () => {
           </Card>
         </div>
 
-        {/* Split da tabela em duas colunas */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-finance-green">Receitas</h2>
-            <TransactionsTable 
-              transactions={receitas} 
-              isLoading={isLoading} 
-              showPagination={false}
-            />
-          </div>
-          
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-finance-red">Despesas</h2>
-            <TransactionsTable 
-              transactions={despesas} 
-              isLoading={isLoading} 
-              showPagination={false}
-            />
-          </div>
+        {/* Tabela completa de transações */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Todas as Transações</h2>
+          <TransactionsTable 
+            transactions={transactions} 
+            isLoading={isLoading}
+            showPagination={true}
+          />
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
