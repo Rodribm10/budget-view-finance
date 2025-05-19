@@ -85,6 +85,8 @@ const WhatsApp = () => {
                 onSetPresence={handleSetPresence}
                 onDeleteInstance={handleDeleteInstance}
                 onViewQrCode={handleViewQrCode}
+                onRefreshInstances={refreshInstances}
+                isRefreshing={isRefreshing}
               />
             </div>
           </div>

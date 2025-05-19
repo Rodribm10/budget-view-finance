@@ -1,99 +1,72 @@
+import React from "react";
+import {
+  LayoutDashboard,
+  Users,
+  Settings,
+  MessageSquare,
+  Headphones
+} from "lucide-react";
 
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag, MessageCircle } from 'lucide-react';
-
-// Updated navItems with the new WhatsApp connection page
-const navItems = [
-  { 
-    name: 'Dashboard', 
-    path: '/dashboard',
-    icon: <Home className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Transações', 
-    path: '/transacoes', 
-    icon: <DollarSign className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Categorias', 
-    path: '/categorias', 
-    icon: <PieChart className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Metas', 
-    path: '/metas', 
-    icon: <Flag className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Calendário', 
-    path: '/calendario', 
-    icon: <CalendarDays className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Conectar WhatsApp', 
-    path: '/whatsapp', 
-    icon: <MessageCircle className="mr-2 h-5 w-5" /> 
-  },
-];
+import { MainNavItem } from "@/types";
+import { siteConfig } from "@/config/site";
 
 interface SidebarProps {
-  className?: string;
+  items?: MainNavItem[]
 }
 
-const Sidebar = ({ className }: SidebarProps) => {
-  const location = useLocation();
-  const [collapsed, setCollapsed] = React.useState(false);
-
-  // Improved function to verify if the item is active based on exact path
-  const isItemActive = (path: string) => {
-    return location.pathname === path;
-  };
-
+export function Sidebar({ items }: SidebarProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col h-full bg-sidebar border-r border-border transition-all duration-300 ease-in-out",
-        collapsed ? "w-[60px]" : "w-[250px]",
-        className
-      )}
-    >
-      <div className="flex items-center justify-between p-4">
-        {!collapsed && (
-          <h1 className="font-bold text-xl text-primary">FinDash</h1>
-        )}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      <nav className="flex-1 py-4 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.path}
-            className={cn(
-              "flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors",
-              isItemActive(item.path)
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-              collapsed ? "justify-center" : "justify-start"
-            )}
-          >
-            <span className={collapsed ? "mr-0" : "mr-2"}>{item.icon}</span>
-            {!collapsed && <span>{item.name}</span>}
-          </Link>
+    <div className="flex flex-col space-y-6 w-full">
+      <a href="/" className="flex items-center space-x-2">
+        <img
+          src="/logo.png"
+          alt="Logo"
+          className="h-8 w-8 rounded-md"
+        />
+        <span className="font-bold">{siteConfig.name}</span>
+      </a>
+      <div className="flex flex-col space-y-1">
+        {items?.map((item) => (
+          item.href ? (
+            <a
+              key={item.title}
+              href={item.href}
+              className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-secondary"
+            >
+              {item.icon}
+              <span>{item.title}</span>
+            </a>
+          ) : null
         ))}
-      </nav>
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export const defaultItems: MainNavItem[] = [
+  {
+    title: "Dashboard",
+    href: "/",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+  },
+  {
+    title: "Usuários",
+    href: "/usuarios",
+    icon: <Users className="h-5 w-5" />,
+  },
+  {
+    title: "WhatsApp",
+    href: "/whatsapp",
+    icon: <MessageSquare className="h-5 w-5" />,
+  },
+  {
+    title: "Configurações",
+    href: "/configuracoes",
+    icon: <Settings className="h-5 w-5" />,
+  },
+  {
+    title: "Áudios Rodrigo",
+    href: "/rodrigo-audio",
+    icon: <Headphones className="h-5 w-5" />
+  },
+]

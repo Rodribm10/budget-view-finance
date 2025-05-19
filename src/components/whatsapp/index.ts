@@ -5,3 +5,4 @@ export { default as InstanceList } from './InstanceList';
 export { default as InstanceStats } from './InstanceStats';
 export { default as QrCodeDialog } from './QrCodeDialog';
 export { default as InstanceCard } from './InstanceCard';
+export { default as MessageWebhook } from './MessageWebhook';

@@ -1,1 +1,6 @@
+
 project_id = "tnurlgbvfsxwqgwxamni"
+
+# Enable webhook edge function without JWT verification
+[functions.whatsapp-webhook]
+verify_jwt = false
