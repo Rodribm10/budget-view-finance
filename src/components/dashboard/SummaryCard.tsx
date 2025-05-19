@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface SummaryCardProps {
   title: string;
   value: string;
+  secondaryValue?: string;
   icon: React.ReactNode;
   trend?: number;
   className?: string;
@@ -16,6 +17,7 @@ interface SummaryCardProps {
 const SummaryCard: React.FC<SummaryCardProps> = ({
   title,
   value,
+  secondaryValue,
   icon,
   trend,
   className,
@@ -41,6 +43,9 @@ const SummaryCard: React.FC<SummaryCardProps> = ({
         <div className="space-y-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className={cn("text-2xl font-bold", valueClass)}>{value}</p>
+          {secondaryValue && (
+            <p className="text-sm text-muted-foreground">{secondaryValue}</p>
+          )}
         </div>
       </CardContent>
     </Card>

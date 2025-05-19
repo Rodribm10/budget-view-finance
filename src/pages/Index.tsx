@@ -5,7 +5,7 @@ import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
-import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
+import { Wallet, ArrowUp, ArrowDown, PiggyBank, Percent, DollarSign } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { getTransacoes, getTransactionSummary, getCategorySummary, getMonthlyData } from '@/services/transacaoService';
@@ -120,6 +120,7 @@ const Dashboard = () => {
           <SummaryCard
             title="Economia"
             value={`${totals.receitas > 0 ? ((totals.saldo / totals.receitas) * 100).toFixed(1) : 0}%`}
+            secondaryValue={formatCurrency(totals.saldo)}
             icon={<PiggyBank size={20} className="text-finance-purple" />}
             iconClass="bg-finance-purple/10"
             valueClass="text-finance-purple"
