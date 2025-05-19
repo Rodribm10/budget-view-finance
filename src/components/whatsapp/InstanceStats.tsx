@@ -8,7 +8,7 @@ interface InstanceStatsProps {
 const InstanceStats = ({ instances }: InstanceStatsProps) => {
   const totalInstances = instances.length;
   const connectedInstances = instances.filter(i => i.connectionState === 'open').length;
-  const disconnectedInstances = instances.filter(i => i.connectionState === 'closed').length;
+  const disconnectedInstances = instances.filter(i => i.connectionState === 'closed' || i.status === 'disconnected').length;
   const connectingInstances = instances.filter(i => i.connectionState === 'connecting').length;
 
   if (totalInstances === 0) {

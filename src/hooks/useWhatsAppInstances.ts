@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import { 
@@ -37,26 +36,50 @@ export const useWhatsAppInstances = () => {
   }, [instances, currentUserId]);
   
   // Function to check connection status for all instances
-  const checkAllInstancesStatus = async () => {
+  const checkAllInstancesStatus = useCallback(async () => {
     if (instances.length === 0) return;
+    
+    console.log(`Checking connection status for ${instances.length} instances`);
     
     try {
       const updatedInstances = await Promise.all(
         instances.map(async (instance) => {
           try {
+            console.log(`Checking status for ${instance.instanceName}`);
             const state = await fetchConnectionState(instance.instanceName);
-            return { ...instance, connectionState: state };
+            console.log(`Status for ${instance.instanceName}: ${state}`);
+            
+            // Only update connectionState if it's different
+            if (instance.connectionState !== state) {
+              return { ...instance, connectionState: state };
+            }
+            return instance;
           } catch (error) {
             console.error(`Error checking status for ${instance.instanceName}:`, error);
-            return { ...instance, connectionState: 'closed' as const };
+            
+            // If the instance doesn't exist on the server, mark it as closed
+            if (error instanceof Error && error.message.includes("does not exist")) {
+              return { ...instance, connectionState: 'closed', status: 'disconnected' };
+            }
+            
+            // Keep the current state in case of other errors
+            return instance;
           }
         })
       );
-      setInstances(updatedInstances);
+      
+      // Only update state if there are actual changes
+      const hasChanges = JSON.stringify(updatedInstances) !== JSON.stringify(instances);
+      if (hasChanges) {
+        console.log('Updated instances after status check:', updatedInstances);
+        setInstances(updatedInstances);
+      } else {
+        console.log('No changes in instance status');
+      }
     } catch (error) {
       console.error("Error checking instances status:", error);
     }
-  };
+  }, [instances]);
 
   // Handler para atualizar a lista de instâncias do servidor
   const refreshInstances = async () => {
@@ -71,35 +94,47 @@ export const useWhatsAppInstances = () => {
 
     setIsRefreshing(true);
     try {
+      console.log("Fetching instances from server...");
       const response = await fetchAllInstances();
       console.log("Fetched instances from server:", response);
       
       if (response.instances && Array.isArray(response.instances)) {
-        // Filtra instâncias para mostrar apenas as do usuário atual
-        // E mapeia para o formato correto com userId
+        // Mapeia as instâncias do servidor para o formato correto com userId
         const serverInstances: WhatsAppInstance[] = response.instances
-          .filter(serverInstance => {
-            // Implemente sua lógica de filtro para o usuário atual (se necessário)
-            // Por padrão, vamos assumir que todas as instâncias são do usuário atual
-            return true;
-          })
           .map(serverInstance => ({
             instanceName: serverInstance.instanceName,
-            instanceId: serverInstance.instanceName,
+            instanceId: serverInstance.instanceName, // Using instanceName as the ID for consistency
             phoneNumber: serverInstance.number || 'Desconhecido',
             userId: currentUserId,
             connectionState: serverInstance.state || 'closed',
             status: serverInstance.status || 'unknown'
           }));
         
-        // Mesclando instâncias do servidor com as locais (para não perder dados locais)
-        const localInstanceIds = new Set(instances.map(i => i.instanceId));
-        const newInstances = [
-          ...instances,
-          ...serverInstances.filter(i => !localInstanceIds.has(i.instanceId))
-        ];
+        console.log("Mapped server instances:", serverInstances);
         
-        setInstances(newInstances);
+        // Identifica instâncias novas que não existem localmente
+        const localInstanceIds = new Set(instances.map(i => i.instanceId));
+        const newServerInstances = serverInstances.filter(i => !localInstanceIds.has(i.instanceId));
+        
+        // Atualiza instâncias existentes com dados do servidor
+        const updatedExistingInstances = instances.map(localInstance => {
+          const serverMatch = serverInstances.find(si => si.instanceId === localInstance.instanceId);
+          if (serverMatch) {
+            return {
+              ...localInstance,
+              connectionState: serverMatch.connectionState,
+              status: serverMatch.status
+            };
+          }
+          return localInstance;
+        });
+        
+        // Combina tudo
+        const allInstances = [...updatedExistingInstances, ...newServerInstances];
+        
+        console.log("Combined instances after refresh:", allInstances);
+        setInstances(allInstances);
+        
         toast({
           title: "Sucesso",
           description: `${serverInstances.length} instâncias encontradas no servidor`,
@@ -120,18 +155,34 @@ export const useWhatsAppInstances = () => {
     } finally {
       setIsRefreshing(false);
       // Verificar status após atualizar a lista
-      checkAllInstancesStatus();
+      await checkAllInstancesStatus();
     }
   };
 
   // Add a new instance
   const addInstance = (newInstance: WhatsAppInstance) => {
     console.log("New instance created, adding to instances list:", newInstance);
-    setInstances(prevInstances => [...prevInstances, newInstance]);
+    
+    // Verifica se já existe uma instância com o mesmo ID
+    const existingIndex = instances.findIndex(inst => inst.instanceId === newInstance.instanceId);
+    
+    if (existingIndex >= 0) {
+      // Atualiza a instância existente
+      console.log(`Instance with ID ${newInstance.instanceId} already exists, updating it`);
+      setInstances(prevInstances => 
+        prevInstances.map((instance, index) => 
+          index === existingIndex ? newInstance : instance
+        )
+      );
+    } else {
+      // Adiciona nova instância
+      setInstances(prevInstances => [...prevInstances, newInstance]);
+    }
   };
 
   // Remove an instance
   const removeInstance = (instanceId: string) => {
+    console.log(`Removing instance with ID: ${instanceId}`);
     setInstances(prevInstances => {
       const filtered = prevInstances.filter(instance => instance.instanceId !== instanceId);
       console.log("Updated instances after deletion:", filtered);
@@ -141,13 +192,17 @@ export const useWhatsAppInstances = () => {
 
   // Update an instance
   const updateInstance = (updatedInstance: WhatsAppInstance) => {
-    setInstances(prevInstances => 
-      prevInstances.map(instance => 
+    console.log(`Updating instance: ${updatedInstance.instanceName}`, updatedInstance);
+    setInstances(prevInstances => {
+      const newInstances = prevInstances.map(instance => 
         instance.instanceId === updatedInstance.instanceId 
           ? updatedInstance 
           : instance
-      )
-    );
+      );
+      
+      console.log("Updated instances:", newInstances);
+      return newInstances;
+    });
   };
 
   return {

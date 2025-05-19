@@ -56,6 +56,7 @@ const CreateInstanceForm = ({ onInstanceCreated }: CreateInstanceFormProps) => {
     setLoading(true);
 
     try {
+      console.log(`Creating instance with name ${instanceName} and number ${phoneNumber}`);
       const data = await createWhatsAppInstance(instanceName, phoneNumber);
       
       console.log('API response for create instance:', data);
@@ -63,7 +64,7 @@ const CreateInstanceForm = ({ onInstanceCreated }: CreateInstanceFormProps) => {
       // Create new instance object with user ID
       const newInstance: WhatsAppInstance = {
         instanceName,
-        instanceId: data.instance?.instanceId || instanceName, // Use instanceName as fallback ID
+        instanceId: instanceName, // Use instanceName as the ID for consistency
         phoneNumber,
         userId: currentUserId, // Associate with current user
         status: data.instance?.status || 'created',

@@ -141,6 +141,27 @@ const InstanceCard = ({
     );
   };
 
+  // Determina o estado de conexão a ser exibido
+  const getConnectionStatus = () => {
+    // Se o status é 'disconnected', 'error', 'destroyed', ou não está definido, consideramos como desconectado
+    if (instance.status === 'disconnected' || 
+        instance.status === 'error' || 
+        instance.status === 'destroyed' || 
+        !instance.status) {
+      return 'closed';
+    }
+    
+    // Se o connectionState já está definido como 'open', manter
+    if (instance.connectionState === 'open') {
+      return 'open';
+    }
+    
+    // Em outros casos, usar o valor atual do connectionState
+    return instance.connectionState || 'closed';
+  };
+
+  const connectionStatus = getConnectionStatus();
+
   return (
     <>
       <Card className="h-full">
@@ -154,10 +175,15 @@ const InstanceCard = ({
               <span>{instance.phoneNumber}</span>
             </div>
             <div className="flex items-center text-sm">
-              {instance.connectionState === 'open' ? (
+              {connectionStatus === 'open' ? (
                 <Badge variant="outline" className="flex items-center gap-1 text-green-500 border-green-300">
                   <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
                   Status: Conectado
+                </Badge>
+              ) : connectionStatus === 'connecting' ? (
+                <Badge variant="outline" className="flex items-center gap-1 text-orange-500 border-orange-300">
+                  <span className="inline-block w-2 h-2 rounded-full bg-orange-500"></span>
+                  Status: Conectando
                 </Badge>
               ) : (
                 <Badge variant="outline" className="flex items-center gap-1 text-red-500 border-red-300">

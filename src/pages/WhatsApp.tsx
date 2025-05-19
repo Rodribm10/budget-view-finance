@@ -8,8 +8,10 @@ import InstanceStats from '@/components/whatsapp/InstanceStats';
 import QrCodeDialog from '@/components/whatsapp/QrCodeDialog';
 import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
+import { useToast } from '@/hooks/use-toast';
 
 const WhatsApp = () => {
+  const { toast } = useToast();
   const { 
     instances, 
     isRefreshing,
@@ -33,17 +35,20 @@ const WhatsApp = () => {
 
   // Set up periodic status checks
   useEffect(() => {
+    console.log("Setting up periodic status checks, current instances:", instances.length);
+    
     // Check status initially
     if (instances.length > 0) {
       checkAllInstancesStatus();
     }
 
-    // Set up interval for periodic checks (every 60 seconds)
+    // Set up interval for periodic checks (every 30 seconds)
     const interval = setInterval(() => {
       if (instances.length > 0) {
+        console.log("Running periodic status check");
         checkAllInstancesStatus();
       }
-    }, 60000); // 60 seconds
+    }, 30000); // 30 seconds
 
     // Clean up interval when component unmounts
     return () => {
@@ -52,6 +57,21 @@ const WhatsApp = () => {
       }
     };
   }, [instances.length, checkAllInstancesStatus]);
+
+  // Run refresh instances on initial load to get server instances
+  useEffect(() => {
+    const initialLoad = async () => {
+      if (instances.length === 0) {
+        try {
+          await refreshInstances();
+        } catch (error) {
+          console.error("Error on initial instance refresh:", error);
+        }
+      }
+    };
+    
+    initialLoad();
+  }, []);
 
   // Handler for when a new instance is created
   const handleInstanceCreated = async (newInstance: WhatsAppInstance) => {
@@ -64,14 +84,31 @@ const WhatsApp = () => {
     }
 
     // Trigger a status check for all instances
-    await checkAllInstancesStatus();
+    try {
+      await checkAllInstancesStatus();
+    } catch (error) {
+      console.error("Error checking status after instance creation:", error);
+      toast({
+        title: "Aviso",
+        description: "Instância criada, mas não foi possível verificar o status. Tente atualizar a lista manualmente.",
+        variant: "default",
+      });
+    }
   };
 
   // Handler for when an instance is deleted
   const handleDeleteInstanceWrapper = (instanceId: string) => {
+    console.log(`Instance deletion requested for ID: ${instanceId}`);
     const instanceToDelete = instances.find(i => i.instanceId === instanceId);
     if (instanceToDelete) {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
+    } else {
+      console.error(`Instance with ID ${instanceId} not found for deletion`);
+      toast({
+        title: "Erro",
+        description: "Instância não encontrada para exclusão",
+        variant: "destructive",
+      });
     }
   };
 
