@@ -3,13 +3,13 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag, MessageCircle } from 'lucide-react';
 
-// Updated navItems with correct paths
+// Updated navItems with the new WhatsApp connection page
 const navItems = [
   { 
     name: 'Dashboard', 
-    path: '/dashboard', // Changed path to '/dashboard' to be distinct from root path
+    path: '/dashboard',
     icon: <Home className="mr-2 h-5 w-5" /> 
   },
   { 
@@ -31,6 +31,11 @@ const navItems = [
     name: 'Calendário', 
     path: '/calendario', 
     icon: <CalendarDays className="mr-2 h-5 w-5" /> 
+  },
+  { 
+    name: 'Conectar WhatsApp', 
+    path: '/whatsapp', 
+    icon: <MessageCircle className="mr-2 h-5 w-5" /> 
   },
 ];
 

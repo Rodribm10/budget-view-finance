@@ -7,6 +7,7 @@ import Calendario from '@/pages/Calendario';
 import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import Metas from '@/pages/Metas';
+import WhatsApp from '@/pages/WhatsApp';
 import { Toaster } from '@/components/ui/toaster';
 import './App.css';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -39,6 +40,11 @@ function App() {
         <Route path="/metas" element={
           <ProtectedRoute>
             <Metas />
+          </ProtectedRoute>
+        } />
+        <Route path="/whatsapp" element={
+          <ProtectedRoute>
+            <WhatsApp />
           </ProtectedRoute>
         } />
         <Route path="/login" element={<Auth />} />
