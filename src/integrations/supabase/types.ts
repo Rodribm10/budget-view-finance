@@ -154,6 +154,7 @@ export type Database = {
           detalhes: string | null
           estabelecimento: string | null
           id: number
+          login: string | null
           quando: string | null
           tipo: string | null
           user: string | null
@@ -165,6 +166,7 @@ export type Database = {
           detalhes?: string | null
           estabelecimento?: string | null
           id?: number
+          login?: string | null
           quando?: string | null
           tipo?: string | null
           user?: string | null
@@ -176,6 +178,7 @@ export type Database = {
           detalhes?: string | null
           estabelecimento?: string | null
           id?: number
+          login?: string | null
           quando?: string | null
           tipo?: string | null
           user?: string | null
