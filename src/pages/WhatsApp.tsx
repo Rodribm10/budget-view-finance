@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -47,13 +46,16 @@ const WhatsApp = () => {
 
   // Load saved instances from localStorage on component mount and filter by current user
   useEffect(() => {
+    const userId = localStorage.getItem('userId') || '';
+    setCurrentUserId(userId);
+    
     const savedInstances = localStorage.getItem('whatsappInstances');
-    if (savedInstances && currentUserId) {
+    if (savedInstances && userId) {
       try {
         const allInstances = JSON.parse(savedInstances);
         // Filter instances to only show those belonging to the current user
         const userInstances = allInstances.filter(
-          (instance: WhatsAppInstance) => instance.userId === currentUserId
+          (instance: WhatsAppInstance) => instance.userId === userId
         );
         setInstances(userInstances);
         
@@ -63,7 +65,7 @@ const WhatsApp = () => {
         console.error("Error parsing saved instances:", error);
       }
     }
-  }, [currentUserId]); // Re-run when currentUserId changes
+  }, []); // Only run once on mount
 
   // Save instances to localStorage whenever they change
   useEffect(() => {
@@ -251,12 +253,12 @@ const WhatsApp = () => {
         userId: currentUserId, // Associate with current user
         status: data.instance?.status || 'created',
         qrcode: data.qrcode?.base64 || null,
-        connectionState: 'connecting'
+        connectionState: 'closed' // Default to closed/disconnected
       };
       
       console.log('New instance created:', newInstance);
       
-      // Add new instance to the list
+      // Add new instance to the list - use the function form to guarantee correct state update
       setInstances(prevInstances => [...prevInstances, newInstance]);
       
       toast({
@@ -481,7 +483,15 @@ const WhatsApp = () => {
         )}
         
         {/* QR Code Dialog */}
-        <Dialog open={qrDialogOpen} onOpenChange={setQrDialogOpen}>
+        <Dialog open={qrDialogOpen} onOpenChange={(open) => {
+          // When dialog closes, ensure the instance is still in the list
+          setQrDialogOpen(open);
+          
+          // After dialog closes, trigger status check to update connection state
+          if (!open && instances.length > 0) {
+            checkAllInstancesStatus();
+          }
+        }}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Conectar WhatsApp - {activeInstance?.instanceName}</DialogTitle>
