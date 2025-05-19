@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   LayoutDashboard,
@@ -11,12 +12,13 @@ import { MainNavItem } from "@/types";
 import { siteConfig } from "@/config/site";
 
 interface SidebarProps {
-  items?: MainNavItem[]
+  items?: MainNavItem[];
+  className?: string;
 }
 
-export function Sidebar({ items }: SidebarProps) {
+export function Sidebar({ items, className = "" }: SidebarProps) {
   return (
-    <div className="flex flex-col space-y-6 w-full">
+    <div className={`flex flex-col space-y-6 w-full ${className}`}>
       <a href="/" className="flex items-center space-x-2">
         <img
           src="/logo.png"
@@ -40,7 +42,7 @@ export function Sidebar({ items }: SidebarProps) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export const defaultItems: MainNavItem[] = [
@@ -69,4 +71,4 @@ export const defaultItems: MainNavItem[] = [
     href: "/rodrigo-audio",
     icon: <Headphones className="h-5 w-5" />
   },
-]
+];
