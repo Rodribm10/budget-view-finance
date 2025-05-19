@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/layout/Layout';
 import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
-import { Wallet, ArrowUp, ArrowDown, PiggyBank, Percent, DollarSign } from 'lucide-react';
+import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { getTransacoes, getTransactionSummary, getCategorySummary, getMonthlyData } from '@/services/transacaoService';
@@ -18,8 +18,8 @@ const Dashboard = () => {
   const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0 });
   const { toast } = useToast();
 
-  // Atualizar o userId no localStorage para garantir consistência
-  useEffect(() => {
+  // Use useCallback to ensure this function doesn't change on every render
+  const setupUserId = useCallback(() => {
     const storedUserId = localStorage.getItem('userId');
     const finDashUser = localStorage.getItem('finDashUser');
     
@@ -31,6 +31,12 @@ const Dashboard = () => {
     }
   }, []);
 
+  // Run the userId setup only once
+  useEffect(() => {
+    setupUserId();
+  }, [setupUserId]);
+
+  // Load data only once when component mounts
   useEffect(() => {
     async function loadData() {
       try {
@@ -74,7 +80,9 @@ const Dashboard = () => {
     }
     
     loadData();
-  }, [toast]);
+    // Ensure toast doesn't cause re-renders by removing it from dependencies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
