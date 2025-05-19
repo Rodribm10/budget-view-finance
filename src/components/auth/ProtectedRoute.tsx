@@ -29,6 +29,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         } else {
           console.log('Nenhuma sessão encontrada, redirecionando para login');
           setIsAuthenticated(false);
+          
+          // Toast message is moved here inside useEffect, not during render
+          toast({
+            title: "Autenticação necessária",
+            description: "Por favor, faça login para acessar esta página"
+          });
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
@@ -39,7 +45,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     };
     
     checkAuthentication();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);  // Remove toast from dependencies to prevent re-renders
 
   // Mostrar estado de carregamento
   if (isLoading) {
@@ -48,10 +55,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   
   // Se não estiver autenticado, redirecionar para a página de login
   if (isAuthenticated === false) {
-    toast({
-      title: "Autenticação necessária",
-      description: "Por favor, faça login para acessar esta página"
-    });
+    // Remove the toast from here as it's causing infinite re-renders
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
