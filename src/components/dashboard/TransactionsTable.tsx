@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Transaction } from '@/types/financialTypes';
@@ -236,13 +237,14 @@ const TransactionsTable = ({
       
       {!showPagination && filteredTransactions.length > itemsPerPage && (
         <div className="flex justify-center pt-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => window.location.href = '/transacoes'}
-          >
-            Ver todas as transações
-          </Button>
+          <Link to="/transacoes">
+            <Button 
+              variant="outline" 
+              size="sm"
+            >
+              Ver todas as transações
+            </Button>
+          </Link>
         </div>
       )}
     </div>

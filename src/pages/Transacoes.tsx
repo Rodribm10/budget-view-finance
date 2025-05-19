@@ -45,7 +45,7 @@ const TransacoesPage = () => {
 
   useEffect(() => {
     loadTransactions();
-  }, [toast]);
+  }, []);
 
   const handleTransactionSuccess = () => {
     setIsDialogOpen(false);
