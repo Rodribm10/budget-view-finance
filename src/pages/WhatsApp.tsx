@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { MessageCircle, QrCode, RefreshCw, Smartphone } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
 
 interface WhatsAppInstance {
   instanceName: string;
@@ -16,6 +17,7 @@ interface WhatsAppInstance {
   phoneNumber: string;
   status?: string;
   qrcode?: string;
+  connectionState?: 'open' | 'closed' | 'connecting';
 }
 
 const WhatsApp = () => {
@@ -33,6 +35,7 @@ const WhatsApp = () => {
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [statusCheckInterval, setStatusCheckInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Load saved instances from localStorage on component mount
   useEffect(() => {
@@ -52,6 +55,72 @@ const WhatsApp = () => {
       localStorage.setItem('whatsappInstances', JSON.stringify(instances));
     }
   }, [instances]);
+
+  // Set up periodic status checks
+  useEffect(() => {
+    // Check status initially
+    if (instances.length > 0) {
+      checkAllInstancesStatus();
+    }
+
+    // Set up interval for periodic checks (every 60 seconds)
+    const interval = setInterval(() => {
+      if (instances.length > 0) {
+        checkAllInstancesStatus();
+      }
+    }, 60000); // 60 seconds
+
+    setStatusCheckInterval(interval);
+
+    // Clean up interval when component unmounts
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [instances.length]);
+
+  // Function to check connection status for all instances
+  const checkAllInstancesStatus = async () => {
+    const updatedInstances = await Promise.all(
+      instances.map(async (instance) => {
+        try {
+          const state = await fetchConnectionState(instance.instanceName);
+          return { ...instance, connectionState: state };
+        } catch (error) {
+          console.error(`Error checking status for ${instance.instanceName}:`, error);
+          return { ...instance, connectionState: 'closed' };
+        }
+      })
+    );
+    setInstances(updatedInstances);
+  };
+
+  // Function to fetch connection state for an instance
+  const fetchConnectionState = async (instanceName: string): Promise<'open' | 'closed' | 'connecting'> => {
+    try {
+      const serverUrl = "evolutionapi2.innova1001.com.br";
+      const apiKey = "beeb77fbd7f48f91db2cd539a573c130";
+
+      const response = await fetch(`https://${serverUrl}/instance/connectionState/${encodeURIComponent(instanceName)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': apiKey
+        }
+      });
+
+      if (!response.ok) {
+        return 'closed';
+      }
+
+      const data = await response.json();
+      return data.instance?.state || 'closed';
+    } catch (error) {
+      console.error("Error fetching connection state:", error);
+      return 'closed';
+    }
+  };
 
   const createInstance = async () => {
     // Validate form fields
@@ -103,10 +172,11 @@ const WhatsApp = () => {
       // Create new instance object
       const newInstance: WhatsAppInstance = {
         instanceName,
-        instanceId: data.instanceId,
+        instanceId: data.instance.instanceId,
         phoneNumber,
-        status: data.status,
-        qrcode: data.qrcode
+        status: data.instance.status,
+        qrcode: data.qrcode,
+        connectionState: 'connecting'
       };
       
       // Add new instance to the list
@@ -124,9 +194,12 @@ const WhatsApp = () => {
       // If there's a QR code in the response, show it
       if (data.qrcode) {
         setActiveInstance(newInstance);
-        setQrCodeData(data.qrcode);
+        setQrCodeData(data.qrcode.base64);
         setQrDialogOpen(true);
       }
+
+      // Trigger a status check for all instances
+      checkAllInstancesStatus();
     } catch (error) {
       console.error("Error creating WhatsApp instance:", error);
       toast({
@@ -269,12 +342,19 @@ const WhatsApp = () => {
                         <Smartphone className="h-4 w-4 mr-2 text-gray-500" />
                         <span>{instance.phoneNumber}</span>
                       </div>
-                      {instance.status && (
-                        <div className="flex items-center text-sm">
-                          <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-                          <span>Status: {instance.status}</span>
-                        </div>
-                      )}
+                      <div className="flex items-center text-sm">
+                        {instance.connectionState === 'open' ? (
+                          <Badge variant="success" className="flex items-center gap-1">
+                            <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+                            Status: Conectado
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="flex items-center gap-1 text-red-500 border-red-300">
+                            <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span>
+                            Status: Desconectado
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
