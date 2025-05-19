@@ -166,7 +166,8 @@ const WhatsApp = () => {
 
       // Using the "code" field from the response as the QR code data
       if (data && data.code) {
-        setQrCodeData(data.code);
+        // Save the base64 image data directly - it already contains the data:image prefix
+        setQrCodeData(data.base64);
       } else {
         setQrError("QR Code não disponível. A instância pode já estar conectada ou houve um erro na API.");
       }
