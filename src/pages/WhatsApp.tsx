@@ -76,7 +76,7 @@ const WhatsApp = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
-            <CreateInstanceForm userId={currentUserId} onInstanceCreated={addInstance} />
+            <CreateInstanceForm onInstanceCreated={addInstance} />
             <div className="mt-8">
               <InstanceList 
                 instances={instances}
@@ -99,6 +99,7 @@ const WhatsApp = () => {
             setOpen={setQrDialogOpen} 
             instanceName={activeInstance.instanceName}
             phoneNumber={activeInstance.phoneNumber}
+            onStatusCheck={checkAllInstancesStatus}
           />
         )}
       </div>
