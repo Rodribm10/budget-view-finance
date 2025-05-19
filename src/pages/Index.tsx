@@ -18,6 +18,19 @@ const Dashboard = () => {
   const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0 });
   const { toast } = useToast();
 
+  // Atualizar o userId no localStorage para garantir consistência
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    const finDashUser = localStorage.getItem('finDashUser');
+    
+    if (!storedUserId && finDashUser) {
+      localStorage.setItem('userId', finDashUser);
+    } else if (!storedUserId && !finDashUser) {
+      const defaultId = '9f267008-9128-4a2f-b730-de0a0b5602a9';
+      localStorage.setItem('userId', defaultId);
+    }
+  }, []);
+
   useEffect(() => {
     async function loadData() {
       try {

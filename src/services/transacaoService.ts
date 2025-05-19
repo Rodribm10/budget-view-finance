@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Transaction } from "@/types/financialTypes";
+import { Transaction, CategorySummary } from "@/types/financialTypes";
 
 export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Buscando transações do Supabase...");
@@ -84,7 +83,7 @@ export async function getTransactionSummary() {
   }
 }
 
-export async function getCategorySummary(tipoFiltro: string = 'all') {
+export async function getCategorySummary(tipoFiltro: string = 'despesa') {
   console.log(`Buscando resumo de categorias para tipo: ${tipoFiltro}`);
   
   // Obter o ID do usuário atual do localStorage
@@ -117,7 +116,7 @@ export async function getCategorySummary(tipoFiltro: string = 'all') {
     // Agrupar por categoria
     const categorias: Record<string, number> = {};
     filteredData.forEach((item: any) => {
-      if (item.categoria && item.valor) {
+      if (item.valor) {
         const categoriaKey = item.categoria || 'Outros';
         if (!categorias[categoriaKey]) {
           categorias[categoriaKey] = 0;

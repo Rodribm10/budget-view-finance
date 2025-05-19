@@ -28,6 +28,19 @@ const CategoriasPage = () => {
   const [tipoFiltro, setTipoFiltro] = useState<string>('despesa');
   const { toast } = useToast();
 
+  // Atualizar o userId no localStorage para garantir consistência
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId');
+    const finDashUser = localStorage.getItem('finDashUser');
+    
+    if (!storedUserId && finDashUser) {
+      localStorage.setItem('userId', finDashUser);
+    } else if (!storedUserId && !finDashUser) {
+      const defaultId = '9f267008-9128-4a2f-b730-de0a0b5602a9';
+      localStorage.setItem('userId', defaultId);
+    }
+  }, []);
+
   const loadCategories = async (tipo: string) => {
     try {
       setIsLoading(true);

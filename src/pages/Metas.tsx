@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { ResultadoMeta } from '@/types/financialTypes';
 import { useToast } from '@/components/ui/use-toast';
 import { calcularResultadosMetas, getMeta } from '@/services/metasService';
-import { PlusCircle, Check } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -29,13 +29,24 @@ const MetasPage = () => {
   const [valorMetaAtual, setValorMetaAtual] = useState(0);
 
   useEffect(() => {
-    // Obter userId do localStorage (temporário até termos autenticação completa)
-    const user = localStorage.getItem('finDashUser');
-    if (user) {
-      setUserId(user);
-      loadData(user);
+    // Obter userId armazenado no localStorage
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      setUserId(storedUserId);
+      loadData(storedUserId);
     } else {
-      setIsLoading(false);
+      // Tentar usar finDashUser como fallback
+      const finDashUser = localStorage.getItem('finDashUser');
+      if (finDashUser) {
+        setUserId(finDashUser);
+        loadData(finDashUser);
+      } else {
+        // Caso não encontre nenhum ID de usuário, usar um ID padrão temporário
+        const defaultId = '9f267008-9128-4a2f-b730-de0a0b5602a9';
+        localStorage.setItem('userId', defaultId);
+        setUserId(defaultId);
+        loadData(defaultId);
+      }
     }
   }, []);
 

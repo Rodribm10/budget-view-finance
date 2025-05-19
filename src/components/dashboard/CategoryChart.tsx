@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, Label } from 'recharts';
 import { CategorySummary } from '@/types/financialTypes';
 
 interface CategoryChartProps {
@@ -13,10 +13,10 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
   // Filter out any categories with zero value to prevent rendering issues
   const validCategories = categories.filter(cat => cat.valor > 0);
   
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: any) => {
-    if (percent === 0) return null;
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }: any) => {
+    if (percent < 0.05) return null; // Não mostrar texto para fatias muito pequenas
     
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.7;
     const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
     const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
   
@@ -25,7 +25,7 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
         x={x} 
         y={y} 
         fill="#fff" 
-        textAnchor="middle" 
+        textAnchor={x > cx ? 'start' : 'end'}
         dominantBaseline="central"
         className="text-xs font-medium"
       >
@@ -39,6 +39,38 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
       style: 'currency',
       currency: 'BRL',
     }).format(value);
+  };
+
+  const renderCustomLegend = (props: any) => {
+    const { payload } = props;
+    
+    return (
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs">
+        {payload.map((entry: any, index: number) => (
+          <div key={`item-${index}`} className="flex items-center">
+            <div
+              className="w-3 h-3 mr-2"
+              style={{ backgroundColor: entry.color }}
+            />
+            <span className="truncate">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderCustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border p-2 rounded shadow-lg">
+          <p className="font-medium">{payload[0].name}</p>
+          <p>{formatCurrency(payload[0].value)}</p>
+          <p>{`${(payload[0].payload.percentage * 100).toFixed(1)}%`}</p>
+        </div>
+      );
+    }
+  
+    return null;
   };
 
   return (
@@ -69,16 +101,14 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="valor"
+                  nameKey="categoria"
                 >
                   {validCategories.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip 
-                  formatter={(value: number) => formatCurrency(value)}
-                  labelFormatter={(index) => validCategories[index].categoria}
-                />
-                <Legend />
+                <Tooltip content={renderCustomTooltip} />
+                <Legend content={renderCustomLegend} />
               </PieChart>
             </ResponsiveContainer>
           </div>

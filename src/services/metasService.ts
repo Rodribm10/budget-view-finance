@@ -1,23 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-export interface Meta {
-  id: string;
-  user_id: string;
-  mes: number;
-  ano: number;
-  valor_meta: number;
-  created_at?: string;
-}
-
-export interface ResultadoMeta {
-  mes: number;
-  ano: number;
-  valor_meta: number;
-  economia_real: number;
-  percentual_atingido: number;
-  meta_batida: boolean;
-}
+import { Meta, ResultadoMeta } from '@/types/financialTypes';
 
 // Obter todas as metas do usuário
 export const getMetas = async (userId: string): Promise<Meta[]> => {
@@ -55,9 +38,14 @@ export const getMeta = async (userId: string, mes: number, ano: number): Promise
 };
 
 // Criar ou atualizar meta
-export const salvarMeta = async (meta: Partial<Meta>): Promise<Meta> => {
+export const salvarMeta = async (meta: {
+  user_id: string,
+  mes: number,
+  ano: number,
+  valor_meta: number
+}): Promise<Meta> => {
   // Verificar se já existe uma meta para este mês/ano
-  const existingMeta = await getMeta(meta.user_id as string, meta.mes as number, meta.ano as number);
+  const existingMeta = await getMeta(meta.user_id, meta.mes, meta.ano);
   
   if (existingMeta) {
     // Atualizar meta existente
@@ -128,11 +116,11 @@ export const calcularResultadosMetas = async (userId: string): Promise<Resultado
     
     // Calcular receitas e despesas do mês
     const receitas = transacoes
-      .filter(t => t.tipo === 'receita')
+      .filter(t => t.tipo?.toLowerCase() === 'receita')
       .reduce((sum, t) => sum + Number(t.valor || 0), 0);
     
     const despesas = transacoes
-      .filter(t => t.tipo === 'despesa')
+      .filter(t => t.tipo?.toLowerCase() === 'despesa')
       .reduce((sum, t) => sum + Number(t.valor || 0), 0);
     
     // Calcular economia real
