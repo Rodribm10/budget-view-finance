@@ -62,7 +62,7 @@ export const fetchConnectionState = async (instanceName: string): Promise<'open'
     }
 
     const data = await response.json();
-    return data.instance?.state || 'closed' as 'open' | 'closed' | 'connecting';
+    return data.instance?.state || 'closed';
   } catch (error) {
     console.error("Error fetching connection state:", error);
     return 'closed';
@@ -92,23 +92,29 @@ export const saveInstancesToLocalStorage = (
   // Add current user's instances to the array
   const updatedInstances = [...allInstances, ...instances];
   localStorage.setItem('whatsappInstances', JSON.stringify(updatedInstances));
+  console.log('All WhatsApp instances saved to localStorage:', updatedInstances);
 };
 
 export const loadInstancesFromLocalStorage = (
   userId: string
 ): WhatsAppInstance[] => {
   const savedInstances = localStorage.getItem('whatsappInstances');
+  console.log('Raw saved instances from localStorage:', savedInstances);
+  
   if (savedInstances && userId) {
     try {
       const allInstances = JSON.parse(savedInstances);
       // Filter instances to only show those belonging to the current user
-      return allInstances.filter(
+      const userInstances = allInstances.filter(
         (instance: WhatsAppInstance) => instance.userId === userId
       );
+      console.log(`Found ${userInstances.length} instances for user ${userId}:`, userInstances);
+      return userInstances;
     } catch (error) {
       console.error("Error parsing saved instances:", error);
       return [];
     }
   }
+  console.log(`No instances found for user ${userId}`);
   return [];
 };

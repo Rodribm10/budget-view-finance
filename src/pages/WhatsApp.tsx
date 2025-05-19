@@ -24,20 +24,21 @@ const WhatsApp = () => {
   // Get current user ID and load instances on component mount
   useEffect(() => {
     const userId = localStorage.getItem('userId') || '';
+    console.log("Current userId from localStorage:", userId);
     setCurrentUserId(userId);
     
     if (userId) {
       const userInstances = loadInstancesFromLocalStorage(userId);
-      setInstances(userInstances);
       console.log('Loaded user instances:', userInstances);
+      setInstances(userInstances);
     }
   }, []); // Only run once on mount
 
   // Save instances to localStorage whenever they change
   useEffect(() => {
-    if (instances.length > 0 && currentUserId) {
+    if (currentUserId) {
+      console.log('Saving instances to localStorage:', instances);
       saveInstancesToLocalStorage(instances, currentUserId);
-      console.log('Saved instances to localStorage:', instances);
     }
   }, [instances, currentUserId]);
 
@@ -114,6 +115,8 @@ const WhatsApp = () => {
 
   // Handler for when a new instance is created
   const handleInstanceCreated = async (newInstance: WhatsAppInstance) => {
+    console.log("New instance created, adding to instances list:", newInstance);
+    
     // Add new instance to the list - use the function form to guarantee correct state update
     setInstances(prevInstances => [...prevInstances, newInstance]);
     
@@ -150,7 +153,13 @@ const WhatsApp = () => {
 
   // Handler for when an instance is deleted
   const handleDeleteInstance = (instanceId: string) => {
-    setInstances(prevInstances => prevInstances.filter(instance => instance.instanceId !== instanceId));
+    console.log(`Deleting instance with ID: ${instanceId}`);
+    setInstances(prevInstances => {
+      const filtered = prevInstances.filter(instance => instance.instanceId !== instanceId);
+      console.log("Updated instances after deletion:", filtered);
+      return filtered;
+    });
+    
     // If we're viewing QR code for this instance, close the dialog
     if (activeInstance?.instanceId === instanceId) {
       setQrDialogOpen(false);
