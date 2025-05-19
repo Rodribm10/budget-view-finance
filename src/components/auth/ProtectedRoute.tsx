@@ -20,16 +20,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       setIsLoading(true);
       
       try {
-        // Verificar se temos um userId armazenado
-        const userId = localStorage.getItem('userId');
-        
-        // Verificar se temos uma sessão válida com o Supabase
+        // Verificar se temos uma sessão válida com o Supabase primeiro
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
           console.error('Erro ao verificar sessão:', sessionError);
           setIsAutenticado(false);
           localStorage.setItem('autenticado', 'false');
+          localStorage.removeItem('userId');
           
           toast({
             title: "Erro de autenticação",
@@ -51,14 +49,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             console.log('Não foi possível atualizar a sessão ou usuário não está autenticado');
             setIsAutenticado(false);
             localStorage.setItem('autenticado', 'false');
+            localStorage.removeItem('userId');
             
-            if (userId) {
-              toast({
-                title: "Sessão expirada",
-                description: "Sua sessão expirou. Por favor, faça login novamente",
-                variant: "destructive"
-              });
-            }
+            toast({
+              title: "Sessão expirada",
+              description: "Sua sessão expirou. Por favor, faça login novamente",
+              variant: "destructive"
+            });
             
             setIsLoading(false);
             return;
@@ -67,6 +64,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           console.log('Sessão atualizada com sucesso');
           setIsAutenticado(true);
           localStorage.setItem('autenticado', 'true');
+          
+          // Garantir que o userId esteja atualizado
+          localStorage.setItem('userId', refreshData.session.user.id);
+          
           setIsLoading(false);
           return;
         }
@@ -74,15 +75,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         // Se chegou aqui, temos uma sessão válida
         setIsAutenticado(true);
         localStorage.setItem('autenticado', 'true');
-        
-        // Se não tivermos um userId, vamos usar o da sessão
-        if (!userId && sessionData.session.user.id) {
-          localStorage.setItem('userId', sessionData.session.user.id);
-        }
+        localStorage.setItem('userId', sessionData.session.user.id);
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
         setIsAutenticado(false);
         localStorage.setItem('autenticado', 'false');
+        localStorage.removeItem('userId');
         
         toast({
           title: "Erro inesperado",
@@ -112,6 +110,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       } else if (event === 'TOKEN_REFRESHED' && session) {
         setIsAutenticado(true);
         localStorage.setItem('autenticado', 'true');
+        localStorage.setItem('userId', session.user.id);
       }
     });
     

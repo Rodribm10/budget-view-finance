@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -105,7 +104,7 @@ const App = () => {
         setIsAutenticado(true);
         localStorage.setItem('autenticado', 'true');
         localStorage.setItem('userId', session.user.id);
-      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      } else if (event === 'SIGNED_OUT') {
         setIsAutenticado(false);
         localStorage.setItem('autenticado', 'false');
         localStorage.removeItem('userId');

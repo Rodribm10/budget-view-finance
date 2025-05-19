@@ -57,58 +57,38 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
     }
   });
 
-  async function revalidateSession() {
-    try {
-      // Verificar sessão com Supabase
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !sessionData.session) {
-        console.error('Sessão inválida, tentando atualizar...');
-        
-        // Tentar atualizar a sessão
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-        
-        if (refreshError || !refreshData.session) {
-          // Se não conseguir atualizar, redirecionar para login
-          console.error('Não foi possível atualizar a sessão:', refreshError);
-          toast({
-            title: "Sessão expirada",
-            description: "Sua sessão expirou. Por favor, faça login novamente.",
-            variant: "destructive"
-          });
-          
-          // Limpar o estado de autenticação
-          localStorage.setItem('autenticado', 'false');
-          
-          // Redirecionar para a página de login após um pequeno atraso
-          setTimeout(() => {
-            navigate('/auth');
-          }, 1000);
-          
-          return false;
-        }
-        
-        console.log('Sessão atualizada com sucesso');
-        return true;
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Erro ao verificar sessão:', error);
-      return false;
-    }
-  }
-
   async function onSubmit(data: TransactionFormValues) {
     setIsSubmitting(true);
     
     try {
-      // Verificar se a sessão está válida
-      const sessionValid = await revalidateSession();
-      if (!sessionValid) {
-        setIsSubmitting(false);
+      // Obter a sessão atual primeiro
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        toast({
+          title: "Erro de autenticação",
+          description: "Ocorreu um problema ao verificar sua autenticação. Por favor, faça login novamente.",
+          variant: "destructive"
+        });
+        navigate('/auth');
         return;
       }
+      
+      // Verificar se temos uma sessão válida
+      if (!sessionData.session) {
+        toast({
+          title: "Sessão expirada",
+          description: "Sua sessão expirou. Por favor, faça login novamente.",
+          variant: "destructive"
+        });
+        navigate('/auth');
+        return;
+      }
+      
+      const userId = sessionData.session.user.id;
+      
+      // Atualizar o userId no localStorage para garantir consistência
+      localStorage.setItem('userId', userId);
       
       const valorNumerico = parseFloat(data.valor.replace(',', '.'));
       
@@ -118,19 +98,6 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
           description: "O valor precisa ser um número válido",
           variant: "destructive"
         });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Obtém o ID do usuário logado
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        toast({
-          title: "Erro de autenticação",
-          description: "Você precisa estar logado para adicionar transações",
-          variant: "destructive"
-        });
-        setIsSubmitting(false);
         return;
       }
       
@@ -144,15 +111,12 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       
       console.log(`Inserindo transação na tabela ${tabelaTransacoes} para o usuário ${userId}`);
       
-      // Obtém a sessão atual para acessar o token JWT - nova solicitação após validação
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      // Insere a transação na tabela específica do usuário
+      // Insere a transação na tabela específica do usuário usando o userId da sessão atual
       const { error } = await supabase
         .from(tabelaTransacoes as any)
         .insert([
           {
-            usuario_id: userId,
+            usuario_id: userId,  // Usar o userId da sessão atual, não do localStorage
             estabelecimento: data.estabelecimento,
             valor: valorFinal,
             detalhes: data.detalhes,
@@ -165,7 +129,7 @@ export function TransactionForm({ onSuccess, onCancel }: TransactionFormProps) {
       if (error) {
         console.error('Erro ao salvar transação:', error);
         
-        if (error.message.includes('JWTClaimsSetVerificationException')) {
+        if (error.message.includes('authentication')) {
           toast({
             title: "Erro de autenticação",
             description: "Sua sessão expirou. Por favor, faça login novamente.",
