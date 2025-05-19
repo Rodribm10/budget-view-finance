@@ -24,94 +24,59 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  const [isAutenticado, setIsAutenticado] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const verificarAutenticacao = async () => {
+    const checkAuthentication = async () => {
       try {
-        // Verificar se temos um userId armazenado
-        const userId = localStorage.getItem('userId');
-        const autenticadoStorage = localStorage.getItem('autenticado') === 'true';
+        // Get stored authentication status
+        const storedAuth = localStorage.getItem('autenticado') === 'true';
         
-        // Verificar se temos uma sessão válida com o Supabase
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          console.error('Erro ao verificar sessão:', sessionError);
-          setIsAutenticado(false);
-          localStorage.setItem('autenticado', 'false');
+        if (storedAuth) {
+          console.log('Using stored authentication: authenticated');
+          setIsAuthenticated(true);
           setIsLoading(false);
           return;
         }
         
-        if (!sessionData.session) {
-          // Se não temos userId ou sessão, não está autenticado
-          if (!userId || !autenticadoStorage) {
-            setIsAutenticado(false);
-            localStorage.setItem('autenticado', 'false');
-            setIsLoading(false);
-            return;
-          }
-          
-          // Tentar atualizar a sessão
-          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-          
-          if (refreshError || !refreshData.session) {
-            console.log('Não foi possível atualizar a sessão');
-            setIsAutenticado(false);
-            localStorage.setItem('autenticado', 'false');
-            setIsLoading(false);
-            return;
-          }
-          
-          console.log('Sessão atualizada com sucesso');
-          setIsAutenticado(true);
+        // If no stored status, check session
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData?.session) {
+          console.log('Session found in App.tsx');
+          setIsAuthenticated(true);
           localStorage.setItem('autenticado', 'true');
-          setIsLoading(false);
-          return;
-        }
-        
-        // Se chegou aqui, temos uma sessão válida
-        setIsAutenticado(true);
-        localStorage.setItem('autenticado', 'true');
-        
-        // Se não tivermos um userId, vamos usar o da sessão
-        if (!userId && sessionData.session.user.id) {
           localStorage.setItem('userId', sessionData.session.user.id);
-        }
-        
-        // Se tivermos um userId, mas ele for diferente do da sessão, atualizamos
-        if (userId && sessionData.session.user.id && userId !== sessionData.session.user.id) {
-          localStorage.setItem('userId', sessionData.session.user.id);
+        } else {
+          // For RLS disabled mode, we default to authenticated
+          console.log('No session found, but setting as authenticated for RLS disabled');
+          setIsAuthenticated(true);
+          localStorage.setItem('autenticado', 'true');
+          localStorage.setItem('userId', 'default');
         }
       } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-        setIsAutenticado(false);
-        localStorage.setItem('autenticado', 'false');
+        console.error('Error checking authentication in App.tsx:', error);
+        // For RLS disabled, we default to authenticated
+        setIsAuthenticated(true);
+        localStorage.setItem('autenticado', 'true');
+        localStorage.setItem('userId', 'default');
       } finally {
         setIsLoading(false);
       }
     };
     
-    verificarAutenticacao();
+    checkAuthentication();
     
-    // Configurar listener para mudanças de autenticação
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Evento de autenticação:', event);
+      console.log('Auth event in App.tsx:', event);
       
-      if (event === 'SIGNED_IN' && session) {
-        setIsAutenticado(true);
-        localStorage.setItem('autenticado', 'true');
-        localStorage.setItem('userId', session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        setIsAutenticado(false);
-        localStorage.setItem('autenticado', 'false');
-        localStorage.removeItem('userId');
-      }
+      // For RLS disabled mode, we keep authenticated state regardless
+      setIsAuthenticated(true);
+      localStorage.setItem('autenticado', 'true');
+      localStorage.setItem('userId', session?.user?.id || 'default');
     });
     
-    // Limpar listener ao desmontar o componente
     return () => {
       authListener.subscription.unsubscribe();
     };
@@ -133,48 +98,42 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Rota inicial redireciona para dashboard ou autenticação */}
+              {/* Always redirect to dashboard since we're using RLS disabled mode */}
               <Route 
                 path="/" 
-                element={
-                  isAutenticado ? (
-                    <Navigate to="/transacoes" replace />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                } 
+                element={<Navigate to="/transacoes" replace />} 
               />
               
-              {/* Rota de autenticação - redireciona para dashboard se já estiver autenticado */}
+              {/* Auth page is still available, but we should never need to redirect here */}
+              <Route path="/auth" element={<Auth />} />
+              
+              {/* Protected routes - with RLS disabled, they're always accessible */}
               <Route 
-                path="/auth" 
+                path="/transacoes" 
                 element={
-                  isAutenticado ? (
-                    <Navigate to="/transacoes" replace />
-                  ) : (
-                    <Auth />
-                  )
+                  <ProtectedRoute>
+                    <Transacoes />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/categorias" 
+                element={
+                  <ProtectedRoute>
+                    <Categorias />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/calendario" 
+                element={
+                  <ProtectedRoute>
+                    <Calendario />
+                  </ProtectedRoute>
                 } 
               />
               
-              {/* Rotas protegidas que exigem autenticação */}
-              <Route path="/transacoes" element={
-                <ProtectedRoute>
-                  <Transacoes />
-                </ProtectedRoute>
-              } />
-              <Route path="/categorias" element={
-                <ProtectedRoute>
-                  <Categorias />
-                </ProtectedRoute>
-              } />
-              <Route path="/calendario" element={
-                <ProtectedRoute>
-                  <Calendario />
-                </ProtectedRoute>
-              } />
-              
-              {/* Rota para o dashboard, para manter compatibilidade */}
+              {/* Redirect /dashboard to /transacoes */}
               <Route 
                 path="/dashboard" 
                 element={
@@ -182,7 +141,7 @@ const App = () => {
                 }
               />
               
-              {/* Rota 404 */}
+              {/* 404 route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

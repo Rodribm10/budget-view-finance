@@ -9,45 +9,45 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const [isAutenticado, setIsAutenticado] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const location = useLocation();
 
   useEffect(() => {
-    const verificarAutenticacao = async () => {
-      setIsLoading(true);
-      
+    const checkAuthentication = async () => {
       try {
-        // Since we're working with RLS disabled, we can simplify authentication
-        // Just check for a session, but allow access even without one
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        setIsLoading(true);
         
-        if (sessionError) {
-          console.error('Erro ao verificar sessão:', sessionError);
-          // For RLS disabled, we'll still let the user proceed
-          setIsAutenticado(true);
-          localStorage.setItem('autenticado', 'true');
-          localStorage.setItem('userId', 'default');
+        // Check if we have stored authentication status
+        const storedAuth = localStorage.getItem('autenticado') === 'true';
+        
+        if (storedAuth) {
+          console.log('Using stored authentication status: authenticated');
+          setIsAuthenticated(true);
           setIsLoading(false);
           return;
         }
         
-        if (sessionData.session) {
-          console.log('Sessão encontrada');
-          setIsAutenticado(true);
+        // If no stored status, check for a session
+        const { data: sessionData } = await supabase.auth.getSession();
+        
+        if (sessionData?.session) {
+          console.log('Session found, setting as authenticated');
+          setIsAuthenticated(true);
           localStorage.setItem('autenticado', 'true');
           localStorage.setItem('userId', sessionData.session.user.id);
         } else {
-          console.log('Sessão não encontrada, mas permitindo acesso com RLS desativado');
-          setIsAutenticado(true);
+          // For RLS disabled mode, we set a default authentication
+          console.log('No session found, but setting as authenticated for RLS disabled mode');
+          setIsAuthenticated(true);
           localStorage.setItem('autenticado', 'true');
           localStorage.setItem('userId', 'default');
         }
       } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-        // For RLS disabled, we'll still let the user proceed
-        setIsAutenticado(true);
+        console.error('Error checking authentication:', error);
+        // For RLS disabled, default to authenticated
+        setIsAuthenticated(true);
         localStorage.setItem('autenticado', 'true');
         localStorage.setItem('userId', 'default');
       } finally {
@@ -55,37 +55,15 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     };
     
-    verificarAutenticacao();
-    
-    // Configure listener for authentication changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Evento de autenticação:', event);
-      
-      if (event === 'SIGNED_IN' && session) {
-        setIsAutenticado(true);
-        localStorage.setItem('autenticado', 'true');
-        localStorage.setItem('userId', session.user.id);
-      } else if (event === 'SIGNED_OUT') {
-        // For RLS disabled, we'll still let the user be "authenticated" with a default ID
-        setIsAutenticado(true);
-        localStorage.setItem('autenticado', 'true');
-        localStorage.setItem('userId', 'default');
-      }
-    });
-    
-    // Clean up listener when unmounting
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [toast, location.pathname]);
+    checkAuthentication();
+  }, []);
 
-  // Show loading while checking authentication
+  // Show loading state
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
   }
   
-  // Since RLS is disabled, we'll allow access to all routes
-  // We're not redirecting to auth page anymore
+  // With RLS disabled, we simply return the children without redirecting
   return <>{children}</>;
 };
 
