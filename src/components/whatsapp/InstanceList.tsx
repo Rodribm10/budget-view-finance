@@ -8,7 +8,7 @@ import { RefreshCw } from 'lucide-react';
 interface InstanceListProps {
   instances: WhatsAppInstance[];
   onViewQrCode: (instance: WhatsAppInstance) => void;
-  onDeleteInstance: (instanceId: string) => void;
+  onDeleteInstance: (instanceId: string) => void; // Only requires instanceId
   onRestartInstance: (instance: WhatsAppInstance) => Promise<void>;
   onLogoutInstance: (instance: WhatsAppInstance) => Promise<void>;
   onSetPresence: (instance: WhatsAppInstance, presence: 'online' | 'offline') => Promise<void>;

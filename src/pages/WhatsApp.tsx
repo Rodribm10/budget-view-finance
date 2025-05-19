@@ -57,6 +57,16 @@ const WhatsApp = () => {
     };
   }, [checkAllInstancesStatus]);
 
+  // Create a wrapper function that matches the expected signature
+  const handleDeleteInstanceWrapper = (instanceId: string) => {
+    const instance = instances.find(inst => inst.instanceId === instanceId);
+    if (instance) {
+      handleDeleteInstance(instanceId, instance.instanceName);
+    } else {
+      console.error(`Instance with ID ${instanceId} not found`);
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto p-4">
@@ -83,7 +93,7 @@ const WhatsApp = () => {
                 onRestartInstance={handleRestartInstance}
                 onLogoutInstance={handleLogoutInstance} 
                 onSetPresence={handleSetPresence}
-                onDeleteInstance={handleDeleteInstance}
+                onDeleteInstance={handleDeleteInstanceWrapper}
                 onViewQrCode={handleViewQrCode}
                 onRefreshInstances={refreshInstances}
                 isRefreshing={isRefreshing}
