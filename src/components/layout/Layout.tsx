@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Sidebar, defaultItems } from '@/components/layout/Sidebar';
+import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
 import { useToast } from "@/components/ui/use-toast";
 import { Menu } from 'lucide-react';
@@ -39,11 +39,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[250px]">
-            <Sidebar items={defaultItems} className="w-full border-none" />
+            <Sidebar className="w-full border-none" />
           </SheetContent>
         </Sheet>
       ) : (
-        <Sidebar items={defaultItems} />
+        <Sidebar />
       )}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header />

@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Index from '@/pages/Index';
 import Transacoes from '@/pages/Transacoes';
@@ -10,7 +11,6 @@ import WhatsApp from '@/pages/WhatsApp';
 import { Toaster } from '@/components/ui/toaster';
 import './App.css';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
-import RodrigoAudio from './pages/RodrigoAudio';
 
 function App() {
   return (
@@ -49,7 +49,6 @@ function App() {
         } />
         <Route path="/login" element={<Auth />} />
         <Route path="/auth" element={<Auth />} />
-        <Route path="/rodrigo-audio" element={<RodrigoAudio />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

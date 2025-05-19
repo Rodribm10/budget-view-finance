@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -10,22 +10,21 @@ import {
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw } from 'lucide-react';
+import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import { fetchQrCode } from '@/services/whatsAppService';
 import { useToast } from '@/hooks/use-toast';
 
 interface QrCodeDialogProps {
   open: boolean;
-  setOpen: (open: boolean) => void;
-  instanceName: string;
-  phoneNumber: string;
-  onStatusCheck?: () => void;
+  onOpenChange: (open: boolean) => void;
+  activeInstance: WhatsAppInstance | null;
+  onStatusCheck: () => void;
 }
 
 const QrCodeDialog = ({ 
   open, 
-  setOpen, 
-  instanceName, 
-  phoneNumber,
+  onOpenChange, 
+  activeInstance, 
   onStatusCheck 
 }: QrCodeDialogProps) => {
   const { toast } = useToast();
@@ -33,30 +32,23 @@ const QrCodeDialog = ({
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
 
-  // Load QR code when dialog opens
-  useEffect(() => {
-    if (open && instanceName) {
-      handleRefreshQrCode();
-    }
-  }, [open, instanceName]);
-
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen);
+    onOpenChange(newOpen);
     
     // After dialog closes, trigger status check to update connection state
-    if (!newOpen && onStatusCheck) {
+    if (!newOpen) {
       onStatusCheck();
     }
   };
 
   const handleRefreshQrCode = async () => {
-    if (!instanceName) return;
+    if (!activeInstance) return;
     
     setLoadingQR(true);
     setQrError(null);
 
     try {
-      const data = await fetchQrCode(instanceName);
+      const data = await fetchQrCode(activeInstance.instanceName);
       console.log('QR Code API response:', data);
 
       // Using the "base64" field from the response as the QR code data
@@ -83,7 +75,7 @@ const QrCodeDialog = ({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Conectar WhatsApp - {instanceName}</DialogTitle>
+          <DialogTitle>Conectar WhatsApp - {activeInstance?.instanceName}</DialogTitle>
           <DialogDescription>
             Escaneie o QR Code com seu WhatsApp para finalizar a conexão
           </DialogDescription>
@@ -117,7 +109,7 @@ const QrCodeDialog = ({
           )}
           
           <div className="flex space-x-2">
-            {instanceName && (
+            {activeInstance && (
               <Button 
                 variant="outline" 
                 onClick={handleRefreshQrCode} 
@@ -128,7 +120,7 @@ const QrCodeDialog = ({
                 Atualizar QR Code
               </Button>
             )}
-            <Button variant="ghost" onClick={() => setOpen(false)}>
+            <Button variant="ghost" onClick={() => onOpenChange(false)}>
               Fechar
             </Button>
           </div>
