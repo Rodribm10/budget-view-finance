@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
@@ -51,7 +52,20 @@ export const useWhatsAppInstances = () => {
             
             // Only update connectionState if it's different
             if (instance.connectionState !== state) {
-              return { ...instance, connectionState: state };
+              // Ensure the state is one of the valid values or treat as 'closed'
+              let validState: 'open' | 'closed' | 'connecting';
+              if (state === 'open' || state === 'connecting') {
+                validState = state;
+              } else {
+                validState = 'closed';
+              }
+              
+              return { 
+                ...instance, 
+                connectionState: validState,
+                status: state === 'open' ? 'connected' : 
+                       state === 'connecting' ? 'connecting' : 'disconnected'
+              };
             }
             return instance;
           } catch (error) {
@@ -59,7 +73,11 @@ export const useWhatsAppInstances = () => {
             
             // If the instance doesn't exist on the server, mark it as closed
             if (error instanceof Error && error.message.includes("does not exist")) {
-              return { ...instance, connectionState: 'closed', status: 'disconnected' };
+              return { 
+                ...instance, 
+                connectionState: 'closed' as const, 
+                status: 'disconnected' 
+              };
             }
             
             // Keep the current state in case of other errors
@@ -101,14 +119,27 @@ export const useWhatsAppInstances = () => {
       if (response.instances && Array.isArray(response.instances)) {
         // Mapeia as instâncias do servidor para o formato correto com userId
         const serverInstances: WhatsAppInstance[] = response.instances
-          .map(serverInstance => ({
-            instanceName: serverInstance.instanceName,
-            instanceId: serverInstance.instanceName, // Using instanceName as the ID for consistency
-            phoneNumber: serverInstance.number || 'Desconhecido',
-            userId: currentUserId,
-            connectionState: serverInstance.state || 'closed',
-            status: serverInstance.status || 'unknown'
-          }));
+          .map(serverInstance => {
+            // Ensure we convert server state to valid connectionState
+            let connectionState: 'open' | 'closed' | 'connecting';
+            const state = serverInstance.state || 'closed';
+            
+            if (state === 'open' || state === 'connecting') {
+              connectionState = state;
+            } else {
+              connectionState = 'closed';
+            }
+            
+            return {
+              instanceName: serverInstance.instanceName,
+              instanceId: serverInstance.instanceName, // Using instanceName as the ID for consistency
+              phoneNumber: serverInstance.number || 'Desconhecido',
+              userId: currentUserId,
+              connectionState: connectionState,
+              status: connectionState === 'open' ? 'connected' : 
+                     connectionState === 'connecting' ? 'connecting' : 'disconnected'
+            };
+          });
         
         console.log("Mapped server instances:", serverInstances);
         
