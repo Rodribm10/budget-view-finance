@@ -37,9 +37,8 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
       return { id: grupo.workflow_id };
     }
     
-    // Instead of using the Edge Function, we'll use a direct API call to n8n
-    // The API endpoint for the n8n workflow creation
-    const n8nApiUrl = 'https://n8n.innova1001.com.br/api/v1/workflows';
+    // The API endpoint for the n8n workflow creation via Edge Function
+    const edgeFunctionUrl = 'https://tnurlgbvfsxwqgwxamni.supabase.co/functions/v1/create-n8n-workflow';
     const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ3NzM0NzYyLCJleHAiOjE3NTAzMDIwMDB9.Evr_o42xLJPq1c2p5SUWo00IY85WXp8s_nqSy64V-is';
     
     // Create the workflow data
@@ -50,23 +49,27 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
       settings: {}
     };
 
-    // Use the Edge Function as a proxy to make the n8n API call
-    // This avoids CORS issues since the call is made server-side
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tnurlgbvfsxwqgwxamni.supabase.co';
+    // Prepare the request payload
+    const payload = {
+      email: email,
+      grupoId: grupo.id,
+      apiKey: apiKey,
+      workflowData: workflowData
+    };
     
-    console.log('Calling Edge Function to create workflow in n8n');
-    const response = await fetch(`${supabaseUrl}/functions/v1/create-n8n-workflow`, {
+    console.log('Calling Edge Function to create workflow in n8n with payload:', payload);
+    
+    // Get Supabase anonymous key for authorization
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRudXJsZ2J2ZnN4d3Fnd3hhbW5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MTQ1OTksImV4cCI6MjA2MDQ5MDU5OX0.9__EQiZDJ954SmeeJIDTQjOYDjiiRcppai1e8UpuOl4';
+    
+    // Make the request to the Edge Function
+    const response = await fetch(edgeFunctionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
+        'Authorization': `Bearer ${supabaseAnonKey}`
       },
-      body: JSON.stringify({
-        email: email,
-        grupoId: grupo.id,
-        apiKey: apiKey, // Pass the API key to the Edge Function
-        workflowData: workflowData // Pass the workflow data
-      })
+      body: JSON.stringify(payload)
     });
     
     // Log detailed response status
@@ -98,9 +101,12 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
         console.error('Erro ao atualizar workflow_id no grupo:', updateError);
         // We still return the workflow ID even if there was an error updating the group
       }
+      
+      return { id: data.workflow_id };
+    } else {
+      console.error('Resposta não contém workflow_id válido:', data);
+      throw new Error('A resposta da API não contém um workflow_id válido');
     }
-    
-    return { id: data.workflow_id };
   } catch (error) {
     console.error('Erro na requisição de criação de workflow:', error);
     throw error;
