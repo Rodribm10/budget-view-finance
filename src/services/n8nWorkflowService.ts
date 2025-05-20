@@ -1,3 +1,4 @@
+
 // Service dedicated to n8n workflow operations
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,12 +37,16 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
       return { id: grupo.workflow_id };
     }
     
+    // Get the URL from an environment variable or build it
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://tnurlgbvfsxwqgwxamni.supabase.co";
+    
     // Call our edge function to create the workflow
-    const response = await fetch(`${supabase.supabaseUrl}/functions/v1/create-n8n-workflow`, {
+    const response = await fetch(`${supabaseUrl}/functions/v1/create-n8n-workflow`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
+        // Use getSession() to get the current session
+        'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
       },
       body: JSON.stringify({
         email: email,
