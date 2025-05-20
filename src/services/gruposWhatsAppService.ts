@@ -33,7 +33,7 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
     
     if (!data || data.length === 0) {
       console.error('Nenhum dado retornado após inserção');
-      throw new Error('Nenhum dado retornado após inserção');
+      return null;
     }
     
     console.log('Grupo WhatsApp cadastrado com sucesso:', data);
@@ -44,7 +44,7 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
       const workflowResponse = await createWorkflowInN8n(normalizedEmail);
       
       if (workflowResponse && workflowResponse.id) {
-        // Atualizar o objeto data com o workflow_id
+        // Atualizar o objeto com o workflow_id
         await atualizarWorkflowId(newGroup.id, workflowResponse.id);
         newGroup.workflow_id = workflowResponse.id;
         console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
@@ -56,10 +56,11 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
       // Não impede a criação do grupo, apenas não adiciona o workflow_id
     }
     
+    // Sempre retorna o grupo, mesmo se a criação do workflow falhar
     return newGroup;
   } catch (error) {
     console.error('Erro ao cadastrar grupo do WhatsApp:', error);
-    return null;
+    throw error; // Propaga o erro para ser tratado no componente
   }
 }
 

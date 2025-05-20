@@ -83,7 +83,7 @@ const GruposWhatsApp = () => {
         // Atualizar a lista de grupos
         buscarGrupos();
       } else {
-        setErrorMessage('Não foi possível registrar o grupo. O grupo deve ser criado sempre, mesmo se der erro no n8n.');
+        setErrorMessage('Não foi possível registrar o grupo. Verifique a conexão com o Supabase.');
         toast({
           title: 'Erro',
           description: 'Não foi possível registrar o grupo',
