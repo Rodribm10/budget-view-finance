@@ -5,16 +5,24 @@ import { Transaction, CategorySummary } from "@/types/financialTypes";
 export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Buscando transações do Supabase...");
   
-  // Obter o ID do usuário atual do localStorage
-  const userId = localStorage.getItem('userId') || 'default';
-  console.log("Buscando transações para o usuário:", userId);
+  // Obter o email do usuário do localStorage
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    console.error('Email do usuário não encontrado no localStorage');
+    return [];
+  }
+  
+  // Normalizar o email (minúsculo e sem espaços)
+  const normalizedEmail = userEmail.trim().toLowerCase();
+  console.log("Buscando transações para o usuário com email:", normalizedEmail);
   
   try {
-    // Primeiro, buscar todos os grupos do usuário
+    // Primeiro, buscar todos os grupos do usuário pelo email
     const { data: userGroups, error: groupsError } = await supabase
       .from('grupos_whatsapp')
       .select('remote_jid')
-      .eq('user_id', userId);
+      .eq('login', normalizedEmail);
       
     if (groupsError) {
       console.error('Erro ao buscar grupos do usuário:', groupsError);
@@ -24,11 +32,11 @@ export async function getTransacoes(): Promise<Transaction[]> {
     const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
     console.log(`Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
     
-    // Buscar transações com filtro aprimorado
+    // Buscar transações com filtro baseado no email (login) ou grupo_id
     const { data, error } = await supabase
       .from('transacoes')
       .select('*')
-      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`)
+      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`)
       .order('quando', { ascending: false });
 
     if (error) {
@@ -42,6 +50,7 @@ export async function getTransacoes(): Promise<Transaction[]> {
     return data.map((item: any) => ({
       id: item.id.toString(),
       user: item.user || '',
+      login: item.login || normalizedEmail, // Garantir que o campo login esteja preenchido
       created_at: item.created_at,
       valor: item.tipo?.toLowerCase() === 'receita' ? Math.abs(item.valor || 0) : -Math.abs(item.valor || 0),
       quando: item.quando || new Date().toISOString(),
@@ -60,15 +69,23 @@ export async function getTransacoes(): Promise<Transaction[]> {
 export async function getTransactionSummary() {
   console.log("Buscando resumo das transações...");
   
-  // Obter o ID do usuário atual do localStorage
-  const userId = localStorage.getItem('userId') || 'default';
+  // Obter o email do usuário do localStorage
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    console.error('Email do usuário não encontrado no localStorage');
+    return { receitas: 0, despesas: 0, saldo: 0 };
+  }
+  
+  // Normalizar o email (minúsculo e sem espaços)
+  const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
-    // Primeiro, buscar todos os grupos do usuário
+    // Primeiro, buscar todos os grupos do usuário pelo email
     const { data: userGroups, error: groupsError } = await supabase
       .from('grupos_whatsapp')
       .select('remote_jid')
-      .eq('user_id', userId);
+      .eq('login', normalizedEmail);
       
     if (groupsError) {
       console.error('Erro ao buscar grupos do usuário:', groupsError);
@@ -77,11 +94,11 @@ export async function getTransactionSummary() {
     // Extrair IDs dos grupos para usar no filtro
     const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
     
-    // Buscar resumo das transações com filtro aprimorado
+    // Buscar resumo das transações com filtro aprimorado baseado no email (login) ou grupo_id
     const { data, error } = await supabase
       .from('transacoes')
       .select('tipo, valor')
-      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
 
     if (error) {
       console.error('Erro ao buscar resumo das transações:', error);
@@ -115,15 +132,23 @@ export async function getTransactionSummary() {
 export async function getCategorySummary(tipoFiltro: string = 'despesa') {
   console.log(`Buscando resumo de categorias para tipo: ${tipoFiltro}`);
   
-  // Obter o ID do usuário atual do localStorage
-  const userId = localStorage.getItem('userId') || 'default';
+  // Obter o email do usuário do localStorage
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    console.error('Email do usuário não encontrado no localStorage');
+    return [];
+  }
+  
+  // Normalizar o email (minúsculo e sem espaços)
+  const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
-    // Primeiro, buscar todos os grupos do usuário
+    // Primeiro, buscar todos os grupos do usuário pelo email
     const { data: userGroups, error: groupsError } = await supabase
       .from('grupos_whatsapp')
       .select('remote_jid')
-      .eq('user_id', userId);
+      .eq('login', normalizedEmail);
       
     if (groupsError) {
       console.error('Erro ao buscar grupos do usuário:', groupsError);
@@ -132,11 +157,11 @@ export async function getCategorySummary(tipoFiltro: string = 'despesa') {
     // Extrair IDs dos grupos para usar no filtro
     const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
     
-    // Buscar resumo de categorias com filtro aprimorado
+    // Buscar resumo de categorias com filtro aprimorado baseado no email (login) ou grupo_id
     const { data, error } = await supabase
       .from('transacoes')
       .select('categoria, valor, tipo')
-      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
 
     if (error) {
       console.error('Erro ao buscar resumo de categorias:', error);
@@ -192,15 +217,23 @@ export async function getCategorySummary(tipoFiltro: string = 'despesa') {
 export async function getMonthlyData() {
   console.log("Buscando dados mensais...");
   
-  // Obter o ID do usuário atual do localStorage
-  const userId = localStorage.getItem('userId') || 'default';
+  // Obter o email do usuário do localStorage
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    console.error('Email do usuário não encontrado no localStorage');
+    return [];
+  }
+  
+  // Normalizar o email (minúsculo e sem espaços)
+  const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
-    // Primeiro, buscar todos os grupos do usuário
+    // Primeiro, buscar todos os grupos do usuário pelo email
     const { data: userGroups, error: groupsError } = await supabase
       .from('grupos_whatsapp')
       .select('remote_jid')
-      .eq('user_id', userId);
+      .eq('login', normalizedEmail);
       
     if (groupsError) {
       console.error('Erro ao buscar grupos do usuário:', groupsError);
@@ -209,11 +242,11 @@ export async function getMonthlyData() {
     // Extrair IDs dos grupos para usar no filtro
     const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
     
-    // Buscar dados mensais com filtro aprimorado
+    // Buscar dados mensais com filtro aprimorado baseado no email (login) ou grupo_id
     const { data, error } = await supabase
       .from('transacoes')
       .select('quando, valor, tipo')
-      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
 
     if (error) {
       console.error('Erro ao buscar dados mensais:', error);

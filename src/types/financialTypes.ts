@@ -1,8 +1,8 @@
 
-
 export interface Transaction {
   id: string;
   user: string;
+  login?: string; // E-mail do usuário como identificador principal
   created_at: string;
   valor: number;
   quando: string;
@@ -60,11 +60,10 @@ export interface ResultadoMeta {
 
 export interface WhatsAppGroup {
   id: number;
-  user_id: string;
+  user_id: string | null; // Mantido apenas por compatibilidade
   remote_jid: string | null;
   nome_grupo: string | null;
   created_at: string;
   status: string;
-  login: string;
+  login: string; // E-mail do usuário como identificador principal
 }
-

@@ -18,13 +18,11 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
     // Criar registro na tabela grupos_whatsapp
     const { data, error } = await supabase
       .from('grupos_whatsapp')
-      .insert([
-        { 
-          user_id: localStorage.getItem('userId') || '',
-          login: normalizedEmail,
-          status: 'pendente'
-        }
-      ])
+      .insert({
+        user_id: localStorage.getItem('userId') || '', // Mantido por compatibilidade
+        login: normalizedEmail,
+        status: 'pendente'
+      })
       .select();
     
     if (error) {

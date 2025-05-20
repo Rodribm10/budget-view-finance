@@ -52,11 +52,18 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', 
   // Buscar grupos do usuário ao carregar o formulário
   useState(() => {
     const fetchGrupos = async () => {
-      const userId = localStorage.getItem('userId') || 'default';
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        console.error('Email do usuário não encontrado');
+        return;
+      }
+      
+      const normalizedEmail = userEmail.trim().toLowerCase();
+      
       const { data, error } = await supabase
         .from('grupos_whatsapp')
         .select('remote_jid, nome_grupo')
-        .eq('user_id', userId);
+        .eq('login', normalizedEmail);
         
       if (error) {
         console.error('Erro ao buscar grupos:', error);
@@ -85,10 +92,23 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', 
     setIsSubmitting(true);
     
     try {
-      // Get user ID from localStorage - with RLS disabled, this is just for reference
-      const userId = localStorage.getItem('userId') || 'default';
-      const userEmail = localStorage.getItem('userEmail') || '';
-      const userName = localStorage.getItem('userName') || '';
+      // Get user email from localStorage - principal identifier now
+      const userEmail = localStorage.getItem('userEmail');
+      
+      if (!userEmail) {
+        toast({
+          title: "Erro no formulário",
+          description: "Email do usuário não encontrado",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Normalizar o email (minúsculo e sem espaços)
+      const normalizedEmail = userEmail.trim().toLowerCase();
+      
+      // Get user ID from localStorage - kept for compatibility
+      const userId = localStorage.getItem('userId') || '';
       
       const valorNumerico = parseFloat(data.valor.replace(',', '.'));
       
@@ -106,11 +126,12 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', 
         ? Math.abs(valorNumerico) 
         : Math.abs(valorNumerico);
       
-      console.log(`Salvando transação para usuário: ${userId} (${userEmail || userName})`);
+      console.log(`Salvando transação para usuário: ${normalizedEmail} (ID: ${userId})`);
       
-      // Preparar dados da transação incluindo o grupo_id se fornecido
+      // Preparar dados da transação incluindo o login e grupo_id
       const transactionData = {
-        user: userId,
+        user: userId, // Mantido por compatibilidade
+        login: normalizedEmail, // Campo principal para identificação
         estabelecimento: data.estabelecimento,
         valor: valorFinal,
         detalhes: data.detalhes,
