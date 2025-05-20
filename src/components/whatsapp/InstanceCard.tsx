@@ -1,28 +1,11 @@
 
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  QrCode, 
-  Smartphone, 
-  RefreshCw, 
-  X, 
-  PowerOff,
-  CircleDot,
-  CircleOff
-} from 'lucide-react';
+import { Smartphone } from 'lucide-react';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import StatusBadge from './StatusBadge';
+import InstanceActions from './InstanceActions';
+import ConfirmationDialog from './ConfirmationDialog';
 
 interface InstanceCardProps {
   instance: WhatsAppInstance;
@@ -175,112 +158,35 @@ const InstanceCard = ({
               <span>{instance.phoneNumber}</span>
             </div>
             <div className="flex items-center text-sm">
-              {connectionStatus === 'open' ? (
-                <Badge variant="outline" className="flex items-center gap-1 text-green-500 border-green-300">
-                  <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
-                  Status: Conectado
-                </Badge>
-              ) : connectionStatus === 'connecting' ? (
-                <Badge variant="outline" className="flex items-center gap-1 text-orange-500 border-orange-300">
-                  <span className="inline-block w-2 h-2 rounded-full bg-orange-500"></span>
-                  Status: Conectando
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="flex items-center gap-1 text-red-500 border-red-300">
-                  <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span>
-                  Status: Desconectado
-                </Badge>
-              )}
+              <StatusBadge connectionStatus={connectionStatus} />
             </div>
           </div>
         </CardContent>
         <CardFooter className="flex flex-col gap-2">
-          <div className="flex justify-between w-full">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onViewQrCode(instance)}
-              className="flex items-center"
-            >
-              <QrCode className="h-4 w-4 mr-2" />
-              Ver QR Code
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              onClick={handleDelete}
-              disabled={loading !== null}
-            >
-              <X className="h-4 w-4 mr-2" />
-              Excluir
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleRestart}
-              disabled={loading !== null}
-            >
-              <RefreshCw className="h-4 w-4 mr-1" />
-              Reiniciar
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleLogout}
-              disabled={loading !== null}
-            >
-              <PowerOff className="h-4 w-4 mr-1" />
-              Desconectar
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSetOnline}
-              disabled={loading !== null}
-              className="bg-green-50 hover:bg-green-100 text-green-700"
-            >
-              <CircleDot className="h-4 w-4 mr-1" />
-              Definir Online
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleSetOffline}
-              disabled={loading !== null}
-              className="bg-red-50 hover:bg-red-100 text-red-700"
-            >
-              <CircleOff className="h-4 w-4 mr-1" />
-              Definir Offline
-            </Button>
-          </div>
+          <InstanceActions
+            instance={instance}
+            loading={loading}
+            onViewQrCode={onViewQrCode}
+            onRestart={handleRestart}
+            onLogout={handleLogout}
+            onDelete={handleDelete}
+            onSetOnline={handleSetOnline}
+            onSetOffline={handleSetOffline}
+          />
         </CardFooter>
       </Card>
 
-      <AlertDialog open={confirmAction?.open} onOpenChange={(open) => !open && setConfirmAction(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{confirmAction?.title}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction?.description}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={loading !== null}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={executeAction}
-              disabled={loading !== null}
-              className={loading === confirmAction?.title ? "opacity-50 cursor-not-allowed" : ""}
-            >
-              {loading === confirmAction?.title ? "Processando..." : confirmAction?.actionLabel}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {confirmAction && (
+        <ConfirmationDialog
+          open={confirmAction.open}
+          onOpenChange={(open) => !open && setConfirmAction(null)}
+          title={confirmAction.title}
+          description={confirmAction.description}
+          actionLabel={confirmAction.actionLabel}
+          onAction={executeAction}
+          loading={loading !== null}
+        />
+      )}
     </>
   );
 };

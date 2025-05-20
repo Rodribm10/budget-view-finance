@@ -1,10 +1,14 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const usePeriodicStatusCheck = (
   instancesCount: number,
-  checkAllInstancesStatus: () => Promise<void>
+  checkAllInstancesStatus: () => Promise<void>,
+  initialDelay: number = 1000,
+  checkInterval: number = 30000
 ) => {
+  const isFirstRun = useRef(true);
+
   // Set up periodic status checks
   useEffect(() => {
     console.log("Setting up periodic status checks, current instances:", instancesCount);
@@ -15,16 +19,17 @@ export const usePeriodicStatusCheck = (
       initialCheck = setTimeout(() => {
         console.log("Running initial status check");
         checkAllInstancesStatus();
-      }, 1000);
+        isFirstRun.current = false;
+      }, initialDelay);
     }
 
-    // Set up interval for periodic checks (every 30 seconds)
+    // Set up interval for periodic checks
     const interval = setInterval(() => {
       if (instancesCount > 0) {
         console.log("Running periodic status check");
         checkAllInstancesStatus();
       }
-    }, 30000); // 30 seconds
+    }, checkInterval);
 
     // Clean up interval and timeout when component unmounts
     return () => {
@@ -33,5 +38,9 @@ export const usePeriodicStatusCheck = (
         clearTimeout(initialCheck);
       }
     };
-  }, [instancesCount, checkAllInstancesStatus]);
+  }, [instancesCount, checkAllInstancesStatus, initialDelay, checkInterval]);
+
+  return {
+    isFirstRun: isFirstRun.current
+  };
 };
