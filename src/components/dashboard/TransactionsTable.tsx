@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ChevronDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, Search, ChevronLeft, ChevronRight, Edit, Trash2 } from 'lucide-react';
 import { Transaction } from '@/types/financialTypes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,22 +21,32 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { deleteTransacao } from '@/services/transacaoService';
 
 interface TransactionsTableProps {
   transactions: Transaction[];
   isLoading?: boolean;
   showPagination?: boolean;
+  onEdit?: (transaction: Transaction) => void;
+  onDelete?: () => void;
 }
 
 const TransactionsTable = ({ 
   transactions, 
   isLoading = false,
-  showPagination = false 
+  showPagination = false,
+  onEdit,
+  onDelete
 }: TransactionsTableProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<string>('quando');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const { toast } = useToast();
   const itemsPerPage = showPagination ? 10 : 5;
 
   const handleSort = (column: string) => {
@@ -45,6 +55,47 @@ const TransactionsTable = ({
     } else {
       setSortColumn(column);
       setSortDirection('asc');
+    }
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    if (onEdit) {
+      onEdit(transaction);
+    } else {
+      console.log('Editar transação:', transaction);
+      // Implementar edição futura se não houver callback
+    }
+  };
+
+  const handleDeleteClick = (transaction: Transaction) => {
+    setTransactionToDelete(transaction);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!transactionToDelete) return;
+    
+    try {
+      await deleteTransacao(transactionToDelete.id);
+      toast({
+        title: "Transação excluída",
+        description: "A transação foi removida com sucesso",
+      });
+      
+      // Callback para recarregar os dados
+      if (onDelete) {
+        onDelete();
+      }
+    } catch (error) {
+      console.error('Erro ao excluir transação:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a transação",
+        variant: "destructive"
+      });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setTransactionToDelete(null);
     }
   };
 
@@ -157,13 +208,14 @@ const TransactionsTable = ({
               >
                 Valor {sortColumn === 'valor' && (sortDirection === 'asc' ? '↑' : '↓')}
               </TableHead>
+              <TableHead className="w-[120px] text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               Array(5).fill(0).map((_, i) => (
                 <TableRow key={`skeleton-${i}`}>
-                  {Array(5).fill(0).map((_, j) => (
+                  {Array(6).fill(0).map((_, j) => (
                     <TableCell key={`cell-${i}-${j}`} className="p-2">
                       <div className="h-4 bg-muted rounded animate-pulse-gentle" />
                     </TableCell>
@@ -172,7 +224,7 @@ const TransactionsTable = ({
               ))
             ) : paginatedTransactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? 'Nenhuma transação encontrada' : 'Não há transações disponíveis'}
                 </TableCell>
               </TableRow>
@@ -194,6 +246,26 @@ const TransactionsTable = ({
                     transaction.tipo === 'receita' ? "text-finance-green" : "text-finance-red"
                   )}>
                     {formatCurrency(Math.abs(transaction.valor))}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditTransaction(transaction)}
+                        title="Editar"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteClick(transaction)}
+                        title="Excluir"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -247,6 +319,23 @@ const TransactionsTable = ({
           </Link>
         </div>
       )}
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

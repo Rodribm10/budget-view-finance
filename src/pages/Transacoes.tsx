@@ -4,7 +4,7 @@ import Layout from '@/components/layout/Layout';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { TransactionForm } from '@/components/dashboard/TransactionForm';
 import { Transaction } from '@/types/financialTypes';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { getTransacoes } from '@/services/transacaoService';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -22,6 +22,8 @@ const TransacoesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [tipoForm, setTipoForm] = useState<'receita' | 'despesa'>('despesa');
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
 
   const loadTransactions = async () => {
@@ -49,11 +51,28 @@ const TransacoesPage = () => {
 
   const handleTransactionSuccess = () => {
     setIsDialogOpen(false);
+    setSelectedTransaction(null);
+    setIsEditing(false);
     loadTransactions();
     toast({
-      title: "Transação registrada",
-      description: "A nova transação foi adicionada com sucesso",
+      title: isEditing ? "Transação atualizada" : "Transação registrada",
+      description: isEditing 
+        ? "A transação foi atualizada com sucesso" 
+        : "A nova transação foi adicionada com sucesso",
     });
+  };
+
+  const handleEditTransaction = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setTipoForm(transaction.tipo as 'receita' | 'despesa');
+    setIsEditing(true);
+    setIsDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedTransaction(null);
+    setIsEditing(false);
   };
 
   // Separar transações em receitas e despesas
@@ -73,6 +92,8 @@ const TransacoesPage = () => {
 
   const handleOpenDialog = (tipo: 'receita' | 'despesa') => {
     setTipoForm(tipo);
+    setIsEditing(false);
+    setSelectedTransaction(null);
     setIsDialogOpen(true);
   };
 
@@ -135,23 +156,33 @@ const TransacoesPage = () => {
             transactions={transactions} 
             isLoading={isLoading}
             showPagination={true}
+            onEdit={handleEditTransaction}
+            onDelete={loadTransactions}
           />
         </div>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>
-                {tipoForm === 'receita' ? 'Nova Receita' : 'Nova Despesa'}
+                {isEditing 
+                  ? `Editar ${tipoForm === 'receita' ? 'Receita' : 'Despesa'}`
+                  : `Nova ${tipoForm === 'receita' ? 'Receita' : 'Despesa'}`
+                }
               </DialogTitle>
               <DialogDescription>
-                Preencha os campos para registrar uma nova {tipoForm === 'receita' ? 'receita' : 'despesa'}.
+                {isEditing
+                  ? 'Edite os campos para atualizar a transação.'
+                  : `Preencha os campos para registrar uma nova ${tipoForm === 'receita' ? 'receita' : 'despesa'}.`
+                }
               </DialogDescription>
             </DialogHeader>
             <TransactionForm 
               onSuccess={handleTransactionSuccess}
-              onCancel={() => setIsDialogOpen(false)}
+              onCancel={handleCloseDialog}
               defaultTipo={tipoForm}
+              transaction={selectedTransaction}
+              isEditing={isEditing}
             />
           </DialogContent>
         </Dialog>

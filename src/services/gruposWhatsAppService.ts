@@ -6,11 +6,12 @@ import { findOrCreateWhatsAppGroup, listWhatsAppGroups, updateWorkflowId } from 
 /**
  * Main function to register a WhatsApp group and create its workflow
  * Orchestrates the process using the specialized services
+ * @param nomeGrupo Nome definido pelo usuário para o grupo
  */
-export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
+export async function cadastrarGrupoWhatsApp(nomeGrupo?: string): Promise<WhatsAppGroup | null> {
   try {
     // Find or create a WhatsApp group for the current user
-    const group = await findOrCreateWhatsAppGroup();
+    const group = await findOrCreateWhatsAppGroup(nomeGrupo);
     
     // If no group was found or created, return null
     if (!group) {

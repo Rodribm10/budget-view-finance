@@ -29,9 +29,10 @@ export async function updateWorkflowId(groupId: number, workflowId: string): Pro
 
 /**
  * Gets an existing or creates a new WhatsApp group for a user
+ * @param nomeGrupo Optional name for the group
  * @returns The created or existing WhatsApp group
  */
-export async function findOrCreateWhatsAppGroup(): Promise<WhatsAppGroup | null> {
+export async function findOrCreateWhatsAppGroup(nomeGrupo?: string): Promise<WhatsAppGroup | null> {
   try {
     // Obter o email do usuário do localStorage
     const userEmail = localStorage.getItem('userEmail');
@@ -58,6 +59,21 @@ export async function findOrCreateWhatsAppGroup(): Promise<WhatsAppGroup | null>
       console.log('Grupo pendente já existe para este usuário:', existingGroups[0]);
       groupToUse = existingGroups[0];
       
+      // Atualizar nome do grupo se foi fornecido
+      if (nomeGrupo && nomeGrupo.trim() !== '' && nomeGrupo !== groupToUse.nome_grupo) {
+        console.log('Atualizando nome do grupo existente para:', nomeGrupo);
+        const { error } = await supabase
+          .from('grupos_whatsapp')
+          .update({ nome_grupo: nomeGrupo.trim() })
+          .eq('id', groupToUse.id);
+          
+        if (error) {
+          console.error('Erro ao atualizar nome do grupo:', error);
+        } else {
+          groupToUse.nome_grupo = nomeGrupo.trim();
+        }
+      }
+      
       // Se já existe um workflow_id, não precisamos criar novamente
       if (groupToUse.workflow_id) {
         console.log('Workflow já existe para este grupo:', groupToUse.workflow_id);
@@ -72,7 +88,8 @@ export async function findOrCreateWhatsAppGroup(): Promise<WhatsAppGroup | null>
           user_id: localStorage.getItem('userId') || '',
           remote_jid: '',
           login: normalizedEmail,
-          status: 'pendente'
+          status: 'pendente',
+          nome_grupo: nomeGrupo?.trim() || null
         })
         .select();
       
