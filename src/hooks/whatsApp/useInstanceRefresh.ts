@@ -33,13 +33,20 @@ export const useInstanceRefresh = (
         const savedInstanceName = localStorage.getItem(`whatsapp_instance_name_${currentUserId}`);
         console.log("Saved instance name for current user:", savedInstanceName);
         
-        // Filtra as instâncias pelo nome criado pelo usuário
+        // Filtra as instâncias pelo nome criado pelo usuário, se houver um nome salvo
+        // Senão, usa todas as instâncias retornadas pela API
         const filteredInstances = savedInstanceName 
           ? response.instances.filter(instance => instance.instanceName === savedInstanceName)
           : response.instances;
           
+        if (filteredInstances.length > 0) {
+          console.log(`Found ${filteredInstances.length} instances matching saved name:`, filteredInstances);
+        } else {
+          console.log("No instances found matching saved name, using all instances:", response.instances);
+        }
+        
         // Mapeia as instâncias do servidor para o formato correto com userId
-        const serverInstances: WhatsAppInstance[] = filteredInstances
+        const serverInstances: WhatsAppInstance[] = (filteredInstances.length > 0 ? filteredInstances : response.instances)
           .map(serverInstance => {
             // Ensure we convert server state to valid connectionState
             let connectionState: 'open' | 'closed' | 'connecting';
@@ -62,22 +69,22 @@ export const useInstanceRefresh = (
             };
           });
         
-        console.log("Filtered server instances for this user:", serverInstances);
+        console.log("Parsed server instances for this user:", serverInstances);
         
         if (serverInstances.length > 0) {
           setInstances(serverInstances);
           
           toast({
             title: "Sucesso",
-            description: `${serverInstances.length} instância(s) encontrada(s) para este usuário`,
+            description: `${serverInstances.length} instância(s) encontrada(s)`,
           });
         } else {
-          // Clear instances if none found for this user
+          // Clear instances if none found
           setInstances([]);
           
           toast({
             title: "Aviso",
-            description: "Nenhuma instância encontrada para este usuário",
+            description: "Nenhuma instância encontrada. Você pode criar uma nova instância agora.",
           });
         }
       } else {

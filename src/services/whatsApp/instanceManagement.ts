@@ -84,10 +84,19 @@ export const fetchAllInstances = async (): Promise<any> => {
     const data = await makeRequest('/instance/fetchInstances', 'GET');
     
     console.log('All instances response:', data);
+    
+    // Make sure we're returning data in the expected format
+    if (!data || !data.instances || !Array.isArray(data.instances)) {
+      console.error("Invalid response format from fetchInstances API:", data);
+      // Return a standardized empty response rather than throwing an error
+      return { instances: [] };
+    }
+    
     return data;
   } catch (error) {
     console.error("Error fetching all instances:", error);
-    throw error;
+    // Return a standardized empty response on error
+    return { instances: [] };
   }
 };
 

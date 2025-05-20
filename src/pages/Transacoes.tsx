@@ -19,6 +19,7 @@ const TransacoesPage = () => {
     cartoes,
     totalReceitas,
     totalDespesas,
+    totalCartoes,
     formatCurrency,
     handleTransactionSuccess,
     handleDespesaCartaoSuccess,
@@ -42,6 +43,7 @@ const TransacoesPage = () => {
         <TransactionSummaryCards 
           totalReceitas={totalReceitas}
           totalDespesas={totalDespesas}
+          totalCartoes={totalCartoes}
           formatCurrency={formatCurrency}
         />
 

@@ -113,6 +113,9 @@ export const useTransactions = () => {
   // Calcular totais
   const totalReceitas = receitas.reduce((sum, t) => sum + Math.abs(t.valor), 0);
   const totalDespesas = despesas.reduce((sum, t) => sum + Math.abs(t.valor), 0);
+  
+  // Calcular total de despesas de cartão
+  const totalCartoes = cartoes.reduce((sum, cartao) => sum + (cartao.total_despesas || 0), 0);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -132,6 +135,7 @@ export const useTransactions = () => {
     cartoes,
     totalReceitas,
     totalDespesas,
+    totalCartoes,
     formatCurrency,
     handleTransactionSuccess,
     handleDespesaCartaoSuccess,

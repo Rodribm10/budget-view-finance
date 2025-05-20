@@ -5,17 +5,18 @@ import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
-import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
+import { Wallet, ArrowUp, ArrowDown, PiggyBank, CreditCard } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { getTransacoes, getTransactionSummary, getCategorySummary, getMonthlyData } from '@/services/transacaoService';
+import { getCartoes } from '@/services/cartaoCreditoService';
 
 const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
-  const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0 });
+  const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0, cartoes: 0 });
   const { toast } = useToast();
 
   // Use useCallback to ensure this function doesn't change on every render
@@ -44,22 +45,33 @@ const Dashboard = () => {
         console.log("Iniciando carregamento de dados...");
         
         // Buscar todos os dados necessários
-        const [transacoesData, totalsData, categoriesData, monthlyDataResult] = await Promise.all([
+        const [transacoesData, totalsData, categoriesData, monthlyDataResult, cartoesData] = await Promise.all([
           getTransacoes(),
           getTransactionSummary(),
           getCategorySummary(),
-          getMonthlyData()
+          getMonthlyData(),
+          getCartoes()
         ]);
+        
+        // Calcular total dos cartões
+        const totalCartoes = cartoesData.reduce((sum, cartao) => sum + (cartao.total_despesas || 0), 0);
         
         console.log("Dados obtidos com sucesso:", {
           transacoes: transacoesData.length,
           totals: totalsData,
           categories: categoriesData.length,
-          monthlyData: monthlyDataResult.length
+          monthlyData: monthlyDataResult.length,
+          cartoes: cartoesData.length,
+          totalCartoes: totalCartoes
         });
         
         setTransactions(transacoesData);
-        setTotals(totalsData);
+        setTotals({
+          ...totalsData,
+          cartoes: totalCartoes,
+          // Atualiza o saldo incluindo despesas de cartão
+          saldo: totalsData.receitas - totalsData.despesas - totalCartoes
+        });
         setCategories(categoriesData);
         setMonthlyData(monthlyDataResult);
         
@@ -91,6 +103,9 @@ const Dashboard = () => {
     }).format(value);
   };
 
+  // Calculate total of all expenses (regular + credit cards)
+  const totalDespesasGeral = totals.despesas + totals.cartoes;
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -112,7 +127,8 @@ const Dashboard = () => {
           />
           <SummaryCard
             title="Despesas"
-            value={formatCurrency(totals.despesas)}
+            value={formatCurrency(totalDespesasGeral)}
+            secondaryValue={`Cartões: ${formatCurrency(totals.cartoes)}`}
             icon={<ArrowDown size={20} className="text-finance-red" />}
             trend={-2}
             iconClass="bg-finance-red/10"
