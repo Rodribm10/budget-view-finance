@@ -47,6 +47,15 @@ const GruposWhatsApp = () => {
 
   // Cadastrar novo grupo
   const handleCadastrarGrupo = async () => {
+    if (!userEmail) {
+      toast({
+        title: 'Erro',
+        description: 'Você precisa estar logado para cadastrar um grupo',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setCadastrando(true);
     try {
       const novoGrupo = await cadastrarGrupoWhatsApp();
@@ -96,7 +105,7 @@ const GruposWhatsApp = () => {
             </Button>
             <Button 
               onClick={handleCadastrarGrupo} 
-              disabled={cadastrando}
+              disabled={cadastrando || !userEmail}
             >
               {cadastrando ? (
                 <>
@@ -156,6 +165,7 @@ const GruposWhatsApp = () => {
                     <TableHead>ID</TableHead>
                     <TableHead>Nome do grupo</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Workflow</TableHead>
                     <TableHead>Cadastro</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -175,6 +185,17 @@ const GruposWhatsApp = () => {
                           {grupo.remote_jid ? 'Ativo' : 'Pendente'}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {grupo.workflow_id ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">
+                            Configurado
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-gray-500">
+                            Não configurado
+                          </Badge>
+                        )}
+                      </TableCell>
                       <TableCell>{new Date(grupo.created_at).toLocaleDateString()}</TableCell>
                     </TableRow>
                   ))}
@@ -188,7 +209,7 @@ const GruposWhatsApp = () => {
                   variant="outline" 
                   className="mt-4" 
                   onClick={handleCadastrarGrupo}
-                  disabled={cadastrando}
+                  disabled={cadastrando || !userEmail}
                 >
                   <Plus className="h-4 w-4 mr-2" /> 
                   Cadastrar seu primeiro grupo

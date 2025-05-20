@@ -66,4 +66,5 @@ export interface WhatsAppGroup {
   created_at: string;
   status: string;
   login: string; // E-mail do usuário como identificador principal
+  workflow_id?: string | null; // ID do workflow no n8n
 }

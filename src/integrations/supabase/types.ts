@@ -129,6 +129,7 @@ export type Database = {
           remote_jid: string
           status: string | null
           user_id: string
+          workflow_id: string | null
         }
         Insert: {
           created_at?: string | null
@@ -138,6 +139,7 @@ export type Database = {
           remote_jid: string
           status?: string | null
           user_id: string
+          workflow_id?: string | null
         }
         Update: {
           created_at?: string | null
@@ -147,6 +149,7 @@ export type Database = {
           remote_jid?: string
           status?: string | null
           user_id?: string
+          workflow_id?: string | null
         }
         Relationships: []
       }
