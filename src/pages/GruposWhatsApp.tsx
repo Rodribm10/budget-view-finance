@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -106,7 +107,7 @@ const GruposWhatsApp = () => {
         if (errorMsg.includes('Status')) {
           const statusMatch = errorMsg.match(/Status (\d+)/);
           if (statusMatch && statusMatch[1]) {
-            setDebugInfo(`Código de status HTTP da API n8n: ${statusMatch[1]}`);
+            setDebugInfo(`Código de status HTTP da API: ${statusMatch[1]}`);
           }
         }
       }

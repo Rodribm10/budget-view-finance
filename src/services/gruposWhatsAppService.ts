@@ -31,7 +31,7 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
         const workflowResponse = await createWorkflowInN8n(userEmail);
         
         if (workflowResponse && workflowResponse.id) {
-          // Atualizar o objeto com o workflow_id
+          // Update the group with workflow_id
           await updateWorkflowId(group.id, workflowResponse.id);
           group.workflow_id = workflowResponse.id;
           console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
@@ -41,14 +41,14 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
       }
     } catch (n8nError) {
       console.error('Erro ao criar workflow no n8n:', n8nError);
-      // Não impede a criação do grupo, apenas não adiciona o workflow_id
+      // Don't prevent group creation, just continue without workflow_id
     }
     
     // Always return the group, even if workflow creation fails
     return group;
   } catch (error) {
     console.error('Erro ao cadastrar grupo do WhatsApp:', error);
-    throw error; // Propaga o erro para ser tratado no componente
+    throw error; // Propagate error to be handled in the component
   }
 }
 

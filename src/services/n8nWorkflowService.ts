@@ -1,9 +1,6 @@
-
 // Service dedicated to n8n workflow operations
 import { toast } from "@/hooks/use-toast";
-
-const N8N_API_URL = 'https://n8n.innova1001.com.br/api/v1/workflows';
-const N8N_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ3NzM0NzYyLCJleHAiOjE3NTAzMDIwMDB9.Evr_o42xLJPq1c2p5SUWo00IY85WXp8s_nqSy64V-is';
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Creates a workflow in the n8n system for a specific user
@@ -12,67 +9,55 @@ const N8N_API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS
  */
 export async function createWorkflowInN8n(email: string): Promise<{ id: string } | null> {
   try {
-    console.log(`Criando workflow no n8n para o email: ${email}`);
+    console.log(`Solicitando criação de workflow para o email: ${email}`);
     
-    // Nome do workflow formatado corretamente
-    const workflowName = `Workflow Home Finance - ${email}`;
-    console.log(`Nome do workflow: ${workflowName}`);
+    // Find or create WhatsApp group for the user to get the group ID
+    const { data: grupos, error: gruposError } = await supabase
+      .from('grupos_whatsapp')
+      .select('*')
+      .eq('login', email.trim().toLowerCase())
+      .limit(1);
     
-    // Testar primeiro com uma requisição OPTIONS para verificar CORS
-    console.log("Enviando requisição OPTIONS para verificar CORS...");
-    
-    try {
-      const optionsResponse = await fetch(N8N_API_URL, {
-        method: 'OPTIONS',
-        headers: {
-          'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'Content-Type, X-N8N-API-KEY, Origin',
-          'Origin': window.location.origin
-        }
-      });
-      
-      console.log("Resposta OPTIONS:", {
-        status: optionsResponse.status,
-        ok: optionsResponse.ok,
-        headers: Array.from(optionsResponse.headers.entries()),
-        statusText: optionsResponse.statusText
-      });
-    } catch (corsError) {
-      console.error("Erro no teste de CORS:", corsError);
+    if (gruposError) {
+      console.error("Erro ao buscar grupo do WhatsApp:", gruposError);
+      throw new Error("Não foi possível encontrar o grupo do WhatsApp associado ao usuário");
     }
     
-    // Agora fazer a requisição real
-    console.log("Enviando requisição POST para criar workflow...");
+    if (!grupos || grupos.length === 0) {
+      console.error("Nenhum grupo encontrado para o usuário");
+      throw new Error("Nenhum grupo do WhatsApp encontrado para o usuário");
+    }
     
-    const response = await fetch(N8N_API_URL, {
+    const grupo = grupos[0];
+    
+    // If the group already has a workflow ID, return it
+    if (grupo.workflow_id) {
+      console.log(`Grupo já possui workflow ID: ${grupo.workflow_id}`);
+      return { id: grupo.workflow_id };
+    }
+    
+    // Call our edge function to create the workflow
+    const response = await fetch(`${supabase.supabaseUrl}/functions/v1/create-n8n-workflow`, {
       method: 'POST',
       headers: {
-        'X-N8N-API-KEY': N8N_API_KEY,
         'Content-Type': 'application/json',
-        'Origin': window.location.origin
+        'Authorization': `Bearer ${supabase.auth.session()?.access_token || ''}`
       },
       body: JSON.stringify({
-        name: workflowName,
-        nodes: [],
-        connections: {},
-        settings: {}
+        email: email,
+        grupoId: grupo.id
       })
     });
-
-    // Log detalhado do status da resposta
-    console.log("Status da resposta n8n:", {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Array.from(response.headers.entries())
-    });
+    
+    // Log detailed response status
+    console.log(`Status da resposta da Edge Function: ${response.status}`);
     
     if (!response.ok) {
       let errorDetails = '';
       try {
-        const errorText = await response.text();
-        errorDetails = errorText;
-        console.error(`Erro ao criar workflow: Status ${response.status}`, errorText);
+        const errorBody = await response.json();
+        errorDetails = JSON.stringify(errorBody);
+        console.error(`Erro ao criar workflow através da Edge Function: Status ${response.status}`, errorBody);
       } catch (e) {
         console.error(`Não foi possível ler o corpo da resposta de erro: ${e}`);
       }
@@ -82,7 +67,7 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
     const data = await response.json();
     console.log('Resposta da criação de workflow:', data);
     
-    return data;
+    return { id: data.workflow_id };
   } catch (error) {
     console.error('Erro na requisição de criação de workflow:', error);
     throw error;
