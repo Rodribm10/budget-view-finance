@@ -117,12 +117,7 @@ export const useWhatsAppInstance = (
     }
   };
 
-  // Run once when component mounts or currentUserId changes
-  useEffect(() => {
-    if (instanceName && currentUserId) {
-      fetchInstanceByName();
-    }
-  }, [currentUserId]); // Only depend on userId changes
+  // Don't automatically load the instance - removed the useEffect that called fetchInstanceByName
 
   return {
     instanceName,

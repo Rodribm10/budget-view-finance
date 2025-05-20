@@ -69,7 +69,8 @@ export const fetchAllInstances = async (): Promise<any> => {
   try {
     console.log('Fetching all instances');
     
-    const data = await makeRequest('/fetch-instances', 'GET');
+    // Using the /instance/fetchInstances endpoint as specified in the requirements
+    const data = await makeRequest('/instance/fetchInstances', 'GET');
     
     console.log('All instances response:', data);
     return data;

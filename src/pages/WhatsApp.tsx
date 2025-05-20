@@ -10,6 +10,8 @@ import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
 import { useWhatsAppInstance, WHATSAPP_INSTANCE_KEY } from '@/hooks/whatsApp/useWhatsAppInstance';
 import { usePeriodicStatusCheck } from '@/hooks/whatsApp/usePeriodicStatusCheck';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 const WhatsApp = () => {
   const { 
@@ -40,11 +42,12 @@ const WhatsApp = () => {
     isLoading,
     instanceFound,
     setInstanceFound,
+    fetchInstanceByName,
     saveInstanceName,
     clearInstanceName
   } = useWhatsAppInstance(currentUserId, addInstance);
   
-  // Set up periodic status checking
+  // Set up periodic status checking only after instances are loaded
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
 
   // Handler para quando o usuário cria uma nova instância
@@ -87,29 +90,40 @@ const WhatsApp = () => {
     }
   };
 
-  console.log('Current instances in WhatsApp component:', instances);
-  console.log('Instance found status:', instanceFound);
+  // Check if we have any instances to show
+  const hasInstances = Array.isArray(instances) && instances.length > 0;
 
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight">Conectar WhatsApp</h1>
+          
+          {/* Update List Button - Always visible */}
+          <Button 
+            variant="outline" 
+            onClick={refreshInstances}
+            disabled={isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
+          </Button>
         </div>
         
         {isLoading ? (
           <LoadingState />
-        ) : !instanceFound ? (
-          // Show create form if no instance found
+        ) : !instanceFound && !hasInstances ? (
+          // Show create form if no instance found and no instances loaded
           <CreateInstanceForm 
             onInstanceCreated={handleInstanceCreated} 
             initialInstanceName={instanceName}
           />
         ) : (
-          // Only show stats and instance list if instance found
+          // Only show stats and instance list if instances are available
           <>
             {/* Stats component */}
-            <InstanceStats instances={instances} />
+            {hasInstances && <InstanceStats instances={instances} />}
             
             {/* List of created instances */}
             <InstanceList 

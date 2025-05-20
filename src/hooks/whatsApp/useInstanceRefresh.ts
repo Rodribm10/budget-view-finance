@@ -28,9 +28,18 @@ export const useInstanceRefresh = (
       const response = await fetchAllInstances();
       console.log("Fetched instances from server:", response);
       
-      if (response.instances && Array.isArray(response.instances)) {
+      if (response && response.instances && Array.isArray(response.instances)) {
+        // Busca o nome da instância salvo para o usuário atual
+        const savedInstanceName = localStorage.getItem(`whatsapp_instance_name_${currentUserId}`);
+        console.log("Saved instance name for current user:", savedInstanceName);
+        
+        // Filtra as instâncias pelo nome criado pelo usuário
+        const filteredInstances = savedInstanceName 
+          ? response.instances.filter(instance => instance.instanceName === savedInstanceName)
+          : response.instances;
+          
         // Mapeia as instâncias do servidor para o formato correto com userId
-        const serverInstances: WhatsAppInstance[] = response.instances
+        const serverInstances: WhatsAppInstance[] = filteredInstances
           .map(serverInstance => {
             // Ensure we convert server state to valid connectionState
             let connectionState: 'open' | 'closed' | 'connecting';
@@ -53,36 +62,28 @@ export const useInstanceRefresh = (
             };
           });
         
-        console.log("Mapped server instances:", serverInstances);
+        console.log("Filtered server instances for this user:", serverInstances);
         
-        // Identifica instâncias novas que não existem localmente
-        const localInstanceIds = new Set(instances.map(i => i.instanceId));
-        const newServerInstances = serverInstances.filter(i => !localInstanceIds.has(i.instanceId));
-        
-        // Atualiza instâncias existentes com dados do servidor
-        const updatedExistingInstances = instances.map(localInstance => {
-          const serverMatch = serverInstances.find(si => si.instanceId === localInstance.instanceId);
-          if (serverMatch) {
-            return {
-              ...localInstance,
-              connectionState: serverMatch.connectionState,
-              status: serverMatch.status
-            };
-          }
-          return localInstance;
-        });
-        
-        // Combina tudo
-        const allInstances = [...updatedExistingInstances, ...newServerInstances];
-        
-        console.log("Combined instances after refresh:", allInstances);
-        setInstances(allInstances);
-        
-        toast({
-          title: "Sucesso",
-          description: `${serverInstances.length} instâncias encontradas no servidor`,
-        });
+        if (serverInstances.length > 0) {
+          setInstances(serverInstances);
+          
+          toast({
+            title: "Sucesso",
+            description: `${serverInstances.length} instância(s) encontrada(s) para este usuário`,
+          });
+        } else {
+          // Clear instances if none found for this user
+          setInstances([]);
+          
+          toast({
+            title: "Aviso",
+            description: "Nenhuma instância encontrada para este usuário",
+          });
+        }
       } else {
+        // Handle empty or invalid response
+        setInstances([]);
+        
         toast({
           title: "Aviso",
           description: "Nenhuma instância encontrada no servidor",
@@ -90,6 +91,9 @@ export const useInstanceRefresh = (
       }
     } catch (error) {
       console.error("Erro ao buscar instâncias:", error);
+      // Ensure we don't leave instances in an undefined state
+      setInstances([]);
+      
       toast({
         title: "Erro",
         description: "Falha ao buscar instâncias do servidor",
