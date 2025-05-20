@@ -99,6 +99,30 @@ export type Database = {
         }
         Relationships: []
       }
+      cartoes_credito: {
+        Row: {
+          created_at: string
+          id: string
+          login: string | null
+          nome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          login?: string | null
+          nome: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          login?: string | null
+          nome?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conselheiraamore: {
         Row: {
           content: string | null
@@ -119,6 +143,41 @@ export type Database = {
           metadata?: Json | null
         }
         Relationships: []
+      }
+      despesas_cartao: {
+        Row: {
+          cartao_id: string
+          created_at: string
+          data_despesa: string
+          descricao: string
+          id: string
+          valor: number
+        }
+        Insert: {
+          cartao_id: string
+          created_at?: string
+          data_despesa: string
+          descricao: string
+          id?: string
+          valor: number
+        }
+        Update: {
+          cartao_id?: string
+          created_at?: string
+          data_despesa?: string
+          descricao?: string
+          id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "despesas_cartao_cartao_id_fkey"
+            columns: ["cartao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       grupos_whatsapp: {
         Row: {

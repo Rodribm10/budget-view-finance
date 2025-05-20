@@ -1,104 +1,131 @@
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useMobile } from '@/hooks/use-mobile';
+import { 
+  Home, 
+  ListFilter, 
+  Receipt, 
+  Target, 
+  Calendar, 
+  CreditCard,
+  MessageSquareText,
+  Users,
+  Menu,
+  X
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag, MessageCircle, Users } from 'lucide-react';
-
-// Atualizado para incluir a página de grupos do WhatsApp
-const navItems = [
-  { 
-    name: 'Dashboard', 
-    path: '/dashboard',
-    icon: <Home className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Transações', 
-    path: '/transacoes', 
-    icon: <DollarSign className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Categorias', 
-    path: '/categorias', 
-    icon: <PieChart className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Metas', 
-    path: '/metas', 
-    icon: <Flag className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Calendário', 
-    path: '/calendario', 
-    icon: <CalendarDays className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Conectar WhatsApp', 
-    path: '/whatsapp', 
-    icon: <MessageCircle className="mr-2 h-5 w-5" /> 
-  },
-  { 
-    name: 'Grupos WhatsApp', 
-    path: '/grupos-whatsapp', 
-    icon: <Users className="mr-2 h-5 w-5" /> 
-  },
-];
+import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
-  className?: string;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-const Sidebar = ({ className }: SidebarProps) => {
-  const location = useLocation();
-  const [collapsed, setCollapsed] = React.useState(false);
-
-  // Improved function to verify if the item is active based on exact path
-  const isItemActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  return (
-    <div
-      className={cn(
-        "flex flex-col h-full bg-sidebar border-r border-border transition-all duration-300 ease-in-out",
-        collapsed ? "w-[60px]" : "w-[250px]",
-        className
-      )}
-    >
-      <div className="flex items-center justify-between p-4">
-        {!collapsed && (
-          <h1 className="font-bold text-xl text-primary">FinDash</h1>
-        )}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setCollapsed(!collapsed)}
-          className="ml-auto"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
-      </div>
-
-      <nav className="flex-1 py-4 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.path}
-            className={cn(
-              "flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors",
-              isItemActive(item.path)
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-              collapsed ? "justify-center" : "justify-start"
-            )}
-          >
-            <span className={collapsed ? "mr-0" : "mr-2"}>{item.icon}</span>
-            {!collapsed && <span>{item.name}</span>}
-          </Link>
-        ))}
-      </nav>
-    </div>
+const getNavLinkClass = (isActive: boolean) => {
+  return cn(
+    "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary hover:text-foreground",
+    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
   );
 };
 
-export default Sidebar;
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
+  const isMobile = useMobile();
+  const location = useLocation();
+
+  return (
+    <aside className={cn(
+      "fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
+      isOpen ? 'translate-x-0' : '-translate-x-full',
+      isMobile ? 'w-full' : 'w-64'
+    )}>
+      <div className="flex items-center justify-between px-4 py-2">
+        <Link to="/" className="flex items-center space-x-2 font-semibold">
+          <span>FinDash</span>
+        </Link>
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        )}
+      </div>
+      
+      <div className="scrollbar-thin h-full space-y-4 py-4 overflow-y-auto">
+        <div className="px-3 py-2">
+          <div className="space-y-1">
+            <NavLink 
+              to="/" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Home className="mr-2 h-4 w-4" />
+              <span>Dashboard</span>
+            </NavLink>
+            <NavLink 
+              to="/transacoes" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Receipt className="mr-2 h-4 w-4" />
+              <span>Transações</span>
+            </NavLink>
+            <NavLink 
+              to="/cartoes" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              <span>Cartões de Crédito</span>
+            </NavLink>
+            <NavLink 
+              to="/categorias" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <ListFilter className="mr-2 h-4 w-4" />
+              <span>Categorias</span>
+            </NavLink>
+            <NavLink 
+              to="/metas" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Target className="mr-2 h-4 w-4" />
+              <span>Metas</span>
+            </NavLink>
+            <NavLink 
+              to="/calendario" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              <span>Calendário</span>
+            </NavLink>
+          </div>
+        </div>
+        
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-3 text-sm font-semibold tracking-tight">
+            WhatsApp
+          </h2>
+          <div className="space-y-1">
+            <NavLink 
+              to="/whatsapp"
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <MessageSquareText className="mr-2 h-4 w-4" />
+              <span>Enviar Mensagem</span>
+            </NavLink>
+            <NavLink 
+              to="/gruposwhatsapp"
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Users className="mr-2 h-4 w-4" />
+              <span>Grupos</span>
+            </NavLink>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
