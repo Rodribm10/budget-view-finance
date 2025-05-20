@@ -31,7 +31,13 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
       throw new Error('Não foi possível cadastrar o grupo de WhatsApp');
     }
     
+    if (!data || data.length === 0) {
+      console.error('Nenhum dado retornado após inserção');
+      throw new Error('Nenhum dado retornado após inserção');
+    }
+    
     console.log('Grupo WhatsApp cadastrado com sucesso:', data);
+    const newGroup = data[0];
 
     // Criar workflow no n8n
     try {
@@ -39,16 +45,18 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
       
       if (workflowResponse && workflowResponse.id) {
         // Atualizar o objeto data com o workflow_id
-        await atualizarWorkflowId(data[0].id, workflowResponse.id);
-        data[0].workflow_id = workflowResponse.id;
+        await atualizarWorkflowId(newGroup.id, workflowResponse.id);
+        newGroup.workflow_id = workflowResponse.id;
         console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
+      } else {
+        console.log('Resposta do n8n não contém ID de workflow válido');
       }
     } catch (n8nError) {
       console.error('Erro ao criar workflow no n8n:', n8nError);
       // Não impede a criação do grupo, apenas não adiciona o workflow_id
     }
     
-    return data[0];
+    return newGroup;
   } catch (error) {
     console.error('Erro ao cadastrar grupo do WhatsApp:', error);
     return null;
@@ -75,7 +83,9 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
     });
 
     if (!response.ok) {
-      throw new Error(`Erro ao criar workflow: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Erro ao criar workflow: Status ${response.status}`, errorText);
+      throw new Error(`Erro ao criar workflow: Status ${response.status}`);
     }
 
     const data = await response.json();

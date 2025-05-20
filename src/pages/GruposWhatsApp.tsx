@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Loader2, Plus, RefreshCw, MessageSquare } from 'lucide-react';
 import { cadastrarGrupoWhatsApp, listarGruposWhatsApp } from '@/services/gruposWhatsAppService';
 import { WhatsAppGroup } from '@/types/financialTypes';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const GruposWhatsApp = () => {
   const { toast } = useToast();
@@ -15,10 +17,12 @@ const GruposWhatsApp = () => {
   const [carregando, setCarregando] = useState<boolean>(true);
   const [cadastrando, setCadastrando] = useState<boolean>(false);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Buscar os grupos do usuário ao carregar a página
   const buscarGrupos = async () => {
     setCarregando(true);
+    setErrorMessage(null);
     try {
       const gruposData = await listarGruposWhatsApp();
       setGrupos(gruposData);
@@ -46,6 +50,8 @@ const GruposWhatsApp = () => {
 
   // Cadastrar novo grupo
   const handleCadastrarGrupo = async () => {
+    setErrorMessage(null);
+    
     if (!userEmail) {
       toast({
         title: 'Erro',
@@ -77,6 +83,7 @@ const GruposWhatsApp = () => {
         // Atualizar a lista de grupos
         buscarGrupos();
       } else {
+        setErrorMessage('Não foi possível registrar o grupo. O grupo deve ser criado sempre, mesmo se der erro no n8n.');
         toast({
           title: 'Erro',
           description: 'Não foi possível registrar o grupo',
@@ -85,6 +92,7 @@ const GruposWhatsApp = () => {
       }
     } catch (error) {
       console.error('Erro ao cadastrar grupo:', error);
+      setErrorMessage('Erro ao cadastrar grupo: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
       toast({
         title: 'Erro',
         description: 'Não foi possível registrar o grupo',
@@ -128,6 +136,15 @@ const GruposWhatsApp = () => {
             </Button>
           </div>
         </div>
+
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertTitle>Erro ao cadastrar grupo</AlertTitle>
+            <AlertDescription>
+              {errorMessage}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card>
           <CardHeader>
