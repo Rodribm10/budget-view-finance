@@ -7,7 +7,7 @@ import { Transaction } from '@/types/financialTypes';
 import { useToast } from "@/hooks/use-toast";
 import { getTransacoes } from '@/services/transacaoService';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -16,6 +16,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CartaoCredito } from '@/types/cartaoTypes';
+import { getCartoes } from '@/services/cartaoCreditoService';
+import { DespesaCartaoFormSelect } from '@/components/credito/DespesaCartaoFormSelect';
 
 const TransacoesPage = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -24,6 +27,8 @@ const TransacoesPage = () => {
   const [tipoForm, setTipoForm] = useState<'receita' | 'despesa'>('despesa');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isCartaoCreditoDialogOpen, setIsCartaoCreditoDialogOpen] = useState(false);
+  const [cartoes, setCartoes] = useState<CartaoCredito[]>([]);
   const { toast } = useToast();
 
   const loadTransactions = async () => {
@@ -45,8 +50,23 @@ const TransacoesPage = () => {
     }
   };
 
+  const loadCartoes = async () => {
+    try {
+      const data = await getCartoes();
+      setCartoes(data);
+    } catch (error) {
+      console.error("Erro ao carregar cartões:", error);
+      toast({
+        title: "Erro ao carregar cartões",
+        description: "Não foi possível obter os dados dos cartões",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     loadTransactions();
+    loadCartoes();
   }, []);
 
   const handleTransactionSuccess = () => {
@@ -62,6 +82,16 @@ const TransacoesPage = () => {
     });
   };
 
+  const handleDespesaCartaoSuccess = () => {
+    setIsCartaoCreditoDialogOpen(false);
+    loadCartoes(); // Recarregar lista de cartões
+    loadTransactions(); // Recarregar transações
+    toast({
+      title: "Despesa de cartão registrada",
+      description: "A despesa do cartão foi adicionada com sucesso",
+    });
+  };
+
   const handleEditTransaction = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setTipoForm(transaction.tipo as 'receita' | 'despesa');
@@ -73,6 +103,10 @@ const TransacoesPage = () => {
     setIsDialogOpen(false);
     setSelectedTransaction(null);
     setIsEditing(false);
+  };
+
+  const handleCloseCartaoCreditoDialog = () => {
+    setIsCartaoCreditoDialogOpen(false);
   };
 
   // Separar transações em receitas e despesas
@@ -97,6 +131,10 @@ const TransacoesPage = () => {
     setIsDialogOpen(true);
   };
 
+  const handleOpenCartaoCreditoDialog = () => {
+    setIsCartaoCreditoDialogOpen(true);
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -116,6 +154,13 @@ const TransacoesPage = () => {
             >
               <PlusCircle className="h-4 w-4" />
               Nova Despesa
+            </Button>
+            <Button 
+              className="flex items-center gap-2"
+              onClick={handleOpenCartaoCreditoDialog}
+            >
+              <CreditCard className="h-4 w-4" />
+              Despesa Cartão
             </Button>
           </div>
         </div>
@@ -161,6 +206,7 @@ const TransacoesPage = () => {
           />
         </div>
 
+        {/* Dialog para transações */}
         <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
@@ -183,6 +229,23 @@ const TransacoesPage = () => {
               defaultTipo={tipoForm}
               transaction={selectedTransaction}
               isEditing={isEditing}
+            />
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog para despesas de cartão */}
+        <Dialog open={isCartaoCreditoDialogOpen} onOpenChange={handleCloseCartaoCreditoDialog}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Nova Despesa de Cartão</DialogTitle>
+              <DialogDescription>
+                Selecione o cartão e preencha os detalhes da despesa.
+              </DialogDescription>
+            </DialogHeader>
+            <DespesaCartaoFormSelect 
+              cartoes={cartoes}
+              onSuccess={handleDespesaCartaoSuccess}
+              onCancel={handleCloseCartaoCreditoDialog}
             />
           </DialogContent>
         </Dialog>
