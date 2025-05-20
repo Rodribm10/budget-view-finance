@@ -37,20 +37,35 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
       return { id: grupo.workflow_id };
     }
     
-    // Get the URL from an environment variable or build it
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://tnurlgbvfsxwqgwxamni.supabase.co";
+    // Instead of using the Edge Function, we'll use a direct API call to n8n
+    // The API endpoint for the n8n workflow creation
+    const n8nApiUrl = 'https://n8n.innova1001.com.br/api/v1/workflows';
+    const apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ3NzM0NzYyLCJleHAiOjE3NTAzMDIwMDB9.Evr_o42xLJPq1c2p5SUWo00IY85WXp8s_nqSy64V-is';
     
-    // Call our edge function to create the workflow
+    // Create the workflow data
+    const workflowData = {
+      name: `Workflow Home Finance - ${email}`,
+      nodes: [],
+      connections: {},
+      settings: {}
+    };
+
+    // Use the Edge Function as a proxy to make the n8n API call
+    // This avoids CORS issues since the call is made server-side
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://tnurlgbvfsxwqgwxamni.supabase.co';
+    
+    console.log('Calling Edge Function to create workflow in n8n');
     const response = await fetch(`${supabaseUrl}/functions/v1/create-n8n-workflow`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // Use getSession() to get the current session
         'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}`
       },
       body: JSON.stringify({
         email: email,
-        grupoId: grupo.id
+        grupoId: grupo.id,
+        apiKey: apiKey, // Pass the API key to the Edge Function
+        workflowData: workflowData // Pass the workflow data
       })
     });
     
@@ -71,6 +86,19 @@ export async function createWorkflowInN8n(email: string): Promise<{ id: string }
 
     const data = await response.json();
     console.log('Resposta da criação de workflow:', data);
+    
+    // After successful workflow creation, update the group record with the workflow ID
+    if (data.workflow_id) {
+      const { error: updateError } = await supabase
+        .from('grupos_whatsapp')
+        .update({ workflow_id: data.workflow_id })
+        .eq('id', grupo.id);
+        
+      if (updateError) {
+        console.error('Erro ao atualizar workflow_id no grupo:', updateError);
+        // We still return the workflow ID even if there was an error updating the group
+      }
+    }
     
     return { id: data.workflow_id };
   } catch (error) {
