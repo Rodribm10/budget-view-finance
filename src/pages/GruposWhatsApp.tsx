@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -66,13 +65,13 @@ const GruposWhatsApp = () => {
         if (novoGrupo.workflow_id) {
           successMessage += '. Workflow criado com sucesso no n8n!';
         } else {
-          successMessage += '. Siga as instruções para completar o vínculo';
+          successMessage = 'Grupo cadastrado, mas falha ao criar workflow de automação.';
         }
         
         toast({
           title: 'Sucesso',
           description: successMessage,
-          variant: 'default',
+          variant: novoGrupo.workflow_id ? 'default' : 'destructive',
         });
         
         // Atualizar a lista de grupos
