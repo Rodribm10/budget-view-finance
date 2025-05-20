@@ -9,6 +9,7 @@ export interface Transaction {
   estabelecimento: string;
   tipo: string;
   categoria: string;
+  grupo_id?: string | null;
 }
 
 export interface TransactionSummary {

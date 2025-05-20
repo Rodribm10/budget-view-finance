@@ -30,7 +30,8 @@ const transactionSchema = z.object({
   detalhes: z.string().min(1, { message: 'Detalhes são obrigatórios' }),
   categoria: z.string().min(1, { message: 'Categoria é obrigatória' }),
   tipo: z.string().min(1, { message: 'Tipo é obrigatório' }),
-  quando: z.string().min(1, { message: 'Data é obrigatória' })
+  quando: z.string().min(1, { message: 'Data é obrigatória' }),
+  grupo_id: z.string().optional()
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -39,12 +40,33 @@ interface TransactionFormProps {
   onSuccess: () => void;
   onCancel: () => void;
   defaultTipo?: 'receita' | 'despesa';
+  grupoId?: string;
 }
 
-export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa' }: TransactionFormProps) {
+export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', grupoId }: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [grupos, setGrupos] = useState<{remote_jid: string, nome_grupo: string | null}[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Buscar grupos do usuário ao carregar o formulário
+  useState(() => {
+    const fetchGrupos = async () => {
+      const userId = localStorage.getItem('userId') || 'default';
+      const { data, error } = await supabase
+        .from('grupos_whatsapp')
+        .select('remote_jid, nome_grupo')
+        .eq('user_id', userId);
+        
+      if (error) {
+        console.error('Erro ao buscar grupos:', error);
+      } else if (data) {
+        setGrupos(data);
+      }
+    };
+    
+    fetchGrupos();
+  });
 
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -54,7 +76,8 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa' }
       detalhes: '',
       categoria: '',
       tipo: defaultTipo,
-      quando: new Date().toISOString().split('T')[0]
+      quando: new Date().toISOString().split('T')[0],
+      grupo_id: grupoId || ''
     }
   });
 
@@ -85,20 +108,24 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa' }
       
       console.log(`Salvando transação para usuário: ${userId} (${userEmail || userName})`);
       
+      // Preparar dados da transação incluindo o grupo_id se fornecido
+      const transactionData = {
+        user: userId,
+        estabelecimento: data.estabelecimento,
+        valor: valorFinal,
+        detalhes: data.detalhes,
+        categoria: data.categoria,
+        tipo: data.tipo,
+        quando: data.quando,
+        grupo_id: data.grupo_id || null
+      };
+      
+      console.log('Dados da transação a serem salvos:', transactionData);
+      
       // With RLS disabled, we can insert directly to the fixed table
       const { error } = await supabase
-        .from('transacoes') // Using a fixed table name instead of dynamic one
-        .insert([
-          {
-            user: userId,  // Store user ID as reference only
-            estabelecimento: data.estabelecimento,
-            valor: valorFinal,
-            detalhes: data.detalhes,
-            categoria: data.categoria,
-            tipo: data.tipo,
-            quando: data.quando
-          }
-        ]);
+        .from('transacoes')
+        .insert([transactionData]);
         
       if (error) {
         console.error('Erro ao salvar transação:', error);
@@ -229,6 +256,37 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa' }
             </FormItem>
           )}
         />
+        
+        {grupos.length > 0 && (
+          <FormField
+            control={form.control}
+            name="grupo_id"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Grupo WhatsApp (opcional)</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  value={field.value || ""}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um grupo (opcional)" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">Nenhum grupo</SelectItem>
+                    {grupos.map((grupo) => (
+                      <SelectItem key={grupo.remote_jid} value={grupo.remote_jid}>
+                        {grupo.nome_grupo || grupo.remote_jid}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
         <div className="flex justify-end space-x-2 pt-2">
           <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>

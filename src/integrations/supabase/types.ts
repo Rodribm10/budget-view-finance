@@ -120,6 +120,30 @@ export type Database = {
         }
         Relationships: []
       }
+      grupos_whatsapp: {
+        Row: {
+          created_at: string | null
+          id: number
+          nome_grupo: string | null
+          remote_jid: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          nome_grupo?: string | null
+          remote_jid: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          nome_grupo?: string | null
+          remote_jid?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       metas: {
         Row: {
           ano: number
@@ -189,6 +213,7 @@ export type Database = {
           created_at: string
           detalhes: string | null
           estabelecimento: string | null
+          grupo_id: string | null
           id: number
           login: string | null
           quando: string | null
@@ -201,6 +226,7 @@ export type Database = {
           created_at?: string
           detalhes?: string | null
           estabelecimento?: string | null
+          grupo_id?: string | null
           id?: number
           login?: string | null
           quando?: string | null
@@ -213,6 +239,7 @@ export type Database = {
           created_at?: string
           detalhes?: string | null
           estabelecimento?: string | null
+          grupo_id?: string | null
           id?: number
           login?: string | null
           quando?: string | null

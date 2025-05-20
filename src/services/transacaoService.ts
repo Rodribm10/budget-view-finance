@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Transaction, CategorySummary } from "@/types/financialTypes";
 
@@ -9,11 +10,25 @@ export async function getTransacoes(): Promise<Transaction[]> {
   console.log("Buscando transações para o usuário:", userId);
   
   try {
-    // Buscar transações filtrando pelo usuário atual
+    // Primeiro, buscar todos os grupos do usuário
+    const { data: userGroups, error: groupsError } = await supabase
+      .from('grupos_whatsapp')
+      .select('remote_jid')
+      .eq('user_id', userId);
+      
+    if (groupsError) {
+      console.error('Erro ao buscar grupos do usuário:', groupsError);
+    }
+    
+    // Extrair IDs dos grupos para usar no filtro
+    const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
+    console.log(`Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
+    
+    // Buscar transações com filtro aprimorado
     const { data, error } = await supabase
       .from('transacoes')
       .select('*')
-      .eq('user', userId) // Filtrar pelo ID do usuário
+      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`)
       .order('quando', { ascending: false });
 
     if (error) {
@@ -33,7 +48,8 @@ export async function getTransacoes(): Promise<Transaction[]> {
       detalhes: item.detalhes || '',
       estabelecimento: item.estabelecimento || '',
       tipo: item.tipo?.toLowerCase() || 'despesa',
-      categoria: item.categoria || 'Outros'
+      categoria: item.categoria || 'Outros',
+      grupo_id: item.grupo_id || null
     }));
   } catch (error) {
     console.error('Erro ao buscar transações:', error);
@@ -48,11 +64,24 @@ export async function getTransactionSummary() {
   const userId = localStorage.getItem('userId') || 'default';
   
   try {
-    // Buscar resumo filtrando pelo usuário atual
+    // Primeiro, buscar todos os grupos do usuário
+    const { data: userGroups, error: groupsError } = await supabase
+      .from('grupos_whatsapp')
+      .select('remote_jid')
+      .eq('user_id', userId);
+      
+    if (groupsError) {
+      console.error('Erro ao buscar grupos do usuário:', groupsError);
+    }
+    
+    // Extrair IDs dos grupos para usar no filtro
+    const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
+    
+    // Buscar resumo das transações com filtro aprimorado
     const { data, error } = await supabase
       .from('transacoes')
       .select('tipo, valor')
-      .eq('user', userId); // Filtrar pelo ID do usuário
+      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
 
     if (error) {
       console.error('Erro ao buscar resumo das transações:', error);
@@ -90,11 +119,24 @@ export async function getCategorySummary(tipoFiltro: string = 'despesa') {
   const userId = localStorage.getItem('userId') || 'default';
   
   try {
-    // Buscar resumo de categorias filtrando pelo usuário atual
+    // Primeiro, buscar todos os grupos do usuário
+    const { data: userGroups, error: groupsError } = await supabase
+      .from('grupos_whatsapp')
+      .select('remote_jid')
+      .eq('user_id', userId);
+      
+    if (groupsError) {
+      console.error('Erro ao buscar grupos do usuário:', groupsError);
+    }
+    
+    // Extrair IDs dos grupos para usar no filtro
+    const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
+    
+    // Buscar resumo de categorias com filtro aprimorado
     const { data, error } = await supabase
       .from('transacoes')
       .select('categoria, valor, tipo')
-      .eq('user', userId); // Filtrar pelo ID do usuário
+      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
 
     if (error) {
       console.error('Erro ao buscar resumo de categorias:', error);
@@ -154,11 +196,24 @@ export async function getMonthlyData() {
   const userId = localStorage.getItem('userId') || 'default';
   
   try {
-    // Buscar dados mensais filtrando pelo usuário atual
+    // Primeiro, buscar todos os grupos do usuário
+    const { data: userGroups, error: groupsError } = await supabase
+      .from('grupos_whatsapp')
+      .select('remote_jid')
+      .eq('user_id', userId);
+      
+    if (groupsError) {
+      console.error('Erro ao buscar grupos do usuário:', groupsError);
+    }
+    
+    // Extrair IDs dos grupos para usar no filtro
+    const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
+    
+    // Buscar dados mensais com filtro aprimorado
     const { data, error } = await supabase
       .from('transacoes')
       .select('quando, valor, tipo')
-      .eq('user', userId); // Filtrar pelo ID do usuário
+      .or(`user.eq.${userId},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
 
     if (error) {
       console.error('Erro ao buscar dados mensais:', error);
