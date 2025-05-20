@@ -12,6 +12,7 @@ import { useWhatsAppInstance, WHATSAPP_INSTANCE_KEY } from '@/hooks/whatsApp/use
 import { usePeriodicStatusCheck } from '@/hooks/whatsApp/usePeriodicStatusCheck';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { useState } from 'react';
 
 const WhatsApp = () => {
   const { 
@@ -47,6 +48,9 @@ const WhatsApp = () => {
     clearInstanceName
   } = useWhatsAppInstance(currentUserId, addInstance);
   
+  // Toggle for showing the creation form
+  const [showCreateForm, setShowCreateForm] = useState(!instanceFound && instances.length === 0);
+  
   // Set up periodic status checking only after instances are loaded
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
 
@@ -55,6 +59,7 @@ const WhatsApp = () => {
     console.log('New instance to be added:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
+    setShowCreateForm(false);
     
     // Salvar o nome da instância no localStorage para uso futuro
     saveInstanceName(newInstance.instanceName);
@@ -84,6 +89,7 @@ const WhatsApp = () => {
       // Se a instância excluída for a atual, limpar o nome salvo
       if (instanceToDelete.instanceName === instanceName) {
         clearInstanceName();
+        setShowCreateForm(true);
       }
     } else {
       console.error(`Instance with ID ${instanceId} not found for deletion`);
@@ -113,16 +119,27 @@ const WhatsApp = () => {
         
         {isLoading ? (
           <LoadingState />
-        ) : !instanceFound && !hasInstances ? (
-          // Show create form if no instance found and no instances loaded
-          <CreateInstanceForm 
-            onInstanceCreated={handleInstanceCreated} 
-            initialInstanceName={instanceName}
-          />
         ) : (
-          // Only show stats and instance list if instances are available
           <>
-            {/* Stats component */}
+            {/* Always show create form if showCreateForm is true */}
+            {showCreateForm && (
+              <CreateInstanceForm 
+                onInstanceCreated={handleInstanceCreated} 
+                initialInstanceName={instanceName}
+              />
+            )}
+            
+            {/* Toggle Create Form Button - only show if form is hidden */}
+            {!showCreateForm && (
+              <Button 
+                onClick={() => setShowCreateForm(true)}
+                className="mb-4"
+              >
+                Conectar Novo WhatsApp
+              </Button>
+            )}
+            
+            {/* Only show stats if instances are available */}
             {hasInstances && <InstanceStats instances={instances} />}
             
             {/* List of created instances */}
