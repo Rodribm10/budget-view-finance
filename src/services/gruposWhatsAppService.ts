@@ -15,44 +15,74 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
     // Normalizar o email (minúsculo e sem espaços)
     const normalizedEmail = userEmail.trim().toLowerCase();
     
-    // Criar registro na tabela grupos_whatsapp
-    const { data, error } = await supabase
+    // Primeiro verificar se já existe um grupo pendente para este usuário
+    const { data: existingGroups } = await supabase
       .from('grupos_whatsapp')
-      .insert({
-        user_id: localStorage.getItem('userId') || '', // Mantido por compatibilidade
-        remote_jid: '', // Valor temporário vazio - será preenchido pelo backend posteriormente
-        login: normalizedEmail,
-        status: 'pendente'
-      })
-      .select();
+      .select('*')
+      .eq('login', normalizedEmail)
+      .eq('remote_jid', '')
+      .eq('status', 'pendente');
     
-    if (error) {
-      console.error('Erro ao cadastrar grupo do WhatsApp:', error);
-      throw new Error('Não foi possível cadastrar o grupo de WhatsApp');
+    let groupToUse: WhatsAppGroup | null = null;
+    
+    if (existingGroups && existingGroups.length > 0) {
+      console.log('Grupo pendente já existe para este usuário:', existingGroups[0]);
+      groupToUse = existingGroups[0];
+      
+      // Se já existe um workflow_id, não precisamos criar novamente
+      if (groupToUse.workflow_id) {
+        console.log('Workflow já existe para este grupo:', groupToUse.workflow_id);
+        return groupToUse;
+      }
+    } else {
+      // Criar registro na tabela grupos_whatsapp se não existir
+      console.log('Criando novo grupo para o usuário:', normalizedEmail);
+      const { data, error } = await supabase
+        .from('grupos_whatsapp')
+        .insert({
+          user_id: localStorage.getItem('userId') || '',
+          remote_jid: '',
+          login: normalizedEmail,
+          status: 'pendente'
+        })
+        .select();
+      
+      if (error) {
+        console.error('Erro ao cadastrar grupo do WhatsApp:', error);
+        throw new Error('Não foi possível cadastrar o grupo de WhatsApp');
+      }
+      
+      if (!data || data.length === 0) {
+        console.error('Nenhum dado retornado após inserção');
+        return null;
+      }
+      
+      console.log('Grupo WhatsApp cadastrado com sucesso:', data);
+      groupToUse = data[0];
     }
     
-    if (!data || data.length === 0) {
-      console.error('Nenhum dado retornado após inserção');
+    // A partir daqui, temos um grupo para usar, seja novo ou existente
+    if (!groupToUse) {
+      console.error('Erro inesperado: não foi possível obter ou criar um grupo');
       return null;
     }
     
-    console.log('Grupo WhatsApp cadastrado com sucesso:', data);
-    const newGroup = data[0];
-
-    // Criar workflow no n8n
+    // Criar workflow no n8n se não existir
     try {
-      console.log(`Iniciando criação de workflow para o email: ${normalizedEmail}`);
-      const workflowResponse = await createWorkflowInN8n(normalizedEmail);
-      
-      console.log("Resposta completa do n8n:", workflowResponse);
-      
-      if (workflowResponse && workflowResponse.id) {
-        // Atualizar o objeto com o workflow_id
-        await atualizarWorkflowId(newGroup.id, workflowResponse.id);
-        newGroup.workflow_id = workflowResponse.id;
-        console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
-      } else {
-        console.log('Resposta do n8n não contém ID de workflow válido:', workflowResponse);
+      if (!groupToUse.workflow_id) {
+        console.log(`Iniciando criação de workflow para o email: ${normalizedEmail} e grupo ID: ${groupToUse.id}`);
+        const workflowResponse = await createWorkflowInN8n(normalizedEmail);
+        
+        console.log("Resposta completa do n8n:", workflowResponse);
+        
+        if (workflowResponse && workflowResponse.id) {
+          // Atualizar o objeto com o workflow_id
+          await atualizarWorkflowId(groupToUse.id, workflowResponse.id);
+          groupToUse.workflow_id = workflowResponse.id;
+          console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
+        } else {
+          console.log('Resposta do n8n não contém ID de workflow válido:', workflowResponse);
+        }
       }
     } catch (n8nError) {
       console.error('Erro ao criar workflow no n8n:', n8nError);
@@ -60,7 +90,7 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
     }
     
     // Sempre retorna o grupo, mesmo se a criação do workflow falhar
-    return newGroup;
+    return groupToUse;
   } catch (error) {
     console.error('Erro ao cadastrar grupo do WhatsApp:', error);
     throw error; // Propaga o erro para ser tratado no componente
@@ -76,16 +106,15 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
     const workflowName = `Workflow Home Finance - ${email}`;
     console.log(`Nome do workflow: ${workflowName}`);
     
-    // Verificação de CORS
-    console.log("Iniciando requisição para n8n...");
-    
     // Testar primeiro com uma requisição OPTIONS para verificar CORS
+    console.log("Enviando requisição OPTIONS para verificar CORS...");
+    
     try {
       const optionsResponse = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
         method: 'OPTIONS',
         headers: {
           'Access-Control-Request-Method': 'POST',
-          'Access-Control-Request-Headers': 'Content-Type, X-N8N-API-KEY',
+          'Access-Control-Request-Headers': 'Content-Type, X-N8N-API-KEY, Origin',
           'Origin': window.location.origin
         }
       });
@@ -93,7 +122,8 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
       console.log("Resposta OPTIONS:", {
         status: optionsResponse.status,
         ok: optionsResponse.ok,
-        headers: Array.from(optionsResponse.headers.entries())
+        headers: Array.from(optionsResponse.headers.entries()),
+        statusText: optionsResponse.statusText
       });
     } catch (corsError) {
       console.error("Erro no teste de CORS:", corsError);
@@ -114,8 +144,7 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
         nodes: [],
         connections: {},
         settings: {}
-      }),
-      mode: 'cors'
+      })
     });
 
     // Log detalhado do status da resposta

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -50,7 +49,7 @@ const GruposWhatsApp = () => {
     buscarGrupos();
   }, []);
 
-  // Cadastrar novo grupo
+  // Cadastrar novo grupo ou atualizar workflow se necessário
   const handleCadastrarGrupo = async () => {
     setErrorMessage(null);
     setDebugInfo(null);
@@ -67,13 +66,13 @@ const GruposWhatsApp = () => {
     setCadastrando(true);
     try {
       console.log("Iniciando processo de cadastro de grupo...");
-      const novoGrupo = await cadastrarGrupoWhatsApp();
+      const grupo = await cadastrarGrupoWhatsApp();
       
-      if (novoGrupo) {
+      if (grupo) {
         let successMessage = 'Grupo registrado com sucesso';
         let variant: 'default' | 'destructive' = 'default';
         
-        if (novoGrupo.workflow_id) {
+        if (grupo.workflow_id) {
           successMessage = 'Grupo cadastrado e workflow criado com sucesso!';
         } else {
           successMessage = 'Grupo cadastrado, mas falha ao criar workflow de automação.';
@@ -82,7 +81,7 @@ const GruposWhatsApp = () => {
         }
         
         toast({
-          title: novoGrupo.workflow_id ? 'Sucesso' : 'Atenção',
+          title: grupo.workflow_id ? 'Sucesso' : 'Atenção',
           description: successMessage,
           variant: variant,
         });
