@@ -11,6 +11,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [shouldShowToast, setShouldShowToast] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
 
@@ -30,10 +31,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         } else {
           console.log('Nenhuma sessão encontrada, redirecionando para login');
           setIsAuthenticated(false);
+          setShouldShowToast(true); // Mark that we should show toast, but don't do it here
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
         setIsAuthenticated(false);
+        setShouldShowToast(true);
       } finally {
         setIsLoading(false);
       }
@@ -41,6 +44,17 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     
     checkAuthentication();
   }, []); // Execute only on mount
+
+  // Show toast in a separate useEffect to avoid re-render loops
+  useEffect(() => {
+    if (shouldShowToast) {
+      toast({
+        title: "Autenticação necessária",
+        description: "Por favor, faça login para acessar esta página"
+      });
+      setShouldShowToast(false); // Reset the flag after showing toast
+    }
+  }, [shouldShowToast, toast]);
 
   // Se estiver carregando, mostrar estado de carregamento
   if (isLoading) {
@@ -53,11 +67,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   
   // Se não estiver autenticado, redirecionar para a página de login
   if (!isAuthenticated) {
-    // Use toast here - it's safer after render and won't cause infinite re-renders
-    toast({
-      title: "Autenticação necessária",
-      description: "Por favor, faça login para acessar esta página"
-    });
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   

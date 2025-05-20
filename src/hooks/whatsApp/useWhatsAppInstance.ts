@@ -22,6 +22,8 @@ export const useWhatsAppInstance = (
   
   const [isLoading, setIsLoading] = useState(false);
   const [instanceFound, setInstanceFound] = useState(false);
+  const [shouldShowToast, setShouldShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState({ title: '', description: '', variant: '' as any });
 
   // Function to fetch specific instance by name
   const fetchInstanceByName = async () => {
@@ -58,10 +60,14 @@ export const useWhatsAppInstance = (
         console.log('Found instance:', foundInstance);
         addInstance(foundInstance);
         setInstanceFound(true);
-        toast({
+        
+        // Set toast data instead of calling toast directly
+        setToastMessage({
           title: "Instância encontrada",
-          description: `A instância ${instanceName} foi localizada no servidor.`
+          description: `A instância ${instanceName} foi localizada no servidor.`,
+          variant: "default"
         });
+        setShouldShowToast(true);
       } else {
         setInstanceFound(false);
         console.log(`Instance ${instanceName} not found`);
@@ -69,15 +75,30 @@ export const useWhatsAppInstance = (
     } catch (error) {
       console.error('Error fetching specific instance:', error);
       setInstanceFound(false);
-      toast({
+      
+      // Set toast data instead of calling toast directly
+      setToastMessage({
         title: "Instância não encontrada",
         description: "Não foi possível encontrar a instância com este nome.",
         variant: "destructive"
       });
+      setShouldShowToast(true);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Show toast in a separate useEffect to avoid re-render loops
+  useEffect(() => {
+    if (shouldShowToast) {
+      toast({
+        title: toastMessage.title,
+        description: toastMessage.description,
+        variant: toastMessage.variant
+      });
+      setShouldShowToast(false);
+    }
+  }, [shouldShowToast, toastMessage, toast]);
 
   // Save instance name to localStorage
   const saveInstanceName = (name: string) => {
