@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { WhatsAppGroup } from "@/types/financialTypes";
 
@@ -43,13 +42,15 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
     try {
       const workflowResponse = await createWorkflowInN8n(normalizedEmail);
       
+      console.log("Resposta completa do n8n:", workflowResponse);
+      
       if (workflowResponse && workflowResponse.id) {
         // Atualizar o objeto com o workflow_id
         await atualizarWorkflowId(newGroup.id, workflowResponse.id);
         newGroup.workflow_id = workflowResponse.id;
         console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
       } else {
-        console.log('Resposta do n8n não contém ID de workflow válido');
+        console.log('Resposta do n8n não contém ID de workflow válido:', workflowResponse);
       }
     } catch (n8nError) {
       console.error('Erro ao criar workflow no n8n:', n8nError);
@@ -69,6 +70,13 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
   try {
     console.log(`Criando workflow no n8n para o email: ${email}`);
     
+    // Nome do workflow formatado corretamente
+    const workflowName = `Workflow Home Finance - ${email}`;
+    console.log(`Nome do workflow: ${workflowName}`);
+    
+    // Verificação de CORS
+    console.log("Iniciando requisição para n8n...");
+    
     const response = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
       method: 'POST',
       headers: {
@@ -76,13 +84,15 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        name: `Workflow Home Finance - ${email}`,
+        name: workflowName,
         nodes: [],
         connections: {},
         settings: {}
       })
     });
 
+    console.log("Status da resposta n8n:", response.status);
+    
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Erro ao criar workflow: Status ${response.status}`, errorText);

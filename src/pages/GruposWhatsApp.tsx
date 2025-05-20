@@ -67,17 +67,19 @@ const GruposWhatsApp = () => {
       
       if (novoGrupo) {
         let successMessage = 'Grupo registrado com sucesso';
+        let variant: 'default' | 'destructive' = 'default';
         
         if (novoGrupo.workflow_id) {
-          successMessage += '. Workflow criado com sucesso no n8n!';
+          successMessage = 'Grupo cadastrado e workflow criado com sucesso!';
         } else {
           successMessage = 'Grupo cadastrado, mas falha ao criar workflow de automação.';
+          variant = 'destructive';
         }
         
         toast({
-          title: 'Sucesso',
+          title: novoGrupo.workflow_id ? 'Sucesso' : 'Atenção',
           description: successMessage,
-          variant: novoGrupo.workflow_id ? 'default' : 'destructive',
+          variant: variant,
         });
         
         // Atualizar a lista de grupos
