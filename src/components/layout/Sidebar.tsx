@@ -3,9 +3,9 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Home, CalendarDays, DollarSign, PieChart, Flag, MessageCircle, Users } from 'lucide-react';
 
-// Updated navItems with the new WhatsApp connection page
+// Atualizado para incluir a página de grupos do WhatsApp
 const navItems = [
   { 
     name: 'Dashboard', 
@@ -36,6 +36,11 @@ const navItems = [
     name: 'Conectar WhatsApp', 
     path: '/whatsapp', 
     icon: <MessageCircle className="mr-2 h-5 w-5" /> 
+  },
+  { 
+    name: 'Grupos WhatsApp', 
+    path: '/grupos-whatsapp', 
+    icon: <Users className="mr-2 h-5 w-5" /> 
   },
 ];
 

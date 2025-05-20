@@ -1,4 +1,5 @@
 
+
 export interface Transaction {
   id: string;
   user: string;
@@ -56,3 +57,14 @@ export interface ResultadoMeta {
   percentual_atingido: number;
   meta_batida: boolean;
 }
+
+export interface WhatsAppGroup {
+  id: number;
+  user_id: string;
+  remote_jid: string | null;
+  nome_grupo: string | null;
+  created_at: string;
+  status: string;
+  login: string;
+}
+

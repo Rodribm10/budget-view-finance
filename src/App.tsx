@@ -8,6 +8,7 @@ import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import Metas from '@/pages/Metas';
 import WhatsApp from '@/pages/WhatsApp';
+import GruposWhatsApp from '@/pages/GruposWhatsApp';
 import { Toaster } from '@/components/ui/toaster';
 import './App.css';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
@@ -45,6 +46,11 @@ function App() {
         <Route path="/whatsapp" element={
           <ProtectedRoute>
             <WhatsApp />
+          </ProtectedRoute>
+        } />
+        <Route path="/grupos-whatsapp" element={
+          <ProtectedRoute>
+            <GruposWhatsApp />
           </ProtectedRoute>
         } />
         <Route path="/login" element={<Auth />} />
