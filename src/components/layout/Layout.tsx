@@ -14,6 +14,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { toast } = useToast();
   const [isMobile, setIsMobile] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
     const checkIfMobile = () => {
@@ -27,11 +28,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       window.removeEventListener('resize', checkIfMobile);
     };
   }, []);
+
+  const handleCloseSidebar = () => {
+    setSidebarOpen(false);
+  };
   
   return (
     <div className="flex h-screen overflow-hidden">
       {isMobile ? (
-        <Sheet>
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden fixed top-2 left-2 z-20">
               <Menu className="h-5 w-5" />
@@ -39,11 +44,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[250px]">
-            <Sidebar className="w-full border-none" />
+            <Sidebar isOpen={true} onClose={handleCloseSidebar} />
           </SheetContent>
         </Sheet>
       ) : (
-        <Sidebar />
+        <Sidebar isOpen={true} onClose={() => {}} />
       )}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header />

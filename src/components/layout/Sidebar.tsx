@@ -1,5 +1,6 @@
+
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { useMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Home, 
   ListFilter, 
@@ -28,7 +29,7 @@ const getNavLinkClass = (isActive: boolean) => {
 };
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
-  const isMobile = useMobile();
+  const isMobile = useIsMobile();
   const location = useLocation();
 
   return (
