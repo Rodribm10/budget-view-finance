@@ -33,7 +33,7 @@ const transactionSchema = z.object({
   categoria: z.string().min(1, { message: 'Categoria é obrigatória' }),
   tipo: z.string().min(1, { message: 'Tipo é obrigatório' }),
   quando: z.string().min(1, { message: 'Data é obrigatória' }),
-  grupo_id: z.string().optional()
+  grupo_id: z.string().nullable().optional()
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -43,8 +43,8 @@ interface TransactionFormProps {
   onCancel: () => void;
   defaultTipo?: 'receita' | 'despesa';
   grupoId?: string;
-  transaction?: Transaction | null; // Added this property
-  isEditing?: boolean; // Added this property
+  transaction?: Transaction | null;
+  isEditing?: boolean;
 }
 
 export function TransactionForm({ 
@@ -52,8 +52,8 @@ export function TransactionForm({
   onCancel, 
   defaultTipo = 'despesa', 
   grupoId,
-  transaction = null, // Default to null
-  isEditing = false // Default to false
+  transaction = null,
+  isEditing = false
 }: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [grupos, setGrupos] = useState<{remote_jid: string, nome_grupo: string | null}[]>([]);
@@ -98,7 +98,7 @@ export function TransactionForm({
       quando: transaction?.quando ? 
         new Date(transaction.quando).toISOString().split('T')[0] : 
         new Date().toISOString().split('T')[0],
-      grupo_id: transaction?.grupo_id || grupoId || ''
+      grupo_id: transaction?.grupo_id || grupoId || null
     }
   });
 
@@ -324,7 +324,7 @@ export function TransactionForm({
                 <FormLabel>Grupo WhatsApp (opcional)</FormLabel>
                 <Select 
                   onValueChange={field.onChange} 
-                  value={field.value || ""}
+                  value={field.value || undefined}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -332,7 +332,7 @@ export function TransactionForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">Nenhum grupo</SelectItem>
+                    <SelectItem value="none">Nenhum grupo</SelectItem>
                     {grupos.map((grupo) => (
                       <SelectItem key={grupo.remote_jid} value={grupo.remote_jid}>
                         {grupo.nome_grupo || grupo.remote_jid}
