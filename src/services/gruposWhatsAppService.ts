@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { WhatsAppGroup } from "@/types/financialTypes";
 
@@ -40,6 +41,7 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
 
     // Criar workflow no n8n
     try {
+      console.log(`Iniciando criação de workflow para o email: ${normalizedEmail}`);
       const workflowResponse = await createWorkflowInN8n(normalizedEmail);
       
       console.log("Resposta completa do n8n:", workflowResponse);
@@ -77,26 +79,63 @@ async function createWorkflowInN8n(email: string): Promise<{ id: string } | null
     // Verificação de CORS
     console.log("Iniciando requisição para n8n...");
     
+    // Testar primeiro com uma requisição OPTIONS para verificar CORS
+    try {
+      const optionsResponse = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
+        method: 'OPTIONS',
+        headers: {
+          'Access-Control-Request-Method': 'POST',
+          'Access-Control-Request-Headers': 'Content-Type, X-N8N-API-KEY',
+          'Origin': window.location.origin
+        }
+      });
+      
+      console.log("Resposta OPTIONS:", {
+        status: optionsResponse.status,
+        ok: optionsResponse.ok,
+        headers: Array.from(optionsResponse.headers.entries())
+      });
+    } catch (corsError) {
+      console.error("Erro no teste de CORS:", corsError);
+    }
+    
+    // Agora fazer a requisição real
+    console.log("Enviando requisição POST para criar workflow...");
+    
     const response = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
       method: 'POST',
       headers: {
         'X-N8N-API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ3NzM0NzYyLCJleHAiOjE3NTAzMDIwMDB9.Evr_o42xLJPq1c2p5SUWo00IY85WXp8s_nqSy64V-is',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin
       },
       body: JSON.stringify({
         name: workflowName,
         nodes: [],
         connections: {},
         settings: {}
-      })
+      }),
+      mode: 'cors'
     });
 
-    console.log("Status da resposta n8n:", response.status);
+    // Log detalhado do status da resposta
+    console.log("Status da resposta n8n:", {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Array.from(response.headers.entries())
+    });
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`Erro ao criar workflow: Status ${response.status}`, errorText);
-      throw new Error(`Erro ao criar workflow: Status ${response.status}`);
+      let errorDetails = '';
+      try {
+        const errorText = await response.text();
+        errorDetails = errorText;
+        console.error(`Erro ao criar workflow: Status ${response.status}`, errorText);
+      } catch (e) {
+        console.error(`Não foi possível ler o corpo da resposta de erro: ${e}`);
+      }
+      throw new Error(`Erro ao criar workflow: Status ${response.status}. Detalhes: ${errorDetails}`);
     }
 
     const data = await response.json();

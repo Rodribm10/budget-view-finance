@@ -18,11 +18,13 @@ const GruposWhatsApp = () => {
   const [cadastrando, setCadastrando] = useState<boolean>(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Buscar os grupos do usuário ao carregar a página
   const buscarGrupos = async () => {
     setCarregando(true);
     setErrorMessage(null);
+    setDebugInfo(null);
     try {
       const gruposData = await listarGruposWhatsApp();
       setGrupos(gruposData);
@@ -51,6 +53,7 @@ const GruposWhatsApp = () => {
   // Cadastrar novo grupo
   const handleCadastrarGrupo = async () => {
     setErrorMessage(null);
+    setDebugInfo(null);
     
     if (!userEmail) {
       toast({
@@ -63,6 +66,7 @@ const GruposWhatsApp = () => {
 
     setCadastrando(true);
     try {
+      console.log("Iniciando processo de cadastro de grupo...");
       const novoGrupo = await cadastrarGrupoWhatsApp();
       
       if (novoGrupo) {
@@ -73,6 +77,7 @@ const GruposWhatsApp = () => {
           successMessage = 'Grupo cadastrado e workflow criado com sucesso!';
         } else {
           successMessage = 'Grupo cadastrado, mas falha ao criar workflow de automação.';
+          setDebugInfo('O grupo foi criado no Supabase, mas houve um problema ao criar o workflow no n8n. Verifique os logs do console para mais detalhes.');
           variant = 'destructive';
         }
         
@@ -94,7 +99,20 @@ const GruposWhatsApp = () => {
       }
     } catch (error) {
       console.error('Erro ao cadastrar grupo:', error);
-      setErrorMessage('Erro ao cadastrar grupo: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      let errorMsg = 'Erro desconhecido';
+      if (error instanceof Error) {
+        errorMsg = error.message;
+        
+        // Tentar extrair detalhes específicos do erro se existirem
+        if (errorMsg.includes('Status')) {
+          const statusMatch = errorMsg.match(/Status (\d+)/);
+          if (statusMatch && statusMatch[1]) {
+            setDebugInfo(`Código de status HTTP da API n8n: ${statusMatch[1]}`);
+          }
+        }
+      }
+      
+      setErrorMessage('Erro ao cadastrar grupo: ' + errorMsg);
       toast({
         title: 'Erro',
         description: 'Não foi possível registrar o grupo',
@@ -144,6 +162,15 @@ const GruposWhatsApp = () => {
             <AlertTitle>Erro ao cadastrar grupo</AlertTitle>
             <AlertDescription>
               {errorMessage}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {debugInfo && (
+          <Alert variant="default" className="bg-amber-50 border-amber-200">
+            <AlertTitle>Informações de depuração</AlertTitle>
+            <AlertDescription className="text-amber-800">
+              {debugInfo}
             </AlertDescription>
           </Alert>
         )}
