@@ -34,9 +34,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "fixed left-0 top-0 z-50 flex h-full w-64 flex-col border-r bg-background shadow-sm transition-all duration-300 ease-in-out",
-      isOpen ? 'translate-x-0' : '-translate-x-full',
-      isMobile ? 'w-full' : 'w-64'
+      "flex h-full w-64 flex-col border-r bg-background shadow-sm",
+      isMobile ? 'fixed left-0 top-0 z-50 w-full transition-all duration-300' : 'relative'
     )}>
       <div className="flex items-center justify-between px-4 py-2">
         <Link to="/" className="flex items-center space-x-2 font-semibold">

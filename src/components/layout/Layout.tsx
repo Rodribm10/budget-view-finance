@@ -38,7 +38,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       {isMobile ? (
         <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden fixed top-2 left-2 z-20">
+            <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-20">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Menu</span>
             </Button>
@@ -48,11 +48,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </SheetContent>
         </Sheet>
       ) : (
-        <Sidebar isOpen={true} onClose={() => {}} />
+        <div className="hidden md:block w-64 flex-shrink-0">
+          <Sidebar isOpen={true} onClose={() => {}} />
+        </div>
       )}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-4 pt-16 md:pt-4 md:p-6">
           {children}
         </main>
       </div>
