@@ -2,7 +2,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import LoadingState from '../whatsapp/LoadingState';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -15,6 +15,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
 
   useEffect(() => {
+    // Check authentication status only once on mount
     const checkAuthentication = async () => {
       try {
         setIsLoading(true);
@@ -29,12 +30,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         } else {
           console.log('Nenhuma sessão encontrada, redirecionando para login');
           setIsAuthenticated(false);
-          
-          // Toast message is moved here inside useEffect, not during render
-          toast({
-            title: "Autenticação necessária",
-            description: "Por favor, faça login para acessar esta página"
-          });
         }
       } catch (error) {
         console.error('Erro ao verificar autenticação:', error);
@@ -45,17 +40,24 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     };
     
     checkAuthentication();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);  // Remove toast from dependencies to prevent re-renders
+  }, []); // Execute only on mount
 
-  // Mostrar estado de carregamento
+  // Se estiver carregando, mostrar estado de carregamento
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingState message="Verificando autenticação..." />
+      </div>
+    );
   }
   
   // Se não estiver autenticado, redirecionar para a página de login
-  if (isAuthenticated === false) {
-    // Remove the toast from here as it's causing infinite re-renders
+  if (!isAuthenticated) {
+    // Use toast here - it's safer after render and won't cause infinite re-renders
+    toast({
+      title: "Autenticação necessária",
+      description: "Por favor, faça login para acessar esta página"
+    });
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   

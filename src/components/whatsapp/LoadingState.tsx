@@ -5,12 +5,14 @@ interface LoadingStateProps {
   message?: string;
   size?: 'small' | 'medium' | 'large';
   className?: string;
+  centered?: boolean;
 }
 
 const LoadingState = ({ 
   message = "Buscando instância...", 
   size = 'medium',
-  className = ''
+  className = '',
+  centered = true
 }: LoadingStateProps) => {
   const spinnerSizes = {
     small: 'h-6 w-6',
@@ -25,7 +27,7 @@ const LoadingState = ({
   };
 
   return (
-    <div className={`flex justify-center items-center p-4 ${className}`}>
+    <div className={`flex items-center ${centered ? 'justify-center' : ''} p-4 ${className}`}>
       <div className={`animate-spin rounded-full ${spinnerSizes[size]} border-b-2 border-primary`}></div>
       {message && <p className={`ml-3 ${textSizes[size]}`}>{message}</p>}
     </div>

@@ -25,8 +25,14 @@ export const useWhatsAppInstance = (
 
   // Function to fetch specific instance by name
   const fetchInstanceByName = async () => {
-    // Skip if user not logged in or no instance name
-    if (!currentUserId || !instanceName.trim()) {
+    // Skip if no instance name
+    if (!instanceName.trim()) {
+      return;
+    }
+
+    // Verificar se o usuário está autenticado
+    if (!currentUserId) {
+      console.log('Usuário não autenticado, pulando busca de instância');
       return;
     }
 
@@ -90,18 +96,12 @@ export const useWhatsAppInstance = (
     }
   };
 
-  // Run once when component mounts
+  // Run once when component mounts or currentUserId changes
   useEffect(() => {
-    if (currentUserId) {
+    if (instanceName && currentUserId) {
       fetchInstanceByName();
-    } else {
-      toast({
-        title: "Login necessário",
-        description: "Você precisa estar logado para ver suas instâncias do WhatsApp.",
-        variant: "destructive"
-      });
     }
-  }, [currentUserId]); // Only depend on userId, not instanceName
+  }, [currentUserId]); // Only depend on userId changes
 
   return {
     instanceName,
