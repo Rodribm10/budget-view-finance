@@ -20,6 +20,7 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
       .from('grupos_whatsapp')
       .insert({
         user_id: localStorage.getItem('userId') || '', // Mantido por compatibilidade
+        remote_jid: '', // Valor temporário vazio - será preenchido pelo backend posteriormente
         login: normalizedEmail,
         status: 'pendente'
       })
