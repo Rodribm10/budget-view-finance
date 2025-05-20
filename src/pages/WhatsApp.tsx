@@ -11,6 +11,8 @@ import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
 import { useToast } from '@/hooks/use-toast';
 import { fetchSpecificInstance } from '@/services/whatsApp/instanceManagement';
 
+const WHATSAPP_INSTANCE_KEY = 'whatsapp_instance_name';
+
 const WhatsApp = () => {
   const { toast } = useToast();
   const { 
@@ -34,10 +36,15 @@ const WhatsApp = () => {
     handleViewQrCode
   } = useWhatsAppActions(updateInstance, removeInstance, checkAllInstancesStatus);
   
+  // Obter o nome da instância salvo no localStorage
   const [instanceName, setInstanceName] = useState(() => {
-    // Get user's name from localStorage as default instance name
-    return localStorage.getItem('userName') || '';
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      return localStorage.getItem(`${WHATSAPP_INSTANCE_KEY}_${userId}`) || '';
+    }
+    return '';
   });
+
   const [isLoading, setIsLoading] = useState(false);
   const [instanceFound, setInstanceFound] = useState(false);
   const currentUserId = localStorage.getItem('userId') || '';
@@ -122,7 +129,7 @@ const WhatsApp = () => {
     };
   }, [instances.length, checkAllInstancesStatus]);
 
-  // Fetch the specific instance when the component mounts
+  // Fetch the specific instance when the component mounts (não a cada digitação)
   useEffect(() => {
     if (currentUserId) {
       fetchInstanceByName();
@@ -133,18 +140,19 @@ const WhatsApp = () => {
         variant: "destructive"
       });
     }
-  }, [currentUserId, instanceName]);
+  }, [currentUserId]);
 
-  // Handler for when the user changes the instance name
-  const handleInstanceNameChange = (name: string) => {
-    setInstanceName(name);
-  };
-
-  // Handler for when a new instance is created
-  const handleInstanceCreated = async (newInstance: WhatsAppInstance) => {
+  // Handler para quando o usuário cria uma nova instância
+  const handleInstanceCreated = (newInstance: WhatsAppInstance) => {
     console.log('New instance to be added:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
+    
+    // Salvar o nome da instância no localStorage para uso futuro
+    if (currentUserId) {
+      localStorage.setItem(`${WHATSAPP_INSTANCE_KEY}_${currentUserId}`, newInstance.instanceName);
+      setInstanceName(newInstance.instanceName);
+    }
     
     // If there's a QR code in the response, show it
     if (newInstance.qrcode) {
@@ -172,6 +180,13 @@ const WhatsApp = () => {
     const instanceToDelete = instances.find(i => i.instanceId === instanceId);
     if (instanceToDelete) {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
+      
+      // Se a instância excluída for a atual, limpar o nome salvo
+      if (instanceToDelete.instanceName === instanceName && currentUserId) {
+        localStorage.removeItem(`${WHATSAPP_INSTANCE_KEY}_${currentUserId}`);
+        setInstanceName('');
+        setInstanceFound(false);
+      }
     } else {
       console.error(`Instance with ID ${instanceId} not found for deletion`);
       toast({
@@ -202,7 +217,6 @@ const WhatsApp = () => {
           <CreateInstanceForm 
             onInstanceCreated={handleInstanceCreated} 
             initialInstanceName={instanceName}
-            onInstanceNameChange={handleInstanceNameChange}
           />
         ) : (
           // Only show stats and instance list if instance found

@@ -12,13 +12,11 @@ import { WhatsAppInstance } from '@/types/whatsAppTypes';
 interface CreateInstanceFormProps {
   onInstanceCreated: (instance: WhatsAppInstance) => void;
   initialInstanceName?: string;
-  onInstanceNameChange?: (name: string) => void;
 }
 
 const CreateInstanceForm = ({ 
   onInstanceCreated, 
-  initialInstanceName = '', 
-  onInstanceNameChange 
+  initialInstanceName = '' 
 }: CreateInstanceFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -32,14 +30,6 @@ const CreateInstanceForm = ({
       setInstanceName(initialInstanceName);
     }
   }, [initialInstanceName]);
-
-  const handleInstanceNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newName = e.target.value;
-    setInstanceName(newName);
-    if (onInstanceNameChange) {
-      onInstanceNameChange(newName);
-    }
-  };
 
   const handleCreateInstance = async () => {
     // Validate form fields
@@ -101,7 +91,6 @@ const CreateInstanceForm = ({
       });
       
       // Reset form fields
-      setInstanceName(localStorage.getItem('userName') || '');
       setPhoneNumber('');
       
     } catch (error) {
@@ -133,7 +122,7 @@ const CreateInstanceForm = ({
           <Input
             id="instanceName"
             value={instanceName}
-            onChange={handleInstanceNameChange}
+            onChange={(e) => setInstanceName(e.target.value)}
             placeholder="Digite um nome para a instância"
             required
           />
