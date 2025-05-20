@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,17 +11,35 @@ import { WhatsAppInstance } from '@/types/whatsAppTypes';
 
 interface CreateInstanceFormProps {
   onInstanceCreated: (instance: WhatsAppInstance) => void;
+  initialInstanceName?: string;
+  onInstanceNameChange?: (name: string) => void;
 }
 
-const CreateInstanceForm = ({ onInstanceCreated }: CreateInstanceFormProps) => {
+const CreateInstanceForm = ({ 
+  onInstanceCreated, 
+  initialInstanceName = '', 
+  onInstanceNameChange 
+}: CreateInstanceFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [instanceName, setInstanceName] = useState(() => {
-    // Get user's name from localStorage as default value
-    return localStorage.getItem('userName') || '';
-  });
+  const [instanceName, setInstanceName] = useState(initialInstanceName || '');
   const [phoneNumber, setPhoneNumber] = useState('');
   const currentUserId = localStorage.getItem('userId') || '';
+  
+  // Update instance name if initial value changes
+  useEffect(() => {
+    if (initialInstanceName) {
+      setInstanceName(initialInstanceName);
+    }
+  }, [initialInstanceName]);
+
+  const handleInstanceNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setInstanceName(newName);
+    if (onInstanceNameChange) {
+      onInstanceNameChange(newName);
+    }
+  };
 
   const handleCreateInstance = async () => {
     // Validate form fields
@@ -115,7 +133,7 @@ const CreateInstanceForm = ({ onInstanceCreated }: CreateInstanceFormProps) => {
           <Input
             id="instanceName"
             value={instanceName}
-            onChange={(e) => setInstanceName(e.target.value)}
+            onChange={handleInstanceNameChange}
             placeholder="Digite um nome para a instância"
             required
           />

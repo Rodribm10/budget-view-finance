@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import CreateInstanceForm from '@/components/whatsapp/CreateInstanceForm';
@@ -9,6 +9,7 @@ import QrCodeDialog from '@/components/whatsapp/QrCodeDialog';
 import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
 import { useToast } from '@/hooks/use-toast';
+import { fetchSpecificInstance } from '@/services/whatsApp/instanceManagement';
 
 const WhatsApp = () => {
   const { toast } = useToast();
@@ -32,6 +33,64 @@ const WhatsApp = () => {
     handleDeleteInstance,
     handleViewQrCode
   } = useWhatsAppActions(updateInstance, removeInstance, checkAllInstancesStatus);
+  
+  const [instanceName, setInstanceName] = useState(() => {
+    // Get user's name from localStorage as default instance name
+    return localStorage.getItem('userName') || '';
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [instanceFound, setInstanceFound] = useState(false);
+  const currentUserId = localStorage.getItem('userId') || '';
+
+  // Function to fetch specific instance by name
+  const fetchInstanceByName = async () => {
+    // Skip if user not logged in or no instance name
+    if (!currentUserId || !instanceName.trim()) {
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      console.log(`Fetching specific instance: ${instanceName}`);
+      const data = await fetchSpecificInstance(instanceName);
+      console.log('Fetch specific instance response:', data);
+      
+      if (data && data.instance) {
+        // Instance found, create or update instance object
+        const foundInstance: WhatsAppInstance = {
+          instanceName,
+          instanceId: instanceName,
+          phoneNumber: data.instance.number || '',
+          userId: currentUserId,
+          status: data.instance.status || 'unknown',
+          connectionState: data.instance.state || 'closed',
+          qrcode: data.qrcode?.base64 || null
+        };
+        
+        console.log('Found instance:', foundInstance);
+        addInstance(foundInstance);
+        setInstanceFound(true);
+        toast({
+          title: "Instância encontrada",
+          description: `A instância ${instanceName} foi localizada no servidor.`
+        });
+      } else {
+        setInstanceFound(false);
+        console.log(`Instance ${instanceName} not found`);
+      }
+    } catch (error) {
+      console.error('Error fetching specific instance:', error);
+      setInstanceFound(false);
+      toast({
+        title: "Instância não encontrada",
+        description: "Não foi possível encontrar a instância com este nome.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Set up periodic status checks
   useEffect(() => {
@@ -63,28 +122,29 @@ const WhatsApp = () => {
     };
   }, [instances.length, checkAllInstancesStatus]);
 
-  // Run refresh instances on initial load to get server instances
+  // Fetch the specific instance when the component mounts
   useEffect(() => {
-    // Only run on first render
-    const initialLoad = async () => {
-      if (instances.length === 0) {
-        try {
-          await refreshInstances();
-        } catch (error) {
-          console.error("Error on initial instance refresh:", error);
-        }
-      }
-    };
-    
-    initialLoad();
-    // This effect should only run once when the component mounts
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (currentUserId) {
+      fetchInstanceByName();
+    } else {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa estar logado para ver suas instâncias do WhatsApp.",
+        variant: "destructive"
+      });
+    }
+  }, [currentUserId, instanceName]);
+
+  // Handler for when the user changes the instance name
+  const handleInstanceNameChange = (name: string) => {
+    setInstanceName(name);
+  };
 
   // Handler for when a new instance is created
   const handleInstanceCreated = async (newInstance: WhatsAppInstance) => {
     console.log('New instance to be added:', newInstance);
     addInstance(newInstance);
+    setInstanceFound(true);
     
     // If there's a QR code in the response, show it
     if (newInstance.qrcode) {
@@ -123,6 +183,7 @@ const WhatsApp = () => {
   };
 
   console.log('Current instances in WhatsApp component:', instances);
+  console.log('Instance found status:', instanceFound);
 
   return (
     <Layout>
@@ -131,23 +192,37 @@ const WhatsApp = () => {
           <h1 className="text-2xl font-bold tracking-tight">Conectar WhatsApp</h1>
         </div>
         
-        {/* Form to create a new instance */}
-        <CreateInstanceForm onInstanceCreated={handleInstanceCreated} />
-        
-        {/* Stats component */}
-        <InstanceStats instances={instances} />
-        
-        {/* List of created instances */}
-        <InstanceList 
-          instances={instances} 
-          onViewQrCode={handleViewQrCode} 
-          onDelete={handleDeleteInstanceWrapper}
-          onRestart={handleRestartInstance}
-          onLogout={handleLogoutInstance}
-          onSetPresence={handleSetPresence}
-          onRefreshInstances={refreshInstances}
-          isRefreshing={isRefreshing}
-        />
+        {isLoading ? (
+          <div className="flex justify-center items-center p-10">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <p className="ml-3">Buscando instância...</p>
+          </div>
+        ) : !instanceFound ? (
+          // Show create form if no instance found
+          <CreateInstanceForm 
+            onInstanceCreated={handleInstanceCreated} 
+            initialInstanceName={instanceName}
+            onInstanceNameChange={handleInstanceNameChange}
+          />
+        ) : (
+          // Only show stats and instance list if instance found
+          <>
+            {/* Stats component */}
+            <InstanceStats instances={instances} />
+            
+            {/* List of created instances */}
+            <InstanceList 
+              instances={instances} 
+              onViewQrCode={handleViewQrCode} 
+              onDelete={handleDeleteInstanceWrapper}
+              onRestart={handleRestartInstance}
+              onLogout={handleLogoutInstance}
+              onSetPresence={handleSetPresence}
+              onRefreshInstances={refreshInstances}
+              isRefreshing={isRefreshing}
+            />
+          </>
+        )}
         
         {/* QR Code Dialog */}
         <QrCodeDialog 

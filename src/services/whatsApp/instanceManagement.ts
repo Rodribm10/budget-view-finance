@@ -78,3 +78,24 @@ export const fetchAllInstances = async (): Promise<any> => {
     throw error;
   }
 };
+
+/**
+ * Fetches a specific WhatsApp instance by name
+ */
+export const fetchSpecificInstance = async (instanceName: string): Promise<any> => {
+  try {
+    console.log(`Fetching specific instance: ${instanceName}`);
+    
+    if (!instanceName) {
+      throw new Error("Instance name cannot be empty");
+    }
+    
+    const data = await makeRequest(`/instance/fetchInstances/${encodeURIComponent(instanceName)}`, 'GET');
+    
+    console.log(`Specific instance response for ${instanceName}:`, data);
+    return data;
+  } catch (error) {
+    console.error(`Error fetching specific instance ${instanceName}:`, error);
+    throw error;
+  }
+};
