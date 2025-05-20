@@ -303,7 +303,7 @@ export async function deleteTransacao(id: string): Promise<void> {
     const { error } = await supabase
       .from('transacoes')
       .delete()
-      .eq('id', id);
+      .eq('id', parseInt(id)); // Convert string to number with parseInt
       
     if (error) {
       console.error('Erro ao excluir transação:', error);
@@ -350,7 +350,7 @@ export async function updateTransacao(transaction: Transaction): Promise<Transac
     const { data, error } = await supabase
       .from('transacoes')
       .update(transacaoData)
-      .eq('id', transaction.id)
+      .eq('id', parseInt(transaction.id)) // Convert string to number with parseInt
       .select('*')
       .single();
       

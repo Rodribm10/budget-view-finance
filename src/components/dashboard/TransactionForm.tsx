@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,6 +23,8 @@ import {
   SelectValue
 } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
+import { Transaction } from '@/types/financialTypes';
+import { updateTransacao } from '@/services/transacaoService';
 
 const transactionSchema = z.object({
   estabelecimento: z.string().min(1, { message: 'Estabelecimento é obrigatório' }),
@@ -41,16 +43,25 @@ interface TransactionFormProps {
   onCancel: () => void;
   defaultTipo?: 'receita' | 'despesa';
   grupoId?: string;
+  transaction?: Transaction | null; // Added this property
+  isEditing?: boolean; // Added this property
 }
 
-export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', grupoId }: TransactionFormProps) {
+export function TransactionForm({ 
+  onSuccess, 
+  onCancel, 
+  defaultTipo = 'despesa', 
+  grupoId,
+  transaction = null, // Default to null
+  isEditing = false // Default to false
+}: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [grupos, setGrupos] = useState<{remote_jid: string, nome_grupo: string | null}[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Buscar grupos do usuário ao carregar o formulário
-  useState(() => {
+  // Fetch user groups when the form loads
+  useEffect(() => {
     const fetchGrupos = async () => {
       const userEmail = localStorage.getItem('userEmail');
       if (!userEmail) {
@@ -73,18 +84,21 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', 
     };
     
     fetchGrupos();
-  });
+  }, []);
 
+  // Set up form with default values or transaction data if editing
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
-      estabelecimento: '',
-      valor: '',
-      detalhes: '',
-      categoria: '',
-      tipo: defaultTipo,
-      quando: new Date().toISOString().split('T')[0],
-      grupo_id: grupoId || ''
+      estabelecimento: transaction?.estabelecimento || '',
+      valor: transaction ? String(Math.abs(transaction.valor)) : '',
+      detalhes: transaction?.detalhes || '',
+      categoria: transaction?.categoria || '',
+      tipo: transaction?.tipo as 'receita' | 'despesa' || defaultTipo,
+      quando: transaction?.quando ? 
+        new Date(transaction.quando).toISOString().split('T')[0] : 
+        new Date().toISOString().split('T')[0],
+      grupo_id: transaction?.grupo_id || grupoId || ''
     }
   });
 
@@ -104,7 +118,7 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', 
         return;
       }
       
-      // Normalizar o email (minúsculo e sem espaços)
+      // Normalize the email (lowercase and trim spaces)
       const normalizedEmail = userEmail.trim().toLowerCase();
       
       // Get user ID from localStorage - kept for compatibility
@@ -128,40 +142,63 @@ export function TransactionForm({ onSuccess, onCancel, defaultTipo = 'despesa', 
       
       console.log(`Salvando transação para usuário: ${normalizedEmail} (ID: ${userId})`);
       
-      // Preparar dados da transação incluindo o login e grupo_id
-      const transactionData = {
-        user: userId, // Mantido por compatibilidade
-        login: normalizedEmail, // Campo principal para identificação
-        estabelecimento: data.estabelecimento,
-        valor: valorFinal,
-        detalhes: data.detalhes,
-        categoria: data.categoria,
-        tipo: data.tipo,
-        quando: data.quando,
-        grupo_id: data.grupo_id || null
-      };
-      
-      console.log('Dados da transação a serem salvos:', transactionData);
-      
-      // With RLS disabled, we can insert directly to the fixed table
-      const { error } = await supabase
-        .from('transacoes')
-        .insert([transactionData]);
+      // Handle editing vs creating new transaction
+      if (isEditing && transaction) {
+        // Update existing transaction
+        const updatedTransaction = {
+          ...transaction,
+          estabelecimento: data.estabelecimento,
+          valor: valorFinal,
+          detalhes: data.detalhes,
+          categoria: data.categoria,
+          tipo: data.tipo,
+          quando: data.quando,
+          grupo_id: data.grupo_id || null
+        };
         
-      if (error) {
-        console.error('Erro ao salvar transação:', error);
-        
+        await updateTransacao(updatedTransaction);
         toast({
-          title: "Erro ao salvar",
-          description: `Não foi possível salvar a transação: ${error.message}`,
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Transação salva",
-          description: "Transação registrada com sucesso",
+          title: "Transação atualizada",
+          description: "Transação atualizada com sucesso",
         });
         onSuccess();
+      } else {
+        // Create new transaction
+        // Prepare transaction data including login and grupo_id
+        const transactionData = {
+          user: userId, // Kept for compatibility
+          login: normalizedEmail, // Main field for identification
+          estabelecimento: data.estabelecimento,
+          valor: valorFinal,
+          detalhes: data.detalhes,
+          categoria: data.categoria,
+          tipo: data.tipo,
+          quando: data.quando,
+          grupo_id: data.grupo_id || null
+        };
+        
+        console.log('Dados da transação a serem salvos:', transactionData);
+        
+        // With RLS disabled, we can insert directly to the fixed table
+        const { error } = await supabase
+          .from('transacoes')
+          .insert([transactionData]);
+          
+        if (error) {
+          console.error('Erro ao salvar transação:', error);
+          
+          toast({
+            title: "Erro ao salvar",
+            description: `Não foi possível salvar a transação: ${error.message}`,
+            variant: "destructive"
+          });
+        } else {
+          toast({
+            title: "Transação salva",
+            description: "Transação registrada com sucesso",
+          });
+          onSuccess();
+        }
       }
     } catch (error) {
       console.error('Erro ao processar formulário:', error);
