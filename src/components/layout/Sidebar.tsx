@@ -113,10 +113,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               onClick={isMobile ? onClose : undefined}
             >
               <MessageSquareText className="mr-2 h-4 w-4" />
-              <span>Enviar Mensagem</span>
+              <span>Conectar WhatsApp</span>
             </NavLink>
             <NavLink 
-              to="/gruposwhatsapp"
+              to="/grupos-whatsapp"
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
