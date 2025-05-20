@@ -61,9 +61,17 @@ const GruposWhatsApp = () => {
       const novoGrupo = await cadastrarGrupoWhatsApp();
       
       if (novoGrupo) {
+        let successMessage = 'Grupo registrado com sucesso';
+        
+        if (novoGrupo.workflow_id) {
+          successMessage += '. Workflow criado com sucesso no n8n!';
+        } else {
+          successMessage += '. Siga as instruções para completar o vínculo';
+        }
+        
         toast({
-          title: 'Grupo registrado com sucesso',
-          description: 'Siga as instruções para completar o vínculo',
+          title: 'Sucesso',
+          description: successMessage,
           variant: 'default',
         });
         

@@ -33,18 +33,18 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
     
     console.log('Grupo WhatsApp cadastrado com sucesso:', data);
 
-    // Tentativa de clonagem do workflow do n8n
+    // Criar workflow no n8n
     try {
-      const grupoId = data[0].remote_jid;
-      const result = await cloneN8nWorkflow(normalizedEmail, grupoId);
+      const workflowResponse = await createWorkflowInN8n(normalizedEmail);
       
-      if (result && result.workflow_id) {
-        await atualizarWorkflowId(data[0].id, result.workflow_id);
+      if (workflowResponse && workflowResponse.id) {
         // Atualizar o objeto data com o workflow_id
-        data[0].workflow_id = result.workflow_id;
+        await atualizarWorkflowId(data[0].id, workflowResponse.id);
+        data[0].workflow_id = workflowResponse.id;
+        console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
       }
     } catch (n8nError) {
-      console.error('Erro ao clonar workflow do n8n:', n8nError);
+      console.error('Erro ao criar workflow no n8n:', n8nError);
       // Não impede a criação do grupo, apenas não adiciona o workflow_id
     }
     
@@ -52,6 +52,39 @@ export async function cadastrarGrupoWhatsApp(): Promise<WhatsAppGroup | null> {
   } catch (error) {
     console.error('Erro ao cadastrar grupo do WhatsApp:', error);
     return null;
+  }
+}
+
+// Função para criar um workflow no n8n
+async function createWorkflowInN8n(email: string): Promise<{ id: string } | null> {
+  try {
+    console.log(`Criando workflow no n8n para o email: ${email}`);
+    
+    const response = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
+      method: 'POST',
+      headers: {
+        'X-N8N-API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ3NzM0NzYyLCJleHAiOjE3NTAzMDIwMDB9.Evr_o42xLJPq1c2p5SUWo00IY85WXp8s_nqSy64V-is',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: `Workflow Home Finance - ${email}`,
+        nodes: [],
+        connections: {},
+        settings: {}
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro ao criar workflow: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log('Resposta da criação de workflow:', data);
+    
+    return data;
+  } catch (error) {
+    console.error('Erro na requisição de criação de workflow:', error);
+    throw error;
   }
 }
 
