@@ -32,12 +32,23 @@ export const createWhatsAppInstance = async (
  * Fetches QR code for an instance
  */
 export const fetchQrCode = async (instanceName: string): Promise<any> => {
-  console.log(`Fetching QR code for instance: ${instanceName}`);
-  
-  const data = await makeRequest(`/instance/connect/${encodeURIComponent(instanceName)}`, 'GET');
-  
-  console.log('QR code fetch response:', data);
-  return data;
+  try {
+    console.log(`Fetching QR code for instance: ${instanceName}`);
+    
+    const data = await makeRequest(`/instance/connect/${encodeURIComponent(instanceName)}`, 'GET');
+    
+    console.log('QR code fetch response:', data);
+    
+    // Verify that the QR code exists in the response
+    if (!data || !data.base64) {
+      console.warn('QR code response missing base64 data:', data);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error(`Error fetching QR code for ${instanceName}:`, error);
+    throw error;
+  }
 };
 
 /**

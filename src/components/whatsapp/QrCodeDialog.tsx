@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Dialog, 
   DialogContent, 
@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ScanQrCode } from 'lucide-react';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import { fetchQrCode } from '@/services/whatsAppService';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +31,17 @@ const QrCodeDialog = ({
   const [loadingQR, setLoadingQR] = useState(false);
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
   const [qrError, setQrError] = useState<string | null>(null);
+
+  // Auto-fetch QR code when dialog opens with an active instance
+  useEffect(() => {
+    if (open && activeInstance) {
+      handleRefreshQrCode();
+    } else {
+      // Clear QR code data when dialog closes
+      setQrCodeData(null);
+      setQrError(null);
+    }
+  }, [open, activeInstance]);
 
   const handleOpenChange = (newOpen: boolean) => {
     onOpenChange(newOpen);
@@ -55,11 +66,14 @@ const QrCodeDialog = ({
       if (data && data.base64) {
         // Save the base64 image data directly - it already contains the data:image prefix
         setQrCodeData(data.base64);
+        setQrError(null);
       } else {
+        setQrCodeData(null);
         setQrError("QR Code não disponível. A instância pode já estar conectada ou houve um erro na API.");
       }
     } catch (error) {
       console.error("Error fetching QR code:", error);
+      setQrCodeData(null);
       setQrError("Falha ao obter QR Code. Verifique a conexão ou tente novamente mais tarde.");
       toast({
         title: "Erro ao obter QR Code",
@@ -82,7 +96,8 @@ const QrCodeDialog = ({
         </DialogHeader>
         <div className="flex flex-col items-center space-y-4 py-4">
           {loadingQR && (
-            <div className="text-center py-8">
+            <div className="text-center py-8 flex flex-col items-center">
+              <RefreshCw className="h-8 w-8 animate-spin mb-2 text-gray-500" />
               <p>Carregando QR Code...</p>
             </div>
           )}
@@ -90,15 +105,20 @@ const QrCodeDialog = ({
           {qrCodeData && !loadingQR && (
             <div className="flex flex-col items-center space-y-4">
               <div className="border p-4 bg-white rounded-md">
-                <img 
-                  src={qrCodeData}
-                  alt="QR Code WhatsApp" 
-                  className="w-full h-auto max-w-[250px]" 
-                />
+                {qrCodeData.startsWith('data:image/') ? (
+                  <img 
+                    src={qrCodeData}
+                    alt="QR Code WhatsApp" 
+                    className="w-full h-auto max-w-[250px]" 
+                  />
+                ) : (
+                  <div className="text-center text-red-500">Formato de QR Code inválido</div>
+                )}
               </div>
-              <p className="text-sm text-center">
-                Escaneie este QR Code com seu WhatsApp para finalizar a conexão.
-              </p>
+              <div className="flex items-center gap-2 text-sm text-center text-gray-600">
+                <ScanQrCode className="h-4 w-4" />
+                <p>Escaneie este QR Code com seu WhatsApp para finalizar a conexão</p>
+              </div>
             </div>
           )}
           
@@ -116,8 +136,8 @@ const QrCodeDialog = ({
                 disabled={loadingQR}
                 className="flex items-center"
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Atualizar QR Code
+                <RefreshCw className={`h-4 w-4 mr-2 ${loadingQR ? 'animate-spin' : ''}`} />
+                {loadingQR ? 'Atualizando...' : 'Atualizar QR Code'}
               </Button>
             )}
             <Button variant="ghost" onClick={() => onOpenChange(false)}>

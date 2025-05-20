@@ -154,14 +154,15 @@ export const useWhatsAppActions = (
   // Handler for when QR code dialog is requested
   const handleViewQrCode = async (instance: WhatsAppInstance) => {
     console.log(`Opening QR code dialog for instance: ${instance.instanceName}`);
+    
+    // First set the active instance and open dialog to show loading state
     setActiveInstance(instance);
     setQrDialogOpen(true);
 
     try {
-      const data = await fetchQrCode(instance.instanceName);
-      console.log('QR Code API response:', data);
-      
-      // If the fetchQrCode call was successful, QrCodeDialog will handle showing the QR code
+      // Pre-fetch QR code data - this will be handled by the dialog itself now
+      // with the useEffect in the dialog component 
+      console.log('QR Code dialog opened, fetching will be handled by dialog component');
     } catch (error) {
       console.error("Error initiating QR code fetch:", error);
       toast({
@@ -169,7 +170,6 @@ export const useWhatsAppActions = (
         description: "Falha ao iniciar obtenção de QR Code. Tente novamente.",
         variant: "destructive",
       });
-      setQrDialogOpen(false);
     }
   };
 
