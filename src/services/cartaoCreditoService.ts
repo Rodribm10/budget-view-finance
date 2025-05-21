@@ -26,9 +26,18 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
       throw new Error('Não foi possível carregar os cartões de crédito');
     }
     
+    // Verificar se todos os cartões têm o campo cartao_codigo
+    const cartoesValidos = data.map(cartao => {
+      if (!cartao.cartao_codigo) {
+        // Se não tiver, gerar um código temporário baseado no id
+        cartao.cartao_codigo = `cartao_${cartao.id.substring(0, 8)}`;
+      }
+      return cartao as CartaoCredito;
+    });
+    
     // Buscar o total de despesas para cada cartão
     const cartoesComTotal = await Promise.all(
-      data.map(async (cartao: CartaoCredito) => {
+      cartoesValidos.map(async (cartao: CartaoCredito) => {
         const total = await getTotalDespesasCartao(cartao.cartao_codigo);
         return { ...cartao, total_despesas: total };
       })
@@ -74,8 +83,19 @@ export async function verificarCartaoExistente(nome: string, banco: string): Pro
   }
 }
 
+// Função para gerar um código único para o cartão
+function gerarCartaoCodigo(nome: string, banco: string): string {
+  const timestamp = new Date().getTime();
+  const randomStr = Math.random().toString(36).substring(2, 7);
+  // Remover espaços e caracteres especiais
+  const nomeSanitizado = nome.replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+  const bancoSanitizado = banco.replace(/[^a-zA-Z0-9]/g, '').substring(0, 5);
+  
+  return `${nomeSanitizado}_${bancoSanitizado}_${randomStr}`;
+}
+
 // Função para criar um novo cartão de crédito
-export async function criarCartao(nome: string, bandeira: string, banco: string, cartao_codigo: string): Promise<CartaoCredito | null> {
+export async function criarCartao(nome: string, bandeira: string, banco: string): Promise<CartaoCredito | null> {
   // Obter o email do usuário do localStorage
   const userEmail = localStorage.getItem('userEmail');
   // Obter o ID do usuário do localStorage (mantido por compatibilidade)
@@ -95,6 +115,9 @@ export async function criarCartao(nome: string, bandeira: string, banco: string,
     throw new Error(`Você já possui um cartão ${nome} do banco ${banco}.`);
   }
   
+  // Gerar um código único para o cartão
+  const cartao_codigo = gerarCartaoCodigo(nome, banco);
+  
   try {
     const { data, error } = await supabase
       .from('cartoes_credito')
@@ -113,7 +136,7 @@ export async function criarCartao(nome: string, bandeira: string, banco: string,
       throw new Error('Não foi possível criar o cartão de crédito');
     }
     
-    return data[0];
+    return data[0] as CartaoCredito;
   } catch (error) {
     console.error('Erro ao criar cartão:', error);
     throw error;
@@ -134,7 +157,12 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
       throw new Error('Não foi possível carregar os detalhes do cartão');
     }
     
-    return data;
+    // Garantir que cartao_codigo existe
+    if (!data.cartao_codigo) {
+      data.cartao_codigo = `cartao_${data.id.substring(0, 8)}`;
+    }
+    
+    return data as CartaoCredito;
   } catch (error) {
     console.error('Erro ao buscar cartão:', error);
     return null;
@@ -142,7 +170,7 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
 }
 
 // Função para buscar despesas de um cartão
-export async function getDespesasCartao(cartaoCodigo: string): Promise<DespesaCartao[]> {
+export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao[]> {
   // Obter o email do usuário do localStorage
   const userEmail = localStorage.getItem('userEmail');
   
@@ -155,11 +183,18 @@ export async function getDespesasCartao(cartaoCodigo: string): Promise<DespesaCa
   const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
+    // Primeiro, obter o cartao_codigo do cartão
+    const cartao = await getCartao(cartaoId);
+    
+    if (!cartao || !cartao.cartao_codigo) {
+      console.error('Cartão não encontrado ou sem código');
+      return [];
+    }
+    
     const { data, error } = await supabase
       .from('despesas_cartao')
       .select('*')
-      .eq('cartao_codigo', cartaoCodigo)
-      .eq('login', normalizedEmail)
+      .eq('cartao_id', cartaoId)
       .order('data_despesa', { ascending: false });
       
     if (error) {
@@ -167,7 +202,15 @@ export async function getDespesasCartao(cartaoCodigo: string): Promise<DespesaCa
       throw new Error('Não foi possível carregar as despesas do cartão');
     }
     
-    return data;
+    // Garantir que todas as despesas têm cartao_codigo
+    const despesasCompletas = data.map(despesa => {
+      if (!despesa.cartao_codigo) {
+        despesa.cartao_codigo = cartao.cartao_codigo;
+      }
+      return despesa as DespesaCartao;
+    });
+    
+    return despesasCompletas;
   } catch (error) {
     console.error('Erro ao buscar despesas:', error);
     return [];
@@ -175,7 +218,13 @@ export async function getDespesasCartao(cartaoCodigo: string): Promise<DespesaCa
 }
 
 // Função para criar uma nova despesa no cartão
-export async function criarDespesa(cartao_id: string, cartao_codigo: string, valor: number, data_despesa: string, descricao: string): Promise<DespesaCartao | null> {
+export async function criarDespesa(
+  cartao_id: string,
+  cartao_codigo: string,
+  valor: number,
+  data_despesa: string,
+  descricao: string
+): Promise<DespesaCartao | null> {
   // Obter o email do usuário do localStorage
   const userEmail = localStorage.getItem('userEmail');
   // Obter o ID do usuário do localStorage (mantido por compatibilidade)
@@ -208,7 +257,7 @@ export async function criarDespesa(cartao_id: string, cartao_codigo: string, val
       throw new Error('Não foi possível adicionar a despesa ao cartão');
     }
     
-    return data[0];
+    return data[0] as DespesaCartao;
   } catch (error) {
     console.error('Erro ao criar despesa:', error);
     return null;

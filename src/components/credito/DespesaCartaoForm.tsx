@@ -62,6 +62,7 @@ export function DespesaCartaoForm({ cartao, onSuccess, onCancel }: DespesaCartao
       
       const resultado = await criarDespesa(
         cartao.id,
+        cartao.cartao_codigo,
         valorNumerico,
         data.data_despesa,
         data.descricao

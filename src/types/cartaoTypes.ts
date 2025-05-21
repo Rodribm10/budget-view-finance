@@ -2,8 +2,8 @@
 export interface CartaoCredito {
   id: string;
   nome: string;
-  bandeira?: string;
-  banco?: string;
+  bandeira: string;
+  banco: string;
   cartao_codigo: string;
   user_id: string;
   login?: string;
