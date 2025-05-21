@@ -1,6 +1,6 @@
 
 // URL do webhook para notificação de novo cadastro
-const WEBHOOK_URL = "https://hook.us1.make.com/spgyc1wpkqmep46qzo1h1v1m246luw13";
+const WEBHOOK_URL = "https://hook.us1.make.com/j6y1odto82tyo38qv3jh4579kkluhsx7";
 
 interface UserData {
   nome: string;
