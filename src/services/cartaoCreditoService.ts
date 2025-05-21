@@ -10,12 +10,12 @@ export {
   getCartao
 } from './cartao/cartoesService';
 
-// Re-export all functions from despesasService
+// Re-export all functions from despesas services
 export {
   getDespesasCartao,
   criarDespesa,
   getTotalDespesasCartao
-} from './cartao/despesasService';
+} from './cartao/despesas';
 
 // Re-export from utilities
 export { gerarCartaoCodigo } from './cartao/cartaoCodigoUtils';
