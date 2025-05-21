@@ -34,13 +34,15 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
     
     // Para cada cartão, obter o total de despesas
     const cartoesComDespesas = await Promise.all(data.map(async (cartao) => {
-      // Use optional chaining to safely access potentially missing properties
-      const totalDespesas = await getTotalDespesasCartao(cartao.cartao_codigo || '');
+      // We need to add the missing properties with default values if they don't exist
+      const cartaoCodigo = cartao.cartao_codigo || '';
+      const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
+      
       return {
         ...cartao,
         bandeira: cartao.bandeira || '',
         banco: cartao.banco || '',
-        cartao_codigo: cartao.cartao_codigo || '',
+        cartao_codigo: cartaoCodigo,
         total_despesas: totalDespesas
       } as CartaoCredito;
     }));
@@ -78,14 +80,17 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
       return null;
     }
     
+    // Add default values for potentially missing properties
+    const cartaoCodigo = data.cartao_codigo || '';
+    
     // Obter o total de despesas para esse cartão
-    const totalDespesas = await getTotalDespesasCartao(data.cartao_codigo || '');
+    const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
     
     return {
       ...data,
       bandeira: data.bandeira || '',
       banco: data.banco || '',
-      cartao_codigo: data.cartao_codigo || '',
+      cartao_codigo: cartaoCodigo,
       total_despesas: totalDespesas
     } as CartaoCredito;
   } catch (error) {
@@ -143,8 +148,8 @@ export async function criarCartao(
     // Retornar o cartão criado
     return {
       ...data[0],
-      bandeira: banco,
-      banco: bandeira,
+      bandeira: bandeira, // Fix: was incorrectly using banco
+      banco: banco, // Fix: was incorrectly using bandeira
       cartao_codigo: cartao_codigo,
       total_despesas: 0
     } as CartaoCredito;
