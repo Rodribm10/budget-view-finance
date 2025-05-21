@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// URL do webhook para notificação de novo cadastro
+const WEBHOOK_URL = "https://hook.us1.make.com/spgyc1wpkqmep46qzo1h1v1m246luw13";
+
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -23,6 +26,26 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
+
+  // Função para enviar dados do usuário para o webhook
+  const enviarDadosParaWebhook = async (dadosUsuario) => {
+    try {
+      console.log("Enviando dados do usuário para webhook:", dadosUsuario);
+      
+      await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'no-cors', // Necessário para webhooks externos
+        body: JSON.stringify(dadosUsuario),
+      });
+      
+      console.log("Dados enviados com sucesso para o webhook");
+    } catch (error) {
+      console.error("Erro ao enviar dados para o webhook:", error);
+    }
+  };
 
   // Função para fazer login
   const handleLogin = async (e: React.FormEvent) => {
@@ -110,6 +133,18 @@ const Auth = () => {
       if (error) throw error;
       
       if (data) {
+        // Preparar os dados do usuário para enviar ao webhook
+        const dadosUsuario = {
+          nome,
+          empresa,
+          email,
+          data_cadastro: new Date().toISOString(),
+          origem: window.location.origin,
+        };
+        
+        // Enviar dados do usuário para o webhook
+        await enviarDadosParaWebhook(dadosUsuario);
+        
         toast({
           title: "Cadastro realizado",
           description: "Sua conta foi criada com sucesso!"
