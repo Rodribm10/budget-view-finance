@@ -60,6 +60,10 @@ export function CartaoCreditoList({ cartoes, isLoading, onCartaoClick }: CartaoC
               <CreditCard className="w-5 h-5 mr-2" />
               {cartao.nome}
             </CardTitle>
+            <div className="text-sm text-muted-foreground space-y-1">
+              {cartao.banco && <div>{cartao.banco}</div>}
+              {cartao.bandeira && <div>{cartao.bandeira}</div>}
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold">

@@ -4,7 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
+import { CartaoCredito } from '@/types/cartaoTypes';
 import { criarDespesa } from '@/services/cartaoCreditoService';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { 
   Form,
   FormControl,
@@ -15,23 +19,31 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { CartaoCredito } from '@/types/cartaoTypes';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from '@/lib/utils';
 
-const despesaSchema = z.object({
-  cartaoId: z.string().min(1, { message: 'Cartão é obrigatório' }),
-  valor: z.string().min(1, { message: 'Valor é obrigatório' }),
-  data_despesa: z.string().min(1, { message: 'Data é obrigatória' }),
+const despesaCartaoSchema = z.object({
+  cartao_id: z.string().min(1, { message: 'Selecione um cartão' }),
+  valor: z.number().positive({ message: 'O valor deve ser maior que zero' }),
+  data_despesa: z.date({
+    required_error: "Selecione uma data",
+  }),
   descricao: z.string().min(1, { message: 'Descrição é obrigatória' }),
 });
 
-type DespesaFormValues = z.infer<typeof despesaSchema>;
+type DespesaCartaoFormValues = z.infer<typeof despesaCartaoSchema>;
 
 interface DespesaCartaoFormSelectProps {
   cartoes: CartaoCredito[];
@@ -42,44 +54,56 @@ interface DespesaCartaoFormSelectProps {
 export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: DespesaCartaoFormSelectProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [selectedCartao, setSelectedCartao] = useState<CartaoCredito | null>(null);
 
-  const form = useForm<DespesaFormValues>({
-    resolver: zodResolver(despesaSchema),
+  const form = useForm<DespesaCartaoFormValues>({
+    resolver: zodResolver(despesaCartaoSchema),
     defaultValues: {
-      cartaoId: '',
-      valor: '',
-      data_despesa: new Date().toISOString().split('T')[0],
+      valor: undefined,
+      data_despesa: new Date(),
       descricao: '',
     }
   });
 
-  async function onSubmit(data: DespesaFormValues) {
+  const handleCartaoChange = (cartaoId: string) => {
+    const cartao = cartoes.find(c => c.id === cartaoId);
+    setSelectedCartao(cartao || null);
+  };
+
+  const formatCartaoLabel = (cartao: CartaoCredito) => {
+    let label = cartao.nome;
+    if (cartao.banco) label += ` - ${cartao.banco}`;
+    if (cartao.bandeira) label += ` (${cartao.bandeira})`;
+    return label;
+  };
+
+  async function onSubmit(data: DespesaCartaoFormValues) {
+    if (!selectedCartao || !selectedCartao.cartao_codigo) {
+      toast({
+        title: "Erro",
+        description: "Informações do cartão incompletas",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      const valorNumerico = parseFloat(data.valor.replace(',', '.'));
-      
-      if (isNaN(valorNumerico)) {
-        toast({
-          title: "Erro no formulário",
-          description: "O valor precisa ser um número válido",
-          variant: "destructive"
-        });
-        setIsSubmitting(false);
-        return;
-      }
+      const formattedDate = format(data.data_despesa, 'yyyy-MM-dd');
       
       const resultado = await criarDespesa(
-        data.cartaoId,
-        valorNumerico,
-        data.data_despesa,
+        data.cartao_id,
+        selectedCartao.cartao_codigo,
+        data.valor,
+        formattedDate, 
         data.descricao
       );
       
       if (resultado) {
         toast({
           title: "Despesa adicionada",
-          description: "Despesa do cartão cadastrada com sucesso",
+          description: "Despesa do cartão registrada com sucesso",
         });
         onSuccess();
       } else {
@@ -101,21 +125,21 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
     }
   }
 
-  const selectedCartaoNome = form.watch('cartaoId') ? 
-    cartoes.find(cartao => cartao.id === form.watch('cartaoId'))?.nome : '';
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="cartaoId"
+          name="cartao_id"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Cartão de Crédito</FormLabel>
               <Select 
-                onValueChange={field.onChange} 
-                value={field.value}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleCartaoChange(value);
+                }} 
+                defaultValue={field.value}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -125,7 +149,7 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
                 <SelectContent>
                   {cartoes.map((cartao) => (
                     <SelectItem key={cartao.id} value={cartao.id}>
-                      {cartao.nome}
+                      {formatCartaoLabel(cartao)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -135,12 +159,6 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
           )}
         />
         
-        {selectedCartaoNome && (
-          <div className="mb-4">
-            <p className="text-sm text-muted-foreground">Cartão selecionado: <span className="font-medium">{selectedCartaoNome}</span></p>
-          </div>
-        )}
-        
         <FormField
           control={form.control}
           name="valor"
@@ -149,26 +167,56 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
               <FormLabel>Valor</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="0,00" 
-                  {...field} 
-                  type="text"
-                  inputMode="decimal"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  {...field}
+                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="data_despesa"
           render={({ field }) => (
-            <FormItem>
-              <FormLabel>Data</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
+            <FormItem className="flex flex-col">
+              <FormLabel>Data da Despesa</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "dd/MM/yyyy", { locale: ptBR })
+                      ) : (
+                        <span>Selecione uma data</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    disabled={(date) =>
+                      date > new Date() || date < new Date("1900-01-01")
+                    }
+                    initialFocus
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -181,7 +229,7 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
             <FormItem>
               <FormLabel>Descrição</FormLabel>
               <FormControl>
-                <Input placeholder="Detalhes da despesa" {...field} />
+                <Input placeholder="Ex: Compras de supermercado, Restaurante..." {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

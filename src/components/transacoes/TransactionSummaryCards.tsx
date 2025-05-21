@@ -24,6 +24,7 @@ export const TransactionSummaryCards = ({
       <Card>
         <CardHeader className="pb-2 bg-green-50">
           <CardTitle className="text-finance-green flex items-center">
+            <Wallet className="h-4 w-4 mr-2" />
             Ganhos do mês
           </CardTitle>
         </CardHeader>

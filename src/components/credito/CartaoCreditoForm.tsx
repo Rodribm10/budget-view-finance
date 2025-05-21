@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,9 +15,31 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+// Opções para as listas suspensas
+const bandeirasCartao = [
+  'Visa', 'Mastercard', 'Elo', 'American Express', 'Hipercard', 
+  'Diners Club', 'Credicard', 'Sorocred', 'Cabal', 'Banescard', 
+  'Sicoobcard', 'Sicredi', 'Alelo', 'Ticket', 'VR', 'ValeCard', 'Havan'
+];
+
+const bancos = [
+  'Itaú', 'Bradesco', 'Santander', 'Banco do Brasil', 'Caixa', 'Nubank', 
+  'Inter', 'C6 Bank', 'Next', 'Original', 'Pan', 'Banco Bari', 
+  'Sicoob', 'Sicredi', 'Neon', 'BTG Pactual', 'PagBank', 'Will Bank', 'XP'
+];
 
 const cartaoSchema = z.object({
   nome: z.string().min(1, { message: 'Nome do cartão é obrigatório' }),
+  bandeira: z.string({ required_error: 'Selecione uma bandeira' }),
+  banco: z.string({ required_error: 'Selecione um banco' }),
 });
 
 type CartaoFormValues = z.infer<typeof cartaoSchema>;
@@ -35,14 +57,30 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
     resolver: zodResolver(cartaoSchema),
     defaultValues: {
       nome: '',
+      bandeira: '',
+      banco: '',
     }
   });
+
+  // Função para gerar um código único para o cartão
+  const gerarCartaoCodigo = (nome: string, banco: string) => {
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    return `${banco.toLowerCase()}_${nome.toLowerCase().replace(/\s/g, '')}_${randomStr}`;
+  };
 
   async function onSubmit(data: CartaoFormValues) {
     setIsSubmitting(true);
     
     try {
-      const resultado = await criarCartao(data.nome);
+      // Gerar código único para o cartão
+      const cartao_codigo = gerarCartaoCodigo(data.nome, data.banco);
+      
+      const resultado = await criarCartao(
+        data.nome, 
+        data.bandeira, 
+        data.banco, 
+        cartao_codigo
+      );
       
       if (resultado) {
         toast({
@@ -79,8 +117,58 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
             <FormItem>
               <FormLabel>Nome do Cartão</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Nubank, Itaú, Banco do Brasil..." {...field} />
+                <Input placeholder="Ex: Gold, Platinum, Internacional..." {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="bandeira"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Bandeira</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma bandeira" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {bandeirasCartao.map((bandeira) => (
+                    <SelectItem key={bandeira} value={bandeira}>
+                      {bandeira}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="banco"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Banco Emissor</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um banco" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {bancos.map((banco) => (
+                    <SelectItem key={banco} value={banco}>
+                      {banco}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
