@@ -13,6 +13,8 @@ export function CartaoSummaryCard({ totalDespesas }: CartaoSummaryCardProps) {
     }).format(value);
   };
 
+  console.log(`Rendering CartaoSummaryCard with total: ${totalDespesas}`);
+
   return (
     <Card>
       <CardHeader className="pb-2">

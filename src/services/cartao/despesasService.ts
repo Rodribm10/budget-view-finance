@@ -183,6 +183,8 @@ export async function getTotalDespesasCartao(cartaoId: string): Promise<number> 
     
     const cardName = cardData.nome;
     
+    console.log(`Calculando total de despesas para cartão ${cardName} do usuário ${normalizedEmail}`);
+    
     // Now get expenses matching both login and nome
     const { data, error } = await supabase
       .from('despesas_cartao')
@@ -195,8 +197,16 @@ export async function getTotalDespesasCartao(cartaoId: string): Promise<number> 
       return 0;
     }
     
-    // Sum all expense values
-    const total = data.reduce((acc, item) => acc + Number(item.valor), 0);
+    console.log(`Despesas encontradas:`, data);
+    
+    // Sum all expense values, ensuring numeric conversion
+    const total = data.reduce((acc, item) => {
+      const itemValue = Number(item.valor) || 0;
+      console.log(`Somando valor ${itemValue} ao total ${acc}`);
+      return acc + itemValue;
+    }, 0);
+    
+    console.log(`Total calculado: ${total}`);
     return total;
   } catch (error) {
     console.error('Erro ao calcular total de despesas:', error);

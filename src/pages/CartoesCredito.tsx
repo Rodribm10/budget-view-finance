@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { CartaoCredito, DespesaCartao } from '@/types/cartaoTypes';
-import { getCartoes, getDespesasCartao } from '@/services/cartaoCreditoService';
+import { getCartoes, getDespesasCartao, getTotalDespesasCartao } from '@/services/cartaoCreditoService';
 import { useToast } from "@/components/ui/use-toast";
 import { CartaoActions } from '@/components/credito/CartaoActions';
 import { CartaoDetalhes } from '@/components/credito/CartaoDetalhes';
@@ -20,7 +20,17 @@ const CartoesCreditoPage = () => {
     try {
       setIsLoading(true);
       const data = await getCartoes();
-      setCartoes(data);
+      
+      // Load the totals for each card
+      const cartoesWithTotals = await Promise.all(
+        data.map(async (cartao) => {
+          const total_despesas = await getTotalDespesasCartao(cartao.id);
+          console.log(`Cartão ${cartao.nome} (${cartao.id}) - total: ${total_despesas}`);
+          return { ...cartao, total_despesas };
+        })
+      );
+      
+      setCartoes(cartoesWithTotals);
     } catch (error) {
       console.error("Erro ao carregar cartões:", error);
       toast({
@@ -41,8 +51,18 @@ const CartoesCreditoPage = () => {
     try {
       setIsLoading(true);
       // This function now uses login+nome matching internally instead of cartao_id
-      const data = await getDespesasCartao(cartaoId);
-      setDespesas(data);
+      const despesasData = await getDespesasCartao(cartaoId);
+      setDespesas(despesasData);
+      
+      // Also refresh the total for the selected card
+      if (cartaoSelecionado) {
+        const totalDespesas = await getTotalDespesasCartao(cartaoId);
+        console.log(`Total atualizado para cartão ${cartaoSelecionado.nome}: ${totalDespesas}`);
+        setCartaoSelecionado({
+          ...cartaoSelecionado,
+          total_despesas: totalDespesas
+        });
+      }
     } catch (error) {
       console.error("Erro ao carregar despesas:", error);
       toast({
@@ -76,8 +96,12 @@ const CartoesCreditoPage = () => {
     });
   };
 
-  const handleCartaoClick = (cartao: CartaoCredito) => {
-    setCartaoSelecionado(cartao);
+  const handleCartaoClick = async (cartao: CartaoCredito) => {
+    // Refresh the total first
+    const totalDespesas = await getTotalDespesasCartao(cartao.id);
+    const updatedCartao = { ...cartao, total_despesas: totalDespesas };
+    
+    setCartaoSelecionado(updatedCartao);
     loadDespesasCartao(cartao.id);
     setDetalheCartaoAberto(true);
   };

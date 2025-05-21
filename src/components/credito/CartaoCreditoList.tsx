@@ -49,32 +49,35 @@ export function CartaoCreditoList({ cartoes, isLoading, onCartaoClick }: CartaoC
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {cartoes.map((cartao) => (
-        <Card 
-          key={cartao.id} 
-          className="hover:shadow-md transition-shadow cursor-pointer"
-          onClick={() => onCartaoClick(cartao)}
-        >
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center text-lg">
-              <CreditCard className="w-5 h-5 mr-2" />
-              {cartao.nome}
-            </CardTitle>
-            <div className="text-sm text-muted-foreground space-y-1">
-              {cartao.banco && <div>{cartao.banco}</div>}
-              {cartao.bandeira && <div>{cartao.bandeira}</div>}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-semibold">
-              {formatCurrency(cartao.total_despesas)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Total em despesas
-            </p>
-          </CardContent>
-        </Card>
-      ))}
+      {cartoes.map((cartao) => {
+        console.log(`Cartão na lista: ${cartao.nome}, total: ${cartao.total_despesas}`);
+        return (
+          <Card 
+            key={cartao.id} 
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => onCartaoClick(cartao)}
+          >
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center text-lg">
+                <CreditCard className="w-5 h-5 mr-2" />
+                {cartao.nome}
+              </CardTitle>
+              <div className="text-sm text-muted-foreground space-y-1">
+                {cartao.banco && <div>{cartao.banco}</div>}
+                {cartao.bandeira && <div>{cartao.bandeira}</div>}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">
+                {formatCurrency(cartao.total_despesas)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Total em despesas
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }
