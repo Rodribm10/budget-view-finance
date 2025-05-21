@@ -32,16 +32,19 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
       throw new Error('Não foi possível carregar os cartões de crédito');
     }
     
-    // Para cada cartão, obter o total de despesas
+    // Para cada cartão, obter o total de despesas e adicionar campos que podem estar faltando
     const cartoesComDespesas = await Promise.all(data.map(async (cartao) => {
-      // We need to add the missing properties with default values if they don't exist
-      const cartaoCodigo = cartao.cartao_codigo || '';
+      // Os campos bandeira, banco e cartao_codigo podem não existir na tabela
+      // Vamos adicioná-los com valores padrão
+      const cartaoCodigo = cartao.cartao_codigo || 
+                          gerarCartaoCodigo(cartao.nome, 'banco_padrao');
+      
       const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
       
       return {
         ...cartao,
-        bandeira: cartao.bandeira || '',
-        banco: cartao.banco || '',
+        bandeira: '',  // Campo não existe na tabela, definir valor padrão
+        banco: '',     // Campo não existe na tabela, definir valor padrão
         cartao_codigo: cartaoCodigo,
         total_despesas: totalDespesas
       } as CartaoCredito;
@@ -80,16 +83,18 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
       return null;
     }
     
-    // Add default values for potentially missing properties
-    const cartaoCodigo = data.cartao_codigo || '';
+    // Adicionar campos que podem não existir no banco de dados
+    const cartaoCodigo = data.cartao_codigo || 
+                        gerarCartaoCodigo(data.nome, 'banco_padrao');
     
     // Obter o total de despesas para esse cartão
     const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
     
+    // Retorna objeto com campos padrão para campos que não existem no banco
     return {
       ...data,
-      bandeira: data.bandeira || '',
-      banco: data.banco || '',
+      bandeira: '',  // Campo não existe na tabela, definir valor padrão
+      banco: '',     // Campo não existe na tabela, definir valor padrão
       cartao_codigo: cartaoCodigo,
       total_despesas: totalDespesas
     } as CartaoCredito;

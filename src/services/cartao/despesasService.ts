@@ -138,6 +138,7 @@ export async function getTotalDespesasCartao(cartaoCodigo: string): Promise<numb
   const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
+    // Buscar todas as despesas com o código do cartão
     const { data, error } = await supabase
       .from('despesas_cartao')
       .select('valor')
