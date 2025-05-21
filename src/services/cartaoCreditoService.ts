@@ -26,18 +26,25 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
       throw new Error('Não foi possível carregar os cartões de crédito');
     }
     
-    // Verificar se todos os cartões têm o campo cartao_codigo
-    const cartoesValidos = data.map(cartao => {
+    // Garantir que todos os dados têm os campos necessários da interface CartaoCredito
+    const cartoesCompletos = data.map(cartao => {
+      // Se não tiver cartao_codigo, gerar um código temporário baseado no id
       if (!cartao.cartao_codigo) {
-        // Se não tiver, gerar um código temporário baseado no id
         cartao.cartao_codigo = `cartao_${cartao.id.substring(0, 8)}`;
+      }
+      // Se não tiver bandeira ou banco, adicionar valores padrão
+      if (!cartao.bandeira) {
+        cartao.bandeira = 'Não especificada';
+      }
+      if (!cartao.banco) {
+        cartao.banco = 'Não especificado';
       }
       return cartao as CartaoCredito;
     });
     
     // Buscar o total de despesas para cada cartão
     const cartoesComTotal = await Promise.all(
-      cartoesValidos.map(async (cartao: CartaoCredito) => {
+      cartoesCompletos.map(async (cartao: CartaoCredito) => {
         const total = await getTotalDespesasCartao(cartao.cartao_codigo);
         return { ...cartao, total_despesas: total };
       })
@@ -157,12 +164,15 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
       throw new Error('Não foi possível carregar os detalhes do cartão');
     }
     
+    // Garantir que o objeto retornado tem todos os campos necessários
+    const cartaoCompleto = { ...data } as CartaoCredito;
+    
     // Garantir que cartao_codigo existe
-    if (!data.cartao_codigo) {
-      data.cartao_codigo = `cartao_${data.id.substring(0, 8)}`;
+    if (!cartaoCompleto.cartao_codigo) {
+      cartaoCompleto.cartao_codigo = `cartao_${cartaoCompleto.id.substring(0, 8)}`;
     }
     
-    return data as CartaoCredito;
+    return cartaoCompleto;
   } catch (error) {
     console.error('Erro ao buscar cartão:', error);
     return null;
@@ -204,10 +214,11 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
     
     // Garantir que todas as despesas têm cartao_codigo
     const despesasCompletas = data.map(despesa => {
-      if (!despesa.cartao_codigo) {
-        despesa.cartao_codigo = cartao.cartao_codigo;
+      const despesaCompleta = { ...despesa } as DespesaCartao;
+      if (!despesaCompleta.cartao_codigo) {
+        despesaCompleta.cartao_codigo = cartao.cartao_codigo;
       }
-      return despesa as DespesaCartao;
+      return despesaCompleta;
     });
     
     return despesasCompletas;

@@ -60,6 +60,7 @@ export function DespesaCartaoForm({ cartao, onSuccess, onCancel }: DespesaCartao
         return;
       }
       
+      // Make sure we're passing all 5 required parameters
       const resultado = await criarDespesa(
         cartao.id,
         cartao.cartao_codigo,

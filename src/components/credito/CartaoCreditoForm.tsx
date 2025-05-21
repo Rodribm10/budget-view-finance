@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -62,24 +61,15 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
     }
   });
 
-  // Função para gerar um código único para o cartão
-  const gerarCartaoCodigo = (nome: string, banco: string) => {
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    return `${banco.toLowerCase()}_${nome.toLowerCase().replace(/\s/g, '')}_${randomStr}`;
-  };
-
   async function onSubmit(data: CartaoFormValues) {
     setIsSubmitting(true);
     
     try {
-      // Gerar código único para o cartão
-      const cartao_codigo = gerarCartaoCodigo(data.nome, data.banco);
-      
+      // Removed the fourth argument that was causing the error
       const resultado = await criarCartao(
         data.nome, 
         data.bandeira, 
-        data.banco, 
-        cartao_codigo
+        data.banco
       );
       
       if (resultado) {
