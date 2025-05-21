@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
-import { criarDespesa } from '@/services/cartaoCreditoService';
+import { criarDespesa } from '@/services/cartao/despesasService';
 import { 
   Form,
   FormControl,
@@ -59,6 +59,15 @@ export function DespesaCartaoForm({ cartao, onSuccess, onCancel }: DespesaCartao
         setIsSubmitting(false);
         return;
       }
+      
+      console.log('Enviando dados para registro de despesa:', {
+        cartao_id: cartao.id,
+        cartao_nome: cartao.nome,
+        cartao_codigo: cartao.cartao_codigo,
+        valor: valorNumerico,
+        data: data.data_despesa,
+        descricao: data.descricao
+      });
       
       // Make sure we're passing all 5 required parameters
       const resultado = await criarDespesa(

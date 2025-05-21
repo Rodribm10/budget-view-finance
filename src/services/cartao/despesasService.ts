@@ -83,18 +83,36 @@ export async function criarDespesa(
   const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
+    // Obter o nome do cartão diretamente da tabela cartoes_credito
+    const { data: cartaoData, error: cartaoError } = await supabase
+      .from('cartoes_credito')
+      .select('nome')
+      .eq('id', cartao_id)
+      .single();
+      
+    if (cartaoError || !cartaoData) {
+      console.error('Erro ao obter nome do cartão:', cartaoError);
+      return null;
+    }
+    
+    const nomeCartao = cartaoData.nome;
+    
     console.log('Tentando criar despesa de cartão com os dados:', {
       cartao_id,
+      login: normalizedEmail,
+      nome: nomeCartao,
       valor,
       data_despesa,
       descricao
     });
     
-    // IMPORTANTE: Removemos os campos login e user_id que não existem na tabela despesas_cartao
+    // Inserir registro com as novas colunas login e nome
     const { data, error } = await supabase
       .from('despesas_cartao')
       .insert([{ 
         cartao_id: cartao_id,
+        login: normalizedEmail,
+        nome: nomeCartao,
         valor: valor,
         data_despesa: data_despesa,
         descricao: descricao

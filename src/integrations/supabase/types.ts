@@ -151,6 +151,8 @@ export type Database = {
           data_despesa: string
           descricao: string
           id: string
+          login: string | null
+          nome: string | null
           valor: number
         }
         Insert: {
@@ -159,6 +161,8 @@ export type Database = {
           data_despesa: string
           descricao: string
           id?: string
+          login?: string | null
+          nome?: string | null
           valor: number
         }
         Update: {
@@ -167,6 +171,8 @@ export type Database = {
           data_despesa?: string
           descricao?: string
           id?: string
+          login?: string | null
+          nome?: string | null
           valor?: number
         }
         Relationships: [

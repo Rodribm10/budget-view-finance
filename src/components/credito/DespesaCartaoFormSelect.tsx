@@ -97,6 +97,7 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
       
       console.log('Enviando dados para criar despesa:', {
         cartao_id: data.cartao_id,
+        cartao_nome: selectedCartao.nome,
         cartao_codigo: cartaoCodigo,
         valor: data.valor,
         data_despesa: formattedDate,
