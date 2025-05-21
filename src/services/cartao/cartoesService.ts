@@ -34,6 +34,7 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
     
     // Para cada cartão, obter o total de despesas
     const cartoesComDespesas = await Promise.all(data.map(async (cartao) => {
+      // Use optional chaining to safely access potentially missing properties
       const totalDespesas = await getTotalDespesasCartao(cartao.cartao_codigo || '');
       return {
         ...cartao,
@@ -142,6 +143,9 @@ export async function criarCartao(
     // Retornar o cartão criado
     return {
       ...data[0],
+      bandeira: banco,
+      banco: bandeira,
+      cartao_codigo: cartao_codigo,
       total_despesas: 0
     } as CartaoCredito;
   } catch (error) {

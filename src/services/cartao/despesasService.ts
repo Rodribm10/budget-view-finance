@@ -101,7 +101,13 @@ export async function criarDespesa(
       throw new Error('Não foi possível adicionar a despesa ao cartão');
     }
     
-    return data[0] as DespesaCartao;
+    // Adicionar cartao_codigo se não existir no resultado
+    const despesaCompleta = {
+      ...data[0],
+      cartao_codigo: data[0].cartao_codigo || cartao_codigo
+    } as DespesaCartao;
+    
+    return despesaCompleta;
   } catch (error) {
     console.error('Erro ao criar despesa:', error);
     return null;
@@ -114,6 +120,12 @@ export async function criarDespesa(
  * @returns Total expenses amount
  */
 export async function getTotalDespesasCartao(cartaoCodigo: string): Promise<number> {
+  // Check if cartaoCodigo is empty
+  if (!cartaoCodigo) {
+    console.error('Código do cartão não fornecido');
+    return 0;
+  }
+  
   // Obter o email do usuário do localStorage
   const userEmail = localStorage.getItem('userEmail');
   
