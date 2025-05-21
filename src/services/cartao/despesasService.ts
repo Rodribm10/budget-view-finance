@@ -83,15 +83,21 @@ export async function criarDespesa(
   const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
+    console.log('Tentando criar despesa de cartão com os dados:', {
+      cartao_id,
+      valor,
+      data_despesa,
+      descricao
+    });
+    
+    // IMPORTANTE: Removemos os campos login e user_id que não existem na tabela despesas_cartao
     const { data, error } = await supabase
       .from('despesas_cartao')
       .insert([{ 
         cartao_id: cartao_id,
         valor: valor,
         data_despesa: data_despesa,
-        descricao: descricao,
-        login: normalizedEmail,
-        user_id: userId
+        descricao: descricao
       }])
       .select();
       
@@ -120,40 +126,17 @@ export async function criarDespesa(
 
 /**
  * Calculates the total expenses for a credit card
- * @param cartaoCodigo Card code
+ * @param cartaoId Card ID (not code)
  * @returns Total expenses amount
  */
-export async function getTotalDespesasCartao(cartaoCodigo: string): Promise<number> {
-  // Check if cartaoCodigo is empty
-  if (!cartaoCodigo) {
-    console.error('Código do cartão não fornecido');
-    return 0;
-  }
-  
-  // Obter o email do usuário do localStorage
-  const userEmail = localStorage.getItem('userEmail');
-  
-  if (!userEmail) {
-    console.error('Email do usuário não encontrado no localStorage');
+export async function getTotalDespesasCartao(cartaoId: string): Promise<number> {
+  // Check if cartaoId is empty
+  if (!cartaoId) {
+    console.error('ID do cartão não fornecido');
     return 0;
   }
   
   try {
-    // Buscar todas as despesas com o ID do cartão em vez do código
-    // Já que cartao_codigo não existe na tabela despesas_cartao
-    const { data: cartoes, error: cartoesError } = await supabase
-      .from('cartoes_credito')
-      .select('id')
-      .eq('nome', cartaoCodigo) // Usamos o nome como identificador alternativo
-      .limit(1);
-      
-    if (cartoesError || !cartoes || cartoes.length === 0) {
-      console.error('Erro ao buscar cartão pelo código:', cartoesError);
-      return 0;
-    }
-    
-    const cartaoId = cartoes[0].id;
-    
     // Buscar despesas pelo ID do cartão
     const { data, error } = await supabase
       .from('despesas_cartao')

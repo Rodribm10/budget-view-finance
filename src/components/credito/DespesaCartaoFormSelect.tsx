@@ -1,11 +1,11 @@
+
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { CartaoCredito } from '@/types/cartaoTypes';
-import { criarDespesa } from '@/services/cartaoCreditoService';
-import { gerarCartaoCodigo } from '@/services/cartao/cartaoCodigoUtils';
+import { criarDespesa } from '@/services/cartao/despesasService';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -78,10 +78,10 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
   };
 
   async function onSubmit(data: DespesaCartaoFormValues) {
-    if (!selectedCartao || !selectedCartao.cartao_codigo) {
+    if (!selectedCartao) {
       toast({
         title: "Erro",
-        description: "Informações do cartão incompletas",
+        description: "Selecione um cartão primeiro",
         variant: "destructive"
       });
       return;
@@ -92,9 +92,20 @@ export function DespesaCartaoFormSelect({ cartoes, onSuccess, onCancel }: Despes
     try {
       const formattedDate = format(data.data_despesa, 'yyyy-MM-dd');
       
+      // Garantir que temos um cartao_codigo, mesmo que seja gerado na hora
+      const cartaoCodigo = selectedCartao.cartao_codigo || selectedCartao.nome;
+      
+      console.log('Enviando dados para criar despesa:', {
+        cartao_id: data.cartao_id,
+        cartao_codigo: cartaoCodigo,
+        valor: data.valor,
+        data_despesa: formattedDate,
+        descricao: data.descricao
+      });
+      
       const resultado = await criarDespesa(
         data.cartao_id,
-        selectedCartao.cartao_codigo,
+        cartaoCodigo,
         data.valor,
         formattedDate, 
         data.descricao

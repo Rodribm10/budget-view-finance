@@ -2,7 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { CartaoCredito } from "@/types/cartaoTypes";
 import { gerarCartaoCodigo } from "./cartaoCodigoUtils";
-import { getTotalDespesasCartao } from "./despesasService";
 
 /**
  * Fetches all credit cards for the current user
@@ -32,13 +31,21 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
       throw new Error('Não foi possível carregar os cartões de crédito');
     }
     
-    // Para cada cartão, adicionar os campos faltantes e obter o total de despesas
-    const cartoesComDespesas = await Promise.all(data.map(async (cartao) => {
+    // Para cada cartão, adicionar os campos faltantes
+    const cartoesCompletos = data.map(async (cartao) => {
       // Gerar um código único para o cartão, já que não existe na tabela
       const cartaoCodigo = gerarCartaoCodigo(cartao.nome, 'banco_padrao');
       
-      // Obter o total de despesas usando o código gerado ou o nome como fallback
-      const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
+      // Obter o total de despesas de forma direta para evitar dependência circular
+      const { data: despesasData, error: despesasError } = await supabase
+        .from('despesas_cartao')
+        .select('valor')
+        .eq('cartao_id', cartao.id);
+        
+      let totalDespesas = 0;
+      if (!despesasError && despesasData) {
+        totalDespesas = despesasData.reduce((acc, item) => acc + Number(item.valor), 0);
+      }
       
       // Retornar o objeto completo com os campos faltantes
       return {
@@ -52,9 +59,10 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
         cartao_codigo: cartaoCodigo,
         total_despesas: totalDespesas
       } as CartaoCredito;
-    }));
+    });
     
-    return cartoesComDespesas;
+    // Aguardar a resolução de todas as promessas
+    return Promise.all(cartoesCompletos);
   } catch (error) {
     console.error('Erro ao buscar cartões:', error);
     return [];
@@ -90,8 +98,16 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
     // Gerar um código único para o cartão, já que não existe na tabela
     const cartaoCodigo = gerarCartaoCodigo(data.nome, 'banco_padrao');
     
-    // Obter o total de despesas para esse cartão
-    const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
+    // Obter o total de despesas para esse cartão diretamente do banco
+    const { data: despesasData, error: despesasError } = await supabase
+      .from('despesas_cartao')
+      .select('valor')
+      .eq('cartao_id', cartaoId);
+      
+    let totalDespesas = 0;
+    if (!despesasError && despesasData) {
+      totalDespesas = despesasData.reduce((acc, item) => acc + Number(item.valor), 0);
+    }
     
     // Retornar o objeto completo com os campos faltantes
     return {
