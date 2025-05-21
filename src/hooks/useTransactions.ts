@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Transaction } from '@/types/financialTypes';
 import { CartaoCredito } from '@/types/cartaoTypes';
 import { useToast } from '@/hooks/use-toast';
-import { getTransacoes } from '@/services/transacaoService';
+import { getTransacoes } from '@/services/transacao';
 import { getCartoes } from '@/services/cartaoCreditoService';
 
 export const useTransactions = () => {

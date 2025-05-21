@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCategorySummary } from '@/services/transacaoService';
+import { getCategorySummary } from '@/services/transacao';
 import { CategorySummary } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";

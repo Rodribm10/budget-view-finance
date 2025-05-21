@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,7 +5,7 @@ import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Transaction } from '@/types/financialTypes';
-import { updateTransacao } from '@/services/transacaoService';
+import { updateTransacao } from '@/services/transacao';
 
 const transactionSchema = z.object({
   estabelecimento: z.string().min(1, { message: 'Estabelecimento é obrigatório' }),

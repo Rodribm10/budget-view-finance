@@ -8,7 +8,12 @@ import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import { Wallet, ArrowUp, ArrowDown, PiggyBank, CreditCard } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
-import { getTransacoes, getTransactionSummary, getCategorySummary, getMonthlyData } from '@/services/transacaoService';
+import { 
+  getTransacoes, 
+  getTransactionSummary, 
+  getCategorySummary, 
+  getMonthlyData 
+} from '@/services/transacao';
 import { getCartoes } from '@/services/cartaoCreditoService';
 
 const Dashboard = () => {
