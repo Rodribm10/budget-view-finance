@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartaoCredito } from "@/types/cartaoTypes";
 import { gerarCartaoCodigo } from "./cartaoCodigoUtils";
@@ -33,28 +32,19 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
     
     // Garantir que todos os dados têm os campos necessários da interface CartaoCredito
     const cartoesCompletos = data.map(cartao => {
-      const cartaoCompleto = { ...cartao } as CartaoCredito;
-      
-      // Se não tiver cartao_codigo, gerar um código temporário baseado no id
-      if (!cartaoCompleto.cartao_codigo) {
-        cartaoCompleto.cartao_codigo = `cartao_${cartaoCompleto.id.substring(0, 8)}`;
-      }
-      
-      // Se não tiver bandeira ou banco, adicionar valores padrão
-      if (!cartaoCompleto.bandeira) {
-        cartaoCompleto.bandeira = 'Não especificada';
-      }
-      
-      if (!cartaoCompleto.banco) {
-        cartaoCompleto.banco = 'Não especificado';
-      }
+      const cartaoCompleto = { 
+        ...cartao,
+        bandeira: cartao.bandeira || 'Não especificada',
+        banco: cartao.banco || 'Não especificado',
+        cartao_codigo: cartao.cartao_codigo || `cartao_${cartao.id.substring(0, 8)}`
+      } as CartaoCredito;
       
       return cartaoCompleto;
     });
     
-    // Buscar o total de despesas para cada cartão
+    // Buscar o total de despesas para cada cartão - Promise.all já tipa corretamente o retorno
     const cartoesComTotal = await Promise.all(
-      cartoesCompletos.map(async (cartao: CartaoCredito) => {
+      cartoesCompletos.map(async (cartao) => {
         const total = await getTotalDespesasCartao(cartao.cartao_codigo);
         return { ...cartao, total_despesas: total };
       })

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { DespesaCartao } from "@/types/cartaoTypes";
 import { getCartao } from "./cartoesService";
@@ -41,13 +40,10 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
     }
     
     // Garantir que todas as despesas têm cartao_codigo
-    const despesasCompletas = data.map(despesa => {
-      const despesaCompleta = { ...despesa } as DespesaCartao;
-      if (!despesaCompleta.cartao_codigo) {
-        despesaCompleta.cartao_codigo = cartao.cartao_codigo;
-      }
-      return despesaCompleta;
-    });
+    const despesasCompletas = data.map(despesa => ({
+      ...despesa,
+      cartao_codigo: despesa.cartao_codigo || cartao.cartao_codigo
+    })) as DespesaCartao[];
     
     return despesasCompletas;
   } catch (error) {
@@ -132,8 +128,7 @@ export async function getTotalDespesasCartao(cartaoCodigo: string): Promise<numb
     const { data, error } = await supabase
       .from('despesas_cartao')
       .select('valor')
-      .eq('cartao_codigo', cartaoCodigo)
-      .eq('login', normalizedEmail);
+      .eq('cartao_codigo', cartaoCodigo);
       
     if (error) {
       console.error('Erro ao calcular total de despesas:', error);
