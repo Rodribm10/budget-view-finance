@@ -4,8 +4,9 @@ import { DespesaCartao } from "@/types/cartaoTypes";
 import { getCartao } from "./cartoesService";
 
 /**
- * Fetches expenses for a specific credit card
- * @param cartaoId Card ID
+ * Fetches expenses for a specific credit card based on login and nome
+ * @param cartaoId Card ID (still used for type compatibility)
+ * @param cardName Card name to match with expenses
  * @returns Array of card expenses
  */
 export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao[]> {
@@ -21,7 +22,7 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
   const normalizedEmail = userEmail.trim().toLowerCase();
   
   try {
-    // Primeiro, obter o cartao_codigo do cartão
+    // First, get the card details to get the name
     const cartao = await getCartao(cartaoId);
     
     if (!cartao) {
@@ -29,10 +30,14 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
       return [];
     }
     
+    const cardName = cartao.nome;
+    
+    // Now get expenses matching by login and nome instead of cartao_id
     const { data, error } = await supabase
       .from('despesas_cartao')
       .select('*')
-      .eq('cartao_id', cartaoId)
+      .eq('login', normalizedEmail)
+      .eq('nome', cardName)
       .order('data_despesa', { ascending: false });
       
     if (error) {
@@ -40,10 +45,11 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
       throw new Error('Não foi possível carregar as despesas do cartão');
     }
     
-    // Mapear os resultados para o tipo DespesaCartao, adicionando o cartao_codigo
+    // Map results to DespesaCartao type, adding cartao_codigo
     const despesasCompletas = data.map(despesa => ({
       ...despesa,
-      cartao_codigo: cartao.cartao_codigo || '' // Use o código do cartão obtido anteriormente
+      cartao_codigo: cartao.cartao_codigo || '',
+      cartao_id: cartaoId // Keep for backwards compatibility
     })) as DespesaCartao[];
     
     return despesasCompletas;
@@ -55,7 +61,7 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
 
 /**
  * Creates a new expense for a credit card
- * @param cartao_id Card ID
+ * @param cartao_id Card ID (kept for backwards compatibility)
  * @param cartao_codigo Card code
  * @param valor Expense value
  * @param data_despesa Expense date
@@ -98,7 +104,6 @@ export async function criarDespesa(
     const nomeCartao = cartaoData.nome;
     
     console.log('Tentando criar despesa de cartão com os dados:', {
-      cartao_id,
       login: normalizedEmail,
       nome: nomeCartao,
       valor,
@@ -106,16 +111,16 @@ export async function criarDespesa(
       descricao
     });
     
-    // Inserir registro com as novas colunas login e nome
+    // Insert new expense with login and nome (but not cartao_id)
     const { data, error } = await supabase
       .from('despesas_cartao')
       .insert([{ 
-        cartao_id: cartao_id,
         login: normalizedEmail,
         nome: nomeCartao,
         valor: valor,
         data_despesa: data_despesa,
-        descricao: descricao
+        descricao: descricao,
+        cartao_id: cartao_id // Keep for now to avoid breaking existing functionality
       }])
       .select();
       
@@ -129,10 +134,10 @@ export async function criarDespesa(
       return null;
     }
     
-    // Adicionar cartao_codigo ao resultado
+    // Add cartao_codigo to result
     const despesaCompleta = {
       ...data[0],
-      cartao_codigo: cartao_codigo // Use o código do cartão fornecido no parâmetro
+      cartao_codigo: cartao_codigo
     } as DespesaCartao;
     
     return despesaCompleta;
@@ -143,8 +148,8 @@ export async function criarDespesa(
 }
 
 /**
- * Calculates the total expenses for a credit card
- * @param cartaoId Card ID (not code)
+ * Calculates the total expenses for a credit card based on login and card name
+ * @param cartaoId Card ID
  * @returns Total expenses amount
  */
 export async function getTotalDespesasCartao(cartaoId: string): Promise<number> {
@@ -155,18 +160,42 @@ export async function getTotalDespesasCartao(cartaoId: string): Promise<number> 
   }
   
   try {
-    // Buscar despesas pelo ID do cartão
+    // Get the user's email from localStorage
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+      console.error('Email do usuário não encontrado');
+      return 0;
+    }
+    
+    const normalizedEmail = userEmail.trim().toLowerCase();
+    
+    // Get the card's name from cartoes_credito
+    const { data: cardData, error: cardError } = await supabase
+      .from('cartoes_credito')
+      .select('nome')
+      .eq('id', cartaoId)
+      .single();
+      
+    if (cardError || !cardData) {
+      console.error('Erro ao obter nome do cartão:', cardError);
+      return 0;
+    }
+    
+    const cardName = cardData.nome;
+    
+    // Now get expenses matching both login and nome
     const { data, error } = await supabase
       .from('despesas_cartao')
       .select('valor')
-      .eq('cartao_id', cartaoId);
+      .eq('login', normalizedEmail)
+      .eq('nome', cardName);
       
     if (error) {
       console.error('Erro ao calcular total de despesas:', error);
       return 0;
     }
     
-    // Somar todos os valores das despesas
+    // Sum all expense values
     const total = data.reduce((acc, item) => acc + Number(item.valor), 0);
     return total;
   } catch (error) {

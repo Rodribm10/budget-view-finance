@@ -40,6 +40,7 @@ const CartoesCreditoPage = () => {
   const loadDespesasCartao = async (cartaoId: string) => {
     try {
       setIsLoading(true);
+      // This function now uses login+nome matching internally instead of cartao_id
       const data = await getDespesasCartao(cartaoId);
       setDespesas(data);
     } catch (error) {

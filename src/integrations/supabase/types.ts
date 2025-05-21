@@ -146,7 +146,7 @@ export type Database = {
       }
       despesas_cartao: {
         Row: {
-          cartao_id: string
+          cartao_id: string | null
           created_at: string
           data_despesa: string
           descricao: string
@@ -156,7 +156,7 @@ export type Database = {
           valor: number
         }
         Insert: {
-          cartao_id: string
+          cartao_id?: string | null
           created_at?: string
           data_despesa: string
           descricao: string
@@ -166,7 +166,7 @@ export type Database = {
           valor: number
         }
         Update: {
-          cartao_id?: string
+          cartao_id?: string | null
           created_at?: string
           data_despesa?: string
           descricao?: string
