@@ -6,7 +6,6 @@
 // Re-export all functions from cartoesService
 export {
   getCartoes,
-  verificarCartaoExistente,
   criarCartao,
   getCartao
 } from './cartao/cartoesService';
