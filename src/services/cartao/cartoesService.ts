@@ -32,17 +32,21 @@ export async function getCartoes(): Promise<CartaoCredito[]> {
       throw new Error('Não foi possível carregar os cartões de crédito');
     }
     
-    // Para cada cartão, obter o total de despesas e adicionar campos que podem estar faltando
+    // Para cada cartão, adicionar os campos faltantes e obter o total de despesas
     const cartoesComDespesas = await Promise.all(data.map(async (cartao) => {
-      // Os campos bandeira, banco e cartao_codigo podem não existir na tabela
-      // Vamos adicioná-los com valores padrão
-      const cartaoCodigo = cartao.cartao_codigo || 
-                          gerarCartaoCodigo(cartao.nome, 'banco_padrao');
+      // Gerar um código único para o cartão, já que não existe na tabela
+      const cartaoCodigo = gerarCartaoCodigo(cartao.nome, 'banco_padrao');
       
+      // Obter o total de despesas usando o código gerado ou o nome como fallback
       const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
       
+      // Retornar o objeto completo com os campos faltantes
       return {
-        ...cartao,
+        id: cartao.id,
+        nome: cartao.nome,
+        user_id: cartao.user_id,
+        login: cartao.login || normalizedEmail,
+        created_at: cartao.created_at,
         bandeira: '',  // Campo não existe na tabela, definir valor padrão
         banco: '',     // Campo não existe na tabela, definir valor padrão
         cartao_codigo: cartaoCodigo,
@@ -83,16 +87,19 @@ export async function getCartao(cartaoId: string): Promise<CartaoCredito | null>
       return null;
     }
     
-    // Adicionar campos que podem não existir no banco de dados
-    const cartaoCodigo = data.cartao_codigo || 
-                        gerarCartaoCodigo(data.nome, 'banco_padrao');
+    // Gerar um código único para o cartão, já que não existe na tabela
+    const cartaoCodigo = gerarCartaoCodigo(data.nome, 'banco_padrao');
     
     // Obter o total de despesas para esse cartão
     const totalDespesas = await getTotalDespesasCartao(cartaoCodigo);
     
-    // Retorna objeto com campos padrão para campos que não existem no banco
+    // Retornar o objeto completo com os campos faltantes
     return {
-      ...data,
+      id: data.id,
+      nome: data.nome,
+      user_id: data.user_id,
+      login: data.login,
+      created_at: data.created_at,
       bandeira: '',  // Campo não existe na tabela, definir valor padrão
       banco: '',     // Campo não existe na tabela, definir valor padrão
       cartao_codigo: cartaoCodigo,
@@ -137,9 +144,6 @@ export async function criarCartao(
       .from('cartoes_credito')
       .insert([{ 
         nome: nome,
-        banco: banco,
-        bandeira: bandeira,
-        cartao_codigo: cartao_codigo,
         login: normalizedEmail,
         user_id: userId
       }])
@@ -150,12 +154,16 @@ export async function criarCartao(
       throw new Error('Não foi possível criar o cartão de crédito');
     }
     
-    // Retornar o cartão criado
+    // Retornar o cartão criado com os campos adicionais
     return {
-      ...data[0],
-      bandeira: bandeira, // Fix: was incorrectly using banco
-      banco: banco, // Fix: was incorrectly using bandeira
-      cartao_codigo: cartao_codigo,
+      id: data[0].id,
+      nome: data[0].nome,
+      user_id: data[0].user_id,
+      login: data[0].login || normalizedEmail,
+      created_at: data[0].created_at,
+      bandeira: bandeira, // Campo não existe na tabela, mas incluído no retorno
+      banco: banco, // Campo não existe na tabela, mas incluído no retorno
+      cartao_codigo: cartao_codigo, // Campo não existe na tabela, mas incluído no retorno
       total_despesas: 0
     } as CartaoCredito;
   } catch (error) {

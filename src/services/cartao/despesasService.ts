@@ -24,8 +24,8 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
     // Primeiro, obter o cartao_codigo do cartão
     const cartao = await getCartao(cartaoId);
     
-    if (!cartao || !cartao.cartao_codigo) {
-      console.error('Cartão não encontrado ou sem código');
+    if (!cartao) {
+      console.error('Cartão não encontrado');
       return [];
     }
     
@@ -40,10 +40,10 @@ export async function getDespesasCartao(cartaoId: string): Promise<DespesaCartao
       throw new Error('Não foi possível carregar as despesas do cartão');
     }
     
-    // Garantir que todas as despesas têm cartao_codigo
+    // Mapear os resultados para o tipo DespesaCartao, adicionando o cartao_codigo
     const despesasCompletas = data.map(despesa => ({
       ...despesa,
-      cartao_codigo: despesa.cartao_codigo || cartao.cartao_codigo
+      cartao_codigo: cartao.cartao_codigo || '' // Use o código do cartão obtido anteriormente
     })) as DespesaCartao[];
     
     return despesasCompletas;
@@ -87,7 +87,6 @@ export async function criarDespesa(
       .from('despesas_cartao')
       .insert([{ 
         cartao_id: cartao_id,
-        cartao_codigo: cartao_codigo,
         valor: valor,
         data_despesa: data_despesa,
         descricao: descricao,
@@ -101,10 +100,15 @@ export async function criarDespesa(
       throw new Error('Não foi possível adicionar a despesa ao cartão');
     }
     
-    // Adicionar cartao_codigo se não existir no resultado
+    if (!data || data.length === 0) {
+      console.error('Nenhum dado retornado ao criar despesa');
+      return null;
+    }
+    
+    // Adicionar cartao_codigo ao resultado
     const despesaCompleta = {
       ...data[0],
-      cartao_codigo: data[0].cartao_codigo || cartao_codigo
+      cartao_codigo: cartao_codigo // Use o código do cartão fornecido no parâmetro
     } as DespesaCartao;
     
     return despesaCompleta;
@@ -134,19 +138,31 @@ export async function getTotalDespesasCartao(cartaoCodigo: string): Promise<numb
     return 0;
   }
   
-  // Normalizar o email (minúsculo e sem espaços)
-  const normalizedEmail = userEmail.trim().toLowerCase();
-  
   try {
-    // Buscar todas as despesas com o código do cartão
+    // Buscar todas as despesas com o ID do cartão em vez do código
+    // Já que cartao_codigo não existe na tabela despesas_cartao
+    const { data: cartoes, error: cartoesError } = await supabase
+      .from('cartoes_credito')
+      .select('id')
+      .eq('nome', cartaoCodigo) // Usamos o nome como identificador alternativo
+      .limit(1);
+      
+    if (cartoesError || !cartoes || cartoes.length === 0) {
+      console.error('Erro ao buscar cartão pelo código:', cartoesError);
+      return 0;
+    }
+    
+    const cartaoId = cartoes[0].id;
+    
+    // Buscar despesas pelo ID do cartão
     const { data, error } = await supabase
       .from('despesas_cartao')
       .select('valor')
-      .eq('cartao_codigo', cartaoCodigo);
+      .eq('cartao_id', cartaoId);
       
     if (error) {
       console.error('Erro ao calcular total de despesas:', error);
-      throw new Error('Não foi possível calcular o total de despesas');
+      return 0;
     }
     
     // Somar todos os valores das despesas

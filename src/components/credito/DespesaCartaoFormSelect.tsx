@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,6 +5,7 @@ import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
 import { CartaoCredito } from '@/types/cartaoTypes';
 import { criarDespesa } from '@/services/cartaoCreditoService';
+import { gerarCartaoCodigo } from '@/services/cartao/cartaoCodigoUtils';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
