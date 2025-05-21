@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/components/ui/use-toast';
-import { criarDespesa } from '@/services/cartao/despesasService';
+import { criarDespesa } from '@/services/cartao/despesas'; // Updated import path
 import { 
   Form,
   FormControl,

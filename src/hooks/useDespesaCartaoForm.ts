@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { CartaoCredito } from '@/types/cartaoTypes';
-import { criarDespesa } from '@/services/cartao/despesasService';
+import { criarDespesa } from '@/services/cartao/despesas'; // Updated import path
 import { format } from 'date-fns';
 
 const despesaCartaoSchema = z.object({
