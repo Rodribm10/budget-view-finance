@@ -1,6 +1,5 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import Auth from './pages/Auth';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -19,22 +18,55 @@ const CartoesCredito = lazy(() => import('./pages/CartoesCredito'));
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
+  const setLoggedIn = authStore((state) => state.setLoggedIn);
+  
+  // Initialize authStore state once at mount time
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('autenticado') === 'true';
+    setLoggedIn(storedAuth);
+  }, [setLoggedIn]);
 
   return (
     <Router>
       <Toaster />
       
       <Routes>
-        <Route path="/auth" element={isLoggedIn ? <Navigate to="/" /> : <Auth />} />
-        <Route path="/" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Dashboard /></Suspense></ProtectedRoute>} />
-        <Route path="/transacoes" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Transacoes /></Suspense></ProtectedRoute>} />
+        {/* The auth route should not be inside ProtectedRoute */}
+        <Route 
+          path="/auth" 
+          element={isLoggedIn ? <Navigate to="/" replace /> : <Auth />} 
+        />
+        
+        {/* Protected routes */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
+              <Dashboard />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
+        <Route path="/transacoes" element={
+          <ProtectedRoute>
+            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
+              <Transacoes />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         <Route path="/cartoes" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><CartoesCredito /></Suspense></ProtectedRoute>} />
         <Route path="/categorias" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Categorias /></Suspense></ProtectedRoute>} />
         <Route path="/metas" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Metas /></Suspense></ProtectedRoute>} />
         <Route path="/calendario" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Calendario /></Suspense></ProtectedRoute>} />
         <Route path="/whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><WhatsApp /></Suspense></ProtectedRoute>} />
         <Route path="/grupos-whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><GruposWhatsApp /></Suspense></ProtectedRoute>} />
-        <Route path="*" element={<Suspense fallback={<div>Carregando...</div>}><NotFound /></Suspense>} />
+        
+        {/* Not found route */}
+        <Route path="*" element={
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
+            <NotFound />
+          </Suspense>
+        } />
       </Routes>
     </Router>
   );
