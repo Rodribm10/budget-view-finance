@@ -6,6 +6,7 @@ interface UserData {
   nome: string;
   empresa?: string;
   email: string;
+  whatsapp?: string;
   data_cadastro: string;
   origem: string;
 }

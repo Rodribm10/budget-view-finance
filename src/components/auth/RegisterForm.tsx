@@ -20,6 +20,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [email, setEmail] = useState('');
+  const [whatsapp, setWhatsapp] = useState('');
   const [senha, setSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
 
@@ -65,6 +66,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           nome,
           empresa,
           email,
+          whatsapp,
           data_cadastro: new Date().toISOString(),
           origem: window.location.origin,
         };
@@ -137,6 +139,16 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           onChange={(e) => setEmail(e.target.value)}
           disabled={isLoading}
           required
+        />
+      </div>
+      <div className="space-y-2">
+        <Input
+          id="whatsapp"
+          placeholder="WhatsApp (com DDD)"
+          type="tel"
+          value={whatsapp}
+          onChange={(e) => setWhatsapp(e.target.value)}
+          disabled={isLoading}
         />
       </div>
       <div className="space-y-2">
