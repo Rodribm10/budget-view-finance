@@ -47,8 +47,8 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
           description: "Bem-vindo de volta!"
         });
         
-        // Redirecionamento para o dashboard após login bem-sucedido
-        navigate('/dashboard');
+        // Corrigir o redirecionamento para a rota principal "/"
+        navigate('/');
       } else {
         toast({
           title: "Falha no login",
