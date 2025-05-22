@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ResultadoMeta } from '@/types/financialTypes';
 import { useToast } from '@/components/ui/use-toast';
-import { calcularResultadosMetas, getMeta } from '@/services/metasService';
+import { calcularResultadosMetas, getMeta, deletarMeta } from '@/services/metasService';
 import { PlusCircle } from 'lucide-react';
 import {
   Dialog,
@@ -18,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const MetasPage = () => {
   const { toast } = useToast();
@@ -25,8 +35,11 @@ const MetasPage = () => {
   const [resultados, setResultados] = useState<ResultadoMeta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [metaParaEditar, setMetaParaEditar] = useState<{ mes: number, ano: number } | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [metaParaEditar, setMetaParaEditar] = useState<{ mes: number, ano: number, id?: string } | null>(null);
+  const [metaParaDeletar, setMetaParaDeletar] = useState<{ mes: number, ano: number, id: string } | null>(null);
   const [valorMetaAtual, setValorMetaAtual] = useState(0);
+  const [isDeletingMeta, setIsDeletingMeta] = useState(false);
 
   useEffect(() => {
     // Obter userId armazenado no localStorage
@@ -72,11 +85,44 @@ const MetasPage = () => {
       const meta = await getMeta(userId, mes, ano);
       if (meta) {
         setValorMetaAtual(meta.valor_meta);
-        setMetaParaEditar({ mes, ano });
+        setMetaParaEditar({ mes, ano, id: meta.id });
         setIsDialogOpen(true);
       }
     } catch (error) {
       console.error('Erro ao buscar meta para edição:', error);
+    }
+  };
+
+  const handleDeletarMeta = (mes: number, ano: number, id: string) => {
+    setMetaParaDeletar({ mes, ano, id });
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmarDeletarMeta = async () => {
+    if (!metaParaDeletar?.id) return;
+    
+    try {
+      setIsDeletingMeta(true);
+      await deletarMeta(metaParaDeletar.id);
+      
+      // Atualizar lista de metas após deleção
+      await loadData(userId);
+      
+      toast({
+        title: 'Meta excluída',
+        description: `A meta de ${format(new Date(metaParaDeletar.ano, metaParaDeletar.mes - 1, 1), 'MMMM', { locale: ptBR })} ${metaParaDeletar.ano} foi excluída com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao deletar meta:', error);
+      toast({
+        title: 'Erro ao deletar meta',
+        description: 'Não foi possível excluir a meta',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsDeletingMeta(false);
+      setIsDeleteDialogOpen(false);
+      setMetaParaDeletar(null);
     }
   };
 
@@ -161,6 +207,20 @@ const MetasPage = () => {
                         key={`${meta.ano}-${meta.mes}`}
                         meta={meta}
                         onEditClick={() => handleEditarMeta(meta.mes, meta.ano)}
+                        onDeleteClick={() => {
+                          // Aqui precisamos buscar o ID primeiro pois resultadoMeta não tem o ID
+                          // Vamos usar o metaParaEditar.id que já foi carregado se o usuário clicou em editar antes
+                          if (metaParaEditar && metaParaEditar.mes === meta.mes && metaParaEditar.ano === meta.ano && metaParaEditar.id) {
+                            handleDeletarMeta(meta.mes, meta.ano, metaParaEditar.id);
+                          } else {
+                            // Buscar o ID antes de deletar
+                            getMeta(userId, meta.mes, meta.ano).then(metaCompleta => {
+                              if (metaCompleta && metaCompleta.id) {
+                                handleDeletarMeta(meta.mes, meta.ano, metaCompleta.id);
+                              }
+                            });
+                          }
+                        }}
                       />
                     ))}
                 </div>
@@ -191,6 +251,34 @@ const MetasPage = () => {
             />
           </DialogContent>
         </Dialog>
+
+        <AlertDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Confirmar exclusão
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {metaParaDeletar && (
+                  `Tem certeza que deseja excluir a meta de ${format(new Date(metaParaDeletar.ano, metaParaDeletar.mes - 1, 1), 'MMMM', { locale: ptBR })} de ${metaParaDeletar.ano}? Esta ação não pode ser desfeita.`
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeletingMeta}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmarDeletarMeta}
+                disabled={isDeletingMeta}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                {isDeletingMeta ? 'Deletando...' : 'Deletar Meta'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );
