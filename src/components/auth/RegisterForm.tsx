@@ -29,7 +29,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     e.preventDefault();
     
     // Validações básicas
-    if (!nome || !email || !senha) {
+    if (!nome || !email || !senha || !whatsapp) {
       toast({
         title: "Campos obrigatórios",
         description: "Por favor preencha todos os campos obrigatórios",
@@ -55,7 +55,8 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         nome,
         empresa,
         email,
-        senha
+        senha,
+        whatsapp
       });
       
       if (error) throw error;
@@ -92,9 +93,10 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           localStorage.setItem('userId', loginData);
           localStorage.setItem('userEmail', email);
           localStorage.setItem('userName', nome);
+          localStorage.setItem('userWhatsapp', whatsapp);
           
-          // Redirecionamento para o dashboard após cadastro bem-sucedido
-          navigate('/dashboard');
+          // Redirecionamento para a página principal após cadastro bem-sucedido
+          navigate('/');
         }
       }
     } catch (error: any) {
@@ -149,6 +151,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
           disabled={isLoading}
+          required
         />
       </div>
       <div className="space-y-2">

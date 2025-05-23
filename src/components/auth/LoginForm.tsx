@@ -37,10 +37,26 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
 
       // Se encontrou um usuário válido
       if (data) {
+        // Fetch user details to get the WhatsApp number
+        const { data: userData, error: userError } = await supabase
+          .from('usuarios')
+          .select('nome, email, whatsapp')
+          .eq('id', data)
+          .single();
+          
+        if (userError) {
+          console.error("Erro ao buscar dados do usuário:", userError);
+        }
+          
         // Armazenar informações de sessão
         localStorage.setItem('autenticado', 'true');
         localStorage.setItem('userId', data);
         localStorage.setItem('userEmail', loginEmail);
+        
+        if (userData) {
+          localStorage.setItem('userName', userData.nome);
+          localStorage.setItem('userWhatsapp', userData.whatsapp);
+        }
         
         toast({
           title: "Login realizado com sucesso",

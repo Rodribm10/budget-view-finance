@@ -295,6 +295,7 @@ export type Database = {
           id: string
           nome: string
           senha: string
+          whatsapp: string
         }
         Insert: {
           created_at?: string
@@ -303,6 +304,7 @@ export type Database = {
           id?: string
           nome: string
           senha: string
+          whatsapp: string
         }
         Update: {
           created_at?: string
@@ -311,6 +313,7 @@ export type Database = {
           id?: string
           nome?: string
           senha?: string
+          whatsapp?: string
         }
         Relationships: []
       }
