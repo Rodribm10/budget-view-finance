@@ -294,6 +294,7 @@ export type Database = {
           empresa: string | null
           id: string
           nome: string
+          remote_jid: string | null
           senha: string
           whatsapp: string
         }
@@ -303,6 +304,7 @@ export type Database = {
           empresa?: string | null
           id?: string
           nome: string
+          remote_jid?: string | null
           senha: string
           whatsapp: string
         }
@@ -312,6 +314,7 @@ export type Database = {
           empresa?: string | null
           id?: string
           nome?: string
+          remote_jid?: string | null
           senha?: string
           whatsapp?: string
         }

@@ -76,6 +76,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
       // Removemos formatação antes de enviar para o banco
       const whatsappLimpo = whatsapp.replace(/\D/g, '');
       
+      // Garantir que todos os parâmetros sejam incluídos na chamada para a função registrar_usuario
       const { data, error } = await supabase.rpc('registrar_usuario', {
         nome,
         empresa,
