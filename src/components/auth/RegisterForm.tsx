@@ -22,9 +22,29 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [email, setEmail] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
+  const [whatsapp, setWhatsapp] = useState('55');
   const [senha, setSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
+
+  // Função para formatar o WhatsApp
+  const formatarWhatsapp = (valor: string) => {
+    // Remove todos os caracteres não numéricos
+    let nums = valor.replace(/\D/g, '');
+    
+    // Garante que sempre começa com 55 (código do Brasil)
+    if (!nums.startsWith('55')) {
+      nums = '55' + nums;
+    }
+    
+    // Formata com parênteses para o DDD
+    if (nums.length > 7) {
+      return `${nums.slice(0, 2)}(${nums.slice(2, 4)})${nums.slice(4)}`;
+    } else if (nums.length > 4) {
+      return `${nums.slice(0, 2)}(${nums.slice(2)}`;
+    }
+    
+    return nums;
+  };
 
   // Função para cadastrar usuário
   const handleCadastro = async (e: React.FormEvent) => {
@@ -53,12 +73,15 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     
     try {
       // Registrar o usuário usando a função RPC do Supabase
+      // Removemos formatação antes de enviar para o banco
+      const whatsappLimpo = whatsapp.replace(/\D/g, '');
+      
       const { data, error } = await supabase.rpc('registrar_usuario', {
         nome,
         empresa,
         email,
         senha,
-        whatsapp
+        whatsapp: whatsappLimpo
       });
       
       if (error) throw error;
@@ -69,7 +92,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           nome,
           empresa,
           email,
-          whatsapp,
+          whatsapp: whatsappLimpo,
           data_cadastro: new Date().toISOString(),
           origem: window.location.origin,
         };
@@ -95,7 +118,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           localStorage.setItem('userId', loginData);
           localStorage.setItem('userEmail', email);
           localStorage.setItem('userName', nome);
-          localStorage.setItem('userWhatsapp', whatsapp);
+          localStorage.setItem('userWhatsapp', whatsappLimpo);
           
           // Redirecionamento para a página principal após cadastro bem-sucedido
           navigate('/');
@@ -152,10 +175,10 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
         <Input
           id="whatsapp"
-          placeholder="WhatsApp (com DDD)"
+          placeholder="55(11)999999999"
           type="tel"
           value={whatsapp}
-          onChange={(e) => setWhatsapp(e.target.value)}
+          onChange={(e) => setWhatsapp(formatarWhatsapp(e.target.value))}
           disabled={isLoading}
           required
         />
