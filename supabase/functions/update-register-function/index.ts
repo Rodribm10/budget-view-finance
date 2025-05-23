@@ -31,8 +31,33 @@ serve(async (req) => {
       }
     );
     
-    // Update the registrar_usuario function to include the whatsapp parameter
-    const { data, error } = await supabaseClient.rpc('update_register_function');
+    // Execute the SQL to update the function
+    const { data, error } = await supabaseClient.rpc('update_register_function', {
+      sql: `
+        CREATE OR REPLACE FUNCTION public.registrar_usuario(
+          nome text,
+          empresa text,
+          email text,
+          senha text,
+          whatsapp text
+        ) RETURNS uuid
+        LANGUAGE plpgsql
+        SECURITY DEFINER
+        AS $function$
+        DECLARE
+          novo_usuario_id UUID;
+        BEGIN
+          -- Inserir novo usuário com senha hash
+          INSERT INTO public.usuarios (nome, empresa, email, senha, whatsapp)
+          VALUES (nome, empresa, email, crypt(senha, gen_salt('bf')), whatsapp)
+          RETURNING id INTO novo_usuario_id;
+          
+          -- Retorna o ID do usuário criado sem criar tabela individual
+          RETURN novo_usuario_id;
+        END;
+        $function$
+      `
+    });
     
     if (error) throw error;
 

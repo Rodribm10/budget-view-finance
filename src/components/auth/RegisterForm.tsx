@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { enviarDadosParaWebhook } from '@/utils/webhookService';
+import { Label } from '@/components/ui/label';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 
 interface RegisterFormProps {
   isLoading: boolean;
@@ -114,6 +116,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
   return (
     <form onSubmit={handleCadastro} className="space-y-4">
       <div className="space-y-2">
+        <Label htmlFor="nome">Nome completo</Label>
         <Input
           id="nome"
           placeholder="Nome completo"
@@ -124,6 +127,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="empresa">Empresa (opcional)</Label>
         <Input
           id="empresa"
           placeholder="Empresa (opcional)"
@@ -133,6 +137,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
         <Input
           id="email"
           placeholder="Email"
@@ -144,6 +149,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="whatsapp">WhatsApp (com DDD)</Label>
         <Input
           id="whatsapp"
           placeholder="WhatsApp (com DDD)"
@@ -155,6 +161,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="senha">Senha</Label>
         <Input
           id="senha"
           placeholder="Senha"
@@ -166,6 +173,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="confirma-senha">Confirme a senha</Label>
         <Input
           id="confirma-senha"
           placeholder="Confirme a senha"
