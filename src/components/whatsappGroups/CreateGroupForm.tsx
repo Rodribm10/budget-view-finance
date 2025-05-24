@@ -31,19 +31,30 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   // Verificar se o usuário tem instância WhatsApp
   useEffect(() => {
     const checkUserInstance = async () => {
-      if (!userEmail) return;
+      if (!userEmail) {
+        console.log('Email do usuário não fornecido');
+        setCheckingInstance(false);
+        return;
+      }
       
       setCheckingInstance(true);
       try {
+        console.log('Verificando instância para o usuário:', userEmail);
         const instanceData = await getUserWhatsAppInstance(userEmail);
         console.log('Dados da instância do usuário:', instanceData);
         
-        if (instanceData && instanceData.instancia_zap && instanceData.instancia_zap.trim() !== '') {
+        if (instanceData && 
+            instanceData.instancia_zap && 
+            instanceData.instancia_zap.trim() !== '' &&
+            instanceData.whatsapp &&
+            instanceData.whatsapp.trim() !== '') {
           setHasWhatsAppInstance(true);
           setUserInstance(instanceData);
+          console.log('Usuário tem instância WhatsApp válida');
         } else {
           setHasWhatsAppInstance(false);
           setUserInstance(null);
+          console.log('Usuário não tem instância WhatsApp válida ou dados estão incompletos');
         }
       } catch (error) {
         console.error('Erro ao verificar instância do usuário:', error);
@@ -184,6 +195,15 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
               Acesse o menu de conexão e realize este processo primeiro.
             </AlertDescription>
           </Alert>
+          
+          {/* Debug info para ajudar a identificar o problema */}
+          <div className="mt-4 p-4 bg-gray-100 rounded text-sm">
+            <p><strong>Debug Info:</strong></p>
+            <p>Email: {userEmail || 'Não definido'}</p>
+            <p>Instância: {userInstance?.instancia_zap || 'Não encontrada'}</p>
+            <p>WhatsApp: {userInstance?.whatsapp || 'Não encontrado'}</p>
+            <p>Status: {userInstance?.status_instancia || 'Não definido'}</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -198,6 +218,16 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Mostrar informações da instância conectada */}
+        <div className="bg-green-50 border border-green-200 rounded p-3 text-sm">
+          <p className="text-green-800">
+            <strong>✓ Instância conectada:</strong> {userInstance?.instancia_zap}
+          </p>
+          <p className="text-green-700">
+            Status: {userInstance?.status_instancia}
+          </p>
+        </div>
+        
         <div className="space-y-2">
           <Label htmlFor="nomeGrupo">Nome do grupo</Label>
           <Input 

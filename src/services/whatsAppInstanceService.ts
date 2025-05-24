@@ -39,17 +39,20 @@ export async function getUserWhatsAppInstance(userEmail: string): Promise<{
   whatsapp: string | null;
 } | null> {
   try {
+    console.log('Buscando instância para o email:', userEmail);
+    
     const { data, error } = await supabase
       .from('usuarios')
       .select('instancia_zap, status_instancia, whatsapp')
       .eq('email', userEmail.trim().toLowerCase())
-      .single();
+      .maybeSingle(); // Use maybeSingle em vez de single para evitar erro quando não encontrar
     
     if (error) {
       console.error('Erro ao buscar instância WhatsApp:', error);
       return null;
     }
     
+    console.log('Dados da instância encontrados:', data);
     return data;
   } catch (error) {
     console.error('Erro ao buscar instância WhatsApp:', error);
