@@ -293,9 +293,11 @@ export type Database = {
           email: string
           empresa: string | null
           id: string
+          instancia_zap: string | null
           nome: string
           remote_jid: string | null
           senha: string
+          status_instancia: string | null
           whatsapp: string
         }
         Insert: {
@@ -303,9 +305,11 @@ export type Database = {
           email: string
           empresa?: string | null
           id?: string
+          instancia_zap?: string | null
           nome: string
           remote_jid?: string | null
           senha: string
+          status_instancia?: string | null
           whatsapp: string
         }
         Update: {
@@ -313,9 +317,11 @@ export type Database = {
           email?: string
           empresa?: string | null
           id?: string
+          instancia_zap?: string | null
           nome?: string
           remote_jid?: string | null
           senha?: string
+          status_instancia?: string | null
           whatsapp?: string
         }
         Relationships: []

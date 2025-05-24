@@ -1,11 +1,14 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cadastrarGrupoWhatsApp } from '@/services/gruposWhatsAppService';
+import { getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
+import { createWhatsAppGroup, updateGroupRemoteJid } from '@/services/whatsAppGroupCreationService';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateGroupFormProps {
@@ -17,14 +20,45 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   const { toast } = useToast();
   const [cadastrando, setCadastrando] = useState<boolean>(false);
   const [nomeGrupo, setNomeGrupo] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
+  const [hasWhatsAppInstance, setHasWhatsAppInstance] = useState<boolean>(false);
+  const [checkingInstance, setCheckingInstance] = useState<boolean>(true);
+  const [userInstance, setUserInstance] = useState<{
+    instancia_zap: string | null;
+    status_instancia: string | null;
+    whatsapp: string | null;
+  } | null>(null);
 
-  // Cadastrar novo grupo ou atualizar workflow se necessário
+  // Verificar se o usuário tem instância WhatsApp
+  useEffect(() => {
+    const checkUserInstance = async () => {
+      if (!userEmail) return;
+      
+      setCheckingInstance(true);
+      try {
+        const instanceData = await getUserWhatsAppInstance(userEmail);
+        console.log('Dados da instância do usuário:', instanceData);
+        
+        if (instanceData && instanceData.instancia_zap && instanceData.instancia_zap.trim() !== '') {
+          setHasWhatsAppInstance(true);
+          setUserInstance(instanceData);
+        } else {
+          setHasWhatsAppInstance(false);
+          setUserInstance(null);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar instância do usuário:', error);
+        setHasWhatsAppInstance(false);
+        setUserInstance(null);
+      } finally {
+        setCheckingInstance(false);
+      }
+    };
+
+    checkUserInstance();
+  }, [userEmail]);
+
+  // Cadastrar novo grupo
   const handleCadastrarGrupo = async () => {
-    setErrorMessage(null);
-    setDebugInfo(null);
-    
     if (!userEmail) {
       toast({
         title: 'Erro',
@@ -43,67 +77,117 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
       return;
     }
 
+    if (!userInstance || !userInstance.instancia_zap || !userInstance.whatsapp) {
+      toast({
+        title: 'Erro',
+        description: 'Dados da instância WhatsApp não encontrados',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setCadastrando(true);
     try {
       console.log("Iniciando processo de cadastro de grupo...");
+      
+      // 1. Cadastrar grupo no banco de dados local
       const grupo = await cadastrarGrupoWhatsApp(nomeGrupo.trim());
       
-      if (grupo) {
-        let successMessage = 'Grupo registrado com sucesso';
-        let variant: 'default' | 'destructive' = 'default';
+      if (!grupo) {
+        throw new Error('Não foi possível cadastrar o grupo no banco de dados');
+      }
+
+      // 2. Criar grupo no WhatsApp via API
+      try {
+        const groupResponse = await createWhatsAppGroup(
+          userInstance.instancia_zap,
+          userEmail,
+          userInstance.whatsapp
+        );
         
-        if (grupo.workflow_id) {
-          successMessage = 'Grupo cadastrado e workflow criado com sucesso!';
+        console.log('Resposta da criação do grupo:', groupResponse);
+        
+        // 3. Atualizar remote_jid no banco de dados
+        if (groupResponse.id) {
+          await updateGroupRemoteJid(grupo.id, groupResponse.id);
+          
+          toast({
+            title: 'Sucesso!',
+            description: `Grupo "${groupResponse.subject}" criado com sucesso no seu WhatsApp!`,
+            variant: 'default',
+          });
         } else {
-          successMessage = 'Grupo cadastrado, mas falha ao criar workflow de automação.';
-          setDebugInfo('O grupo foi criado no Supabase, mas houve um problema ao criar o workflow no n8n. Verifique os logs do console para mais detalhes.');
-          variant = 'destructive';
+          toast({
+            title: 'Atenção',
+            description: 'Grupo cadastrado no sistema, mas não foi possível criar no WhatsApp',
+            variant: 'destructive',
+          });
         }
         
+      } catch (apiError) {
+        console.error('Erro ao criar grupo via API:', apiError);
         toast({
-          title: grupo.workflow_id ? 'Sucesso' : 'Atenção',
-          description: successMessage,
-          variant: variant,
-        });
-        
-        // Resetar o campo de nome
-        setNomeGrupo('');
-        
-        // Atualizar a lista de grupos
-        onSuccess();
-      } else {
-        setErrorMessage('Não foi possível registrar o grupo. Verifique a conexão com o Supabase.');
-        toast({
-          title: 'Erro',
-          description: 'Não foi possível registrar o grupo',
+          title: 'Atenção',
+          description: 'Grupo cadastrado no sistema, mas houve erro ao criar no WhatsApp. Verifique sua conexão.',
           variant: 'destructive',
         });
       }
+      
+      // Resetar o campo de nome
+      setNomeGrupo('');
+      
+      // Atualizar a lista de grupos
+      onSuccess();
+      
     } catch (error) {
       console.error('Erro ao cadastrar grupo:', error);
       let errorMsg = 'Erro desconhecido';
       if (error instanceof Error) {
         errorMsg = error.message;
-        
-        // Tentar extrair detalhes específicos do erro se existirem
-        if (errorMsg.includes('Status')) {
-          const statusMatch = errorMsg.match(/Status (\d+)/);
-          if (statusMatch && statusMatch[1]) {
-            setDebugInfo(`Código de status HTTP da API: ${statusMatch[1]}`);
-          }
-        }
       }
       
-      setErrorMessage('Erro ao cadastrar grupo: ' + errorMsg);
       toast({
         title: 'Erro',
-        description: 'Não foi possível registrar o grupo',
+        description: `Não foi possível registrar o grupo: ${errorMsg}`,
         variant: 'destructive',
       });
     } finally {
       setCadastrando(false);
     }
   };
+
+  if (checkingInstance) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Verificando instância WhatsApp...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!hasWhatsAppInstance) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Cadastrar novo grupo</CardTitle>
+          <CardDescription>
+            Para criar um grupo é necessário ter uma instância do WhatsApp conectada
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Para criar um grupo é necessário cadastrar e conectar sua instância do WhatsApp. 
+              Acesse o menu de conexão e realize este processo primeiro.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -129,7 +213,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         
         <Button 
           onClick={handleCadastrarGrupo} 
-          disabled={cadastrando || !userEmail || !nomeGrupo.trim()}
+          disabled={cadastrando || !userEmail || !nomeGrupo.trim() || !hasWhatsAppInstance}
           className="w-full"
         >
           {cadastrando ? (
@@ -146,23 +230,13 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         </Button>
         
         <div className="mt-4 border-t pt-4">
-          <h3 className="font-medium mb-2">Após cadastrar:</h3>
-          <ol className="list-decimal list-inside space-y-2">
-            <li>Adicione o número (61)99244-4275 ao grupo do WhatsApp que deseja automatizar</li>
-            <li>Envie uma mensagem neste grupo com o seguinte texto:</li>
-          </ol>
-          
-          <div className="bg-muted p-3 rounded-md font-mono mt-2">
-            {userEmail}
-          </div>
-          
-          <p className="text-sm text-muted-foreground mt-2">
-            Copie e cole o email exatamente como aparece acima
-          </p>
+          <h3 className="font-medium mb-2">Informações importantes:</h3>
+          <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+            <li>O grupo será criado automaticamente no seu WhatsApp</li>
+            <li>Você será adicionado como participante do grupo</li>
+            <li>O grupo terá o nome: FinDash - {userEmail.split('@')[0]}</li>
+          </ul>
         </div>
-
-        {errorMessage && <p className="text-destructive text-sm mt-4">{errorMessage}</p>}
-        {debugInfo && <p className="text-amber-800 text-sm mt-2 bg-amber-50 p-3 rounded-md">{debugInfo}</p>}
       </CardContent>
     </Card>
   );

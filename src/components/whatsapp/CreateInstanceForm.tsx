@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { MessageCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createWhatsAppInstance } from '@/services/whatsAppService';
+import { updateUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 
 interface CreateInstanceFormProps {
@@ -20,23 +21,19 @@ const CreateInstanceForm = ({
 }: CreateInstanceFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [instanceName, setInstanceName] = useState(initialInstanceName || '');
   const [phoneNumber, setPhoneNumber] = useState('');
   const currentUserId = localStorage.getItem('userId') || '';
+  const userEmail = localStorage.getItem('userEmail') || '';
   
-  // Update instance name if initial value changes
-  useEffect(() => {
-    if (initialInstanceName) {
-      setInstanceName(initialInstanceName);
-    }
-  }, [initialInstanceName]);
+  // Nome da instância será sempre o email do usuário
+  const instanceName = userEmail;
 
   const handleCreateInstance = async () => {
     // Validate form fields
-    if (!instanceName.trim()) {
+    if (!userEmail) {
       toast({
         title: "Erro",
-        description: "O nome da instância é obrigatório",
+        description: "Email do usuário não encontrado. Faça login novamente.",
         variant: "destructive",
       });
       return;
@@ -82,6 +79,15 @@ const CreateInstanceForm = ({
       
       console.log('New instance created:', newInstance);
       
+      // Atualizar o banco de dados com a instância
+      try {
+        await updateUserWhatsAppInstance(userEmail, instanceName, 'desconectado');
+        console.log('Instância salva no banco de dados');
+      } catch (dbError) {
+        console.error('Erro ao salvar instância no banco:', dbError);
+        // Não bloquear o processo se falhar ao salvar no banco
+      }
+      
       // Notify parent component about the new instance
       onInstanceCreated(newInstance);
       
@@ -122,11 +128,12 @@ const CreateInstanceForm = ({
           <Input
             id="instanceName"
             value={instanceName}
-            onChange={(e) => setInstanceName(e.target.value)}
-            placeholder="Digite um nome para a instância"
-            required
+            disabled
+            className="bg-gray-100"
           />
-          <p className="text-xs text-muted-foreground">O nome será usado para identificar esta conexão</p>
+          <p className="text-xs text-muted-foreground">
+            O nome da instância será automaticamente seu email de login
+          </p>
         </div>
         
         <div className="space-y-2">
@@ -144,7 +151,7 @@ const CreateInstanceForm = ({
         <Button 
           className="w-full mt-4" 
           onClick={handleCreateInstance}
-          disabled={loading}
+          disabled={loading || !userEmail || !phoneNumber.trim()}
         >
           {loading ? "Criando..." : "Criar Instância"}
         </Button>
