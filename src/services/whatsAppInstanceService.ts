@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -41,30 +40,51 @@ export async function getUserWhatsAppInstance(userEmail: string): Promise<{
   whatsapp: string | null;
 } | null> {
   try {
-    console.log('Buscando instância para o email:', userEmail);
+    console.log('🔍 getUserWhatsAppInstance - Email recebido:', userEmail);
+    
+    const normalizedEmail = userEmail.trim().toLowerCase();
+    console.log('📧 Email normalizado:', normalizedEmail);
     
     const { data, error } = await supabase
       .from('usuarios')
       .select('instancia_zap, status_instancia, whatsapp')
-      .eq('email', userEmail.trim().toLowerCase())
+      .eq('email', normalizedEmail)
       .maybeSingle();
     
     if (error) {
-      console.error('Erro ao buscar instância WhatsApp:', error);
+      console.error('❌ Erro ao buscar instância WhatsApp:', error);
       throw error;
     }
     
-    console.log('Dados da instância encontrados no banco:', data);
+    console.log('📊 DADOS RETORNADOS DO BANCO:');
+    console.log('- Raw data:', JSON.stringify(data, null, 2));
     
-    // Se não encontrou dados, retorna null
     if (!data) {
-      console.log('Nenhum usuário encontrado com o email:', userEmail);
+      console.log('⚠️ Nenhum usuário encontrado com o email:', normalizedEmail);
+      
+      // Vamos fazer uma busca alternativa para ver se o usuário existe com email diferente
+      const { data: allUsers, error: allError } = await supabase
+        .from('usuarios')
+        .select('email, instancia_zap, status_instancia, whatsapp');
+        
+      if (!allError && allUsers) {
+        console.log('📋 TODOS OS USUÁRIOS NO BANCO:');
+        allUsers.forEach((user, index) => {
+          console.log(`${index + 1}. Email: "${user.email}" | Instancia: "${user.instancia_zap}" | Status: "${user.status_instancia}"`);
+        });
+      }
+      
       return null;
     }
     
+    console.log('✅ Usuário encontrado! Dados da instância:');
+    console.log(`- instancia_zap: "${data.instancia_zap}" (tipo: ${typeof data.instancia_zap})`);
+    console.log(`- status_instancia: "${data.status_instancia}" (tipo: ${typeof data.status_instancia})`);
+    console.log(`- whatsapp: "${data.whatsapp}" (tipo: ${typeof data.whatsapp})`);
+    
     return data;
   } catch (error) {
-    console.error('Erro ao buscar instância WhatsApp:', error);
+    console.error('💥 Erro crítico ao buscar instância WhatsApp:', error);
     throw error;
   }
 }
