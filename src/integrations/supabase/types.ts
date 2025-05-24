@@ -395,7 +395,15 @@ export type Database = {
         Returns: string
       }
       registrar_usuario: {
-        Args: { nome: string; empresa: string; email: string; senha: string }
+        Args:
+          | { nome: string; empresa: string; email: string; senha: string }
+          | {
+              nome: string
+              empresa: string
+              email: string
+              senha: string
+              whatsapp: string
+            }
         Returns: string
       }
       sparsevec_out: {
