@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 /**
@@ -43,46 +44,56 @@ export async function getUserWhatsAppInstance(userEmail: string): Promise<{
     console.log('🔍 getUserWhatsAppInstance - Email recebido:', userEmail);
     
     const normalizedEmail = userEmail.trim().toLowerCase();
-    console.log('📧 Email normalizado:', normalizedEmail);
+    console.log('📧 Email normalizado para consulta:', normalizedEmail);
     
-    const { data, error } = await supabase
+    // TESTE DIRETO: Vamos fazer uma consulta mais específica
+    console.log('🔎 FAZENDO CONSULTA DIRETA NO BANCO...');
+    const { data, error, count } = await supabase
       .from('usuarios')
-      .select('instancia_zap, status_instancia, whatsapp')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
+      .select('email, instancia_zap, status_instancia, whatsapp', { count: 'exact' })
+      .eq('email', normalizedEmail);
+    
+    console.log('📊 RESULTADO DA CONSULTA DIRETA:');
+    console.log('- Total de registros encontrados:', count);
+    console.log('- Dados retornados:', JSON.stringify(data, null, 2));
+    console.log('- Erro na consulta:', error);
     
     if (error) {
-      console.error('❌ Erro ao buscar instância WhatsApp:', error);
+      console.error('❌ Erro na consulta Supabase:', error);
       throw error;
     }
     
-    console.log('📊 DADOS RETORNADOS DO BANCO:');
-    console.log('- Raw data:', JSON.stringify(data, null, 2));
-    
-    if (!data) {
-      console.log('⚠️ Nenhum usuário encontrado com o email:', normalizedEmail);
+    if (!data || data.length === 0) {
+      console.log('⚠️ NENHUM REGISTRO ENCONTRADO para o email:', normalizedEmail);
       
-      // Vamos fazer uma busca alternativa para ver se o usuário existe com email diferente
-      const { data: allUsers, error: allError } = await supabase
+      // Fazer uma consulta geral para ver todos os emails no banco
+      console.log('🔍 CONSULTANDO TODOS OS EMAILS NO BANCO:');
+      const { data: allEmails, error: allError } = await supabase
         .from('usuarios')
-        .select('email, instancia_zap, status_instancia, whatsapp');
+        .select('email, instancia_zap, status_instancia');
         
-      if (!allError && allUsers) {
-        console.log('📋 TODOS OS USUÁRIOS NO BANCO:');
-        allUsers.forEach((user, index) => {
-          console.log(`${index + 1}. Email: "${user.email}" | Instancia: "${user.instancia_zap}" | Status: "${user.status_instancia}"`);
+      if (!allError && allEmails) {
+        console.log('📋 TODOS OS EMAILS ENCONTRADOS NO BANCO:');
+        allEmails.forEach((user, index) => {
+          console.log(`${index + 1}. Email no banco: "${user.email}" | Instancia: "${user.instancia_zap}" | Status: "${user.status_instancia}"`);
         });
       }
       
       return null;
     }
     
-    console.log('✅ Usuário encontrado! Dados da instância:');
-    console.log(`- instancia_zap: "${data.instancia_zap}" (tipo: ${typeof data.instancia_zap})`);
-    console.log(`- status_instancia: "${data.status_instancia}" (tipo: ${typeof data.status_instancia})`);
-    console.log(`- whatsapp: "${data.whatsapp}" (tipo: ${typeof data.whatsapp})`);
+    const userData = data[0];
+    console.log('✅ USUÁRIO ENCONTRADO! Dados extraídos:');
+    console.log(`- Email do banco: "${userData.email}"`);
+    console.log(`- instancia_zap: "${userData.instancia_zap}" (tipo: ${typeof userData.instancia_zap})`);
+    console.log(`- status_instancia: "${userData.status_instancia}" (tipo: ${typeof userData.status_instancia})`);
+    console.log(`- whatsapp: "${userData.whatsapp}" (tipo: ${typeof userData.whatsapp})`);
     
-    return data;
+    return {
+      instancia_zap: userData.instancia_zap,
+      status_instancia: userData.status_instancia,
+      whatsapp: userData.whatsapp
+    };
   } catch (error) {
     console.error('💥 Erro crítico ao buscar instância WhatsApp:', error);
     throw error;
@@ -136,23 +147,25 @@ export async function removeUserWhatsAppInstance(userEmail: string): Promise<voi
  */
 export async function getUserDebugInfo(userEmail: string): Promise<any> {
   try {
-    console.log('Buscando informações completas do usuário para debug:', userEmail);
+    console.log('🔍 Buscando informações COMPLETAS do usuário para debug:', userEmail);
+    
+    const normalizedEmail = userEmail.trim().toLowerCase();
+    console.log('📧 Email normalizado para debug:', normalizedEmail);
     
     const { data, error } = await supabase
       .from('usuarios')
       .select('*')
-      .eq('email', userEmail.trim().toLowerCase())
-      .maybeSingle();
+      .eq('email', normalizedEmail);
     
     if (error) {
-      console.error('Erro ao buscar informações completas do usuário:', error);
+      console.error('❌ Erro ao buscar informações completas do usuário:', error);
       throw error;
     }
     
-    console.log('Informações completas do usuário encontradas:', data);
-    return data;
+    console.log('📊 DADOS COMPLETOS DO USUÁRIO:', JSON.stringify(data, null, 2));
+    return data && data.length > 0 ? data[0] : null;
   } catch (error) {
-    console.error('Erro ao buscar informações completas do usuário:', error);
+    console.error('💥 Erro ao buscar informações completas do usuário:', error);
     throw error;
   }
 }

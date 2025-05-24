@@ -39,20 +39,31 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
       
       setCheckingInstance(true);
       try {
-        console.log('🔍 === VERIFICAÇÃO DE INSTÂNCIA ===');
-        console.log('🔍 Verificando instância para o usuário:', userEmail);
+        console.log('🔍 === VERIFICAÇÃO DE INSTÂNCIA INICIADA ===');
+        console.log('🔍 Email fornecido:', userEmail);
+        console.log('🔍 Tipo do email:', typeof userEmail);
+        console.log('🔍 Email length:', userEmail.length);
+        
+        // TESTE: Verificar se o email está sendo usado corretamente
+        const emailTrimmed = userEmail.trim().toLowerCase();
+        console.log('📧 Email após trim/lower:', emailTrimmed);
         
         const instanceData = await getUserWhatsAppInstance(userEmail);
-        console.log('📊 === DADOS DA INSTÂNCIA RETORNADOS ===');
-        console.log('📊 Dados completos:', JSON.stringify(instanceData, null, 2));
+        console.log('📊 === DADOS RETORNADOS DA FUNÇÃO ===');
+        console.log('📊 instanceData completo:', JSON.stringify(instanceData, null, 2));
         
         if (instanceData) {
-          console.log('🔍 === VERIFICAÇÃO DETALHADA ===');
-          console.log('✅ instancia_zap existe?', !!instanceData.instancia_zap);
+          console.log('🔍 === ANÁLISE DETALHADA DOS DADOS ===');
+          console.log('✅ instanceData existe:', !!instanceData);
           console.log('📝 instancia_zap valor:', instanceData.instancia_zap);
-          console.log('✅ instancia_zap não é vazio?', instanceData.instancia_zap?.trim() !== '');
+          console.log('📝 instancia_zap tipo:', typeof instanceData.instancia_zap);
+          console.log('✅ instancia_zap não é null:', instanceData.instancia_zap !== null);
+          console.log('✅ instancia_zap não é vazio após trim:', instanceData.instancia_zap?.trim() !== '');
           console.log('📝 status_instancia valor:', instanceData.status_instancia);
-          console.log('✅ status_instancia é "conectado"?', instanceData.status_instancia === 'conectado');
+          console.log('📝 status_instancia tipo:', typeof instanceData.status_instancia);
+          console.log('✅ status_instancia é "conectado":', instanceData.status_instancia === 'conectado');
+        } else {
+          console.log('❌ instanceData é null ou undefined');
         }
         
         // LÓGICA CORRETA: Verificar se tem instância E se está conectada
@@ -60,26 +71,27 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           instanceData && 
           instanceData.instancia_zap && 
           instanceData.instancia_zap.trim() !== '' &&
-          instanceData.status_instancia === 'conectado' // DEVE ESTAR CONECTADO
+          instanceData.status_instancia === 'conectado'
         );
         
-        console.log('🎯 === RESULTADO DA VALIDAÇÃO ===');
+        console.log('🎯 === RESULTADO FINAL DA VALIDAÇÃO ===');
         console.log('🎯 hasValidInstance:', hasValidInstance);
         
         if (hasValidInstance) {
           setHasWhatsAppInstance(true);
           setUserInstance(instanceData);
-          console.log('✅ Usuário tem instância WhatsApp conectada - liberando cadastro de grupo');
+          console.log('✅ USUÁRIO TEM INSTÂNCIA VÁLIDA - Liberando cadastro de grupo');
         } else {
           setHasWhatsAppInstance(false);
           setUserInstance(instanceData);
-          console.log('❌ Usuário não tem instância conectada:', {
-            instancia_zap: instanceData?.instancia_zap,
-            status_instancia: instanceData?.status_instancia
+          console.log('❌ USUÁRIO NÃO TEM INSTÂNCIA VÁLIDA:', {
+            temInstanceData: !!instanceData,
+            instancia_zap: instanceData?.instancia_zap || 'NULL',
+            status_instancia: instanceData?.status_instancia || 'NULL'
           });
         }
       } catch (error) {
-        console.error('💥 Erro ao verificar instância do usuário:', error);
+        console.error('💥 ERRO CRÍTICO ao verificar instância do usuário:', error);
         setHasWhatsAppInstance(false);
         setUserInstance(null);
       } finally {
@@ -218,35 +230,50 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             </AlertDescription>
           </Alert>
           
-          {/* Informações de debug DETALHADAS */}
+          {/* Informações de debug SUPER DETALHADAS */}
           <div className="mt-4 p-4 bg-gray-100 rounded text-sm">
-            <p><strong>📊 STATUS DETALHADO DA INSTÂNCIA:</strong></p>
+            <p><strong>🔧 DEBUG COMPLETO - CONEXÃO COM BANCO:</strong></p>
             <div className="mt-2 space-y-1">
-              <p><strong>Email consultado:</strong> {userEmail || 'Não definido'}</p>
-              <p><strong>instancia_zap:</strong> 
-                <span className={userInstance?.instancia_zap ? 'text-green-600' : 'text-red-600'}>
-                  {userInstance?.instancia_zap || 'NULL/Vazio'}
-                </span>
-              </p>
-              <p><strong>status_instancia:</strong> 
-                <span className={userInstance?.status_instancia === 'conectado' ? 'text-green-600' : 'text-red-600'}>
-                  {userInstance?.status_instancia || 'NULL/Vazio'}
-                </span>
-              </p>
-              <p><strong>whatsapp:</strong> {userInstance?.whatsapp || 'NULL/Vazio'}</p>
+              <p><strong>Email original:</strong> {userEmail || 'Não definido'}</p>
+              <p><strong>Email processado:</strong> {userEmail?.trim().toLowerCase() || 'Não processado'}</p>
               
-              <div className="mt-3 p-2 bg-yellow-100 rounded">
-                <p><strong>🔍 VALIDAÇÕES:</strong></p>
-                <p>✓ Instância existe? {userInstance ? '✅ SIM' : '❌ NÃO'}</p>
-                <p>✓ instancia_zap preenchida? {(userInstance?.instancia_zap && userInstance.instancia_zap.trim() !== '') ? '✅ SIM' : '❌ NÃO'}</p>
-                <p>✓ Status é "conectado"? {userInstance?.status_instancia === 'conectado' ? '✅ SIM' : '❌ NÃO'}</p>
+              <div className="mt-3 p-2 bg-blue-100 rounded">
+                <p><strong>📊 DADOS DO BANCO DE DADOS:</strong></p>
+                {userInstance ? (
+                  <>
+                    <p><strong>instancia_zap:</strong> 
+                      <span className={userInstance.instancia_zap ? 'text-green-600' : 'text-red-600'}>
+                        "{userInstance.instancia_zap || 'NULL'}" (tipo: {typeof userInstance.instancia_zap})
+                      </span>
+                    </p>
+                    <p><strong>status_instancia:</strong> 
+                      <span className={userInstance.status_instancia === 'conectado' ? 'text-green-600' : 'text-red-600'}>
+                        "{userInstance.status_instancia || 'NULL'}" (tipo: {typeof userInstance.status_instancia})
+                      </span>
+                    </p>
+                    <p><strong>whatsapp:</strong> "{userInstance.whatsapp || 'NULL'}"</p>
+                  </>
+                ) : (
+                  <p className="text-red-600">❌ Nenhum dado retornado do banco de dados!</p>
+                )}
               </div>
               
-              {userInstance?.instancia_zap && userInstance?.status_instancia !== 'conectado' && (
-                <p className="text-red-600 font-medium mt-2">
-                  ⚠️ Instância encontrada, mas não está conectada. Status atual: "{userInstance.status_instancia}"
-                </p>
-              )}
+              <div className="mt-3 p-2 bg-yellow-100 rounded">
+                <p><strong>🔍 VALIDAÇÕES STEP-BY-STEP:</strong></p>
+                <p>1. Dados existem? {userInstance ? '✅ SIM' : '❌ NÃO'}</p>
+                <p>2. instancia_zap preenchida? {(userInstance?.instancia_zap && userInstance.instancia_zap.trim() !== '') ? '✅ SIM' : '❌ NÃO'}</p>
+                <p>3. Status é "conectado"? {userInstance?.status_instancia === 'conectado' ? '✅ SIM' : '❌ NÃO'}</p>
+                
+                {userInstance?.instancia_zap && userInstance?.status_instancia !== 'conectado' && (
+                  <p className="text-red-600 font-medium mt-2">
+                    ⚠️ Instância encontrada mas status incorreto: "{userInstance.status_instancia}"
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            <div className="mt-3 text-xs text-gray-600">
+              <p>💡 Abra o Console do navegador (F12) para ver logs detalhados da consulta ao banco de dados</p>
             </div>
           </div>
         </CardContent>
