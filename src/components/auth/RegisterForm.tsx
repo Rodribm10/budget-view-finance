@@ -22,7 +22,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [email, setEmail] = useState('');
-  const [whatsapp, setWhatsapp] = useState('55');
+  const [whatsapp, setWhatsapp] = useState('55()');
   const [senha, setSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
 
@@ -37,13 +37,19 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     }
     
     // Formata com parênteses para o DDD
-    if (nums.length > 7) {
-      return `${nums.slice(0, 2)}(${nums.slice(2, 4)})${nums.slice(4)}`;
-    } else if (nums.length > 4) {
-      return `${nums.slice(0, 2)}(${nums.slice(2)}`;
+    if (nums.length > 4) {
+      const codigo = nums.slice(0, 2); // 55
+      const ddd = nums.slice(2, 4); // DDD
+      const numero = nums.slice(4); // Resto do número
+      
+      if (nums.length > 6) {
+        return `${codigo}(${ddd})${numero}`;
+      } else {
+        return `${codigo}(${ddd}${numero.length > 0 ? ')' + numero : ''}`;
+      }
     }
     
-    return nums;
+    return nums.length >= 2 ? `${nums.slice(0, 2)}(${nums.slice(2)}` : nums;
   };
 
   // Função para cadastrar usuário
@@ -79,7 +85,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
       // Garantir que todos os parâmetros sejam incluídos na chamada para a função registrar_usuario
       const { data, error } = await supabase.rpc('registrar_usuario', {
         nome,
-        empresa,
+        empresa: empresa || null,
         email,
         senha,
         whatsapp: whatsappLimpo
