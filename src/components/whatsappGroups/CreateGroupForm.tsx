@@ -28,7 +28,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
     whatsapp: string | null;
   } | null>(null);
 
-  // Verificar se o usuário tem instância WhatsApp
+  // Verificar se o usuário tem instância WhatsApp CONECTADA
   useEffect(() => {
     const checkUserInstance = async () => {
       if (!userEmail) {
@@ -43,18 +43,25 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         const instanceData = await getUserWhatsAppInstance(userEmail);
         console.log('Dados da instância do usuário:', instanceData);
         
-        if (instanceData && 
-            instanceData.instancia_zap && 
-            instanceData.instancia_zap.trim() !== '' &&
-            instanceData.whatsapp &&
-            instanceData.whatsapp.trim() !== '') {
+        // LÓGICA CORRETA: Verificar se tem instância E se está conectada
+        const hasValidInstance = !!(
+          instanceData && 
+          instanceData.instancia_zap && 
+          instanceData.instancia_zap.trim() !== '' &&
+          instanceData.status_instancia === 'conectado' // DEVE ESTAR CONECTADO
+        );
+        
+        if (hasValidInstance) {
           setHasWhatsAppInstance(true);
           setUserInstance(instanceData);
-          console.log('Usuário tem instância WhatsApp válida');
+          console.log('Usuário tem instância WhatsApp conectada - liberando cadastro de grupo');
         } else {
           setHasWhatsAppInstance(false);
-          setUserInstance(null);
-          console.log('Usuário não tem instância WhatsApp válida ou dados estão incompletos');
+          setUserInstance(instanceData);
+          console.log('Usuário não tem instância conectada:', {
+            instancia_zap: instanceData?.instancia_zap,
+            status_instancia: instanceData?.status_instancia
+          });
         }
       } catch (error) {
         console.error('Erro ao verificar instância do usuário:', error);
@@ -88,10 +95,10 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
       return;
     }
 
-    if (!userInstance || !userInstance.instancia_zap || !userInstance.whatsapp) {
+    if (!userInstance || !userInstance.instancia_zap || userInstance.status_instancia !== 'conectado') {
       toast({
         title: 'Erro',
-        description: 'Dados da instância WhatsApp não encontrados',
+        description: 'Instância WhatsApp não está conectada',
         variant: 'destructive',
       });
       return;
@@ -113,7 +120,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         const groupResponse = await createWhatsAppGroup(
           userInstance.instancia_zap,
           userEmail,
-          userInstance.whatsapp
+          userInstance.whatsapp || ''
         );
         
         console.log('Resposta da criação do grupo:', groupResponse);
@@ -191,18 +198,23 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Para criar um grupo é necessário cadastrar e conectar sua instância do WhatsApp. 
-              Acesse o menu de conexão e realize este processo primeiro.
+              Para criar um grupo é necessário ter sua instância do WhatsApp conectada. 
+              Acesse o menu "Conectar WhatsApp" e realize a conexão primeiro.
             </AlertDescription>
           </Alert>
           
-          {/* Debug info para ajudar a identificar o problema */}
+          {/* Informações de debug */}
           <div className="mt-4 p-4 bg-gray-100 rounded text-sm">
-            <p><strong>Debug Info:</strong></p>
+            <p><strong>Status da Instância:</strong></p>
             <p>Email: {userEmail || 'Não definido'}</p>
             <p>Instância: {userInstance?.instancia_zap || 'Não encontrada'}</p>
-            <p>WhatsApp: {userInstance?.whatsapp || 'Não encontrado'}</p>
             <p>Status: {userInstance?.status_instancia || 'Não definido'}</p>
+            <p>WhatsApp: {userInstance?.whatsapp || 'Não encontrado'}</p>
+            {userInstance?.instancia_zap && userInstance?.status_instancia !== 'conectado' && (
+              <p className="text-red-600 font-medium mt-2">
+                ⚠️ Instância encontrada, mas não está conectada. Status atual: {userInstance.status_instancia}
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
