@@ -32,27 +32,27 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   useEffect(() => {
     const checkUserInstance = async () => {
       if (!userEmail) {
-        console.log('Email do usuário não fornecido');
+        console.log('🔍 Email do usuário não fornecido');
         setCheckingInstance(false);
         return;
       }
       
       setCheckingInstance(true);
       try {
-        console.log('=== VERIFICAÇÃO DE INSTÂNCIA ===');
-        console.log('Verificando instância para o usuário:', userEmail);
+        console.log('🔍 === VERIFICAÇÃO DE INSTÂNCIA ===');
+        console.log('🔍 Verificando instância para o usuário:', userEmail);
         
         const instanceData = await getUserWhatsAppInstance(userEmail);
-        console.log('=== DADOS DA INSTÂNCIA RETORNADOS ===');
-        console.log('Dados completos:', JSON.stringify(instanceData, null, 2));
+        console.log('📊 === DADOS DA INSTÂNCIA RETORNADOS ===');
+        console.log('📊 Dados completos:', JSON.stringify(instanceData, null, 2));
         
         if (instanceData) {
-          console.log('=== VERIFICAÇÃO DETALHADA ===');
-          console.log('instancia_zap existe?', !!instanceData.instancia_zap);
-          console.log('instancia_zap valor:', instanceData.instancia_zap);
-          console.log('instancia_zap não é vazio?', instanceData.instancia_zap?.trim() !== '');
-          console.log('status_instancia valor:', instanceData.status_instancia);
-          console.log('status_instancia é "conectado"?', instanceData.status_instancia === 'conectado');
+          console.log('🔍 === VERIFICAÇÃO DETALHADA ===');
+          console.log('✅ instancia_zap existe?', !!instanceData.instancia_zap);
+          console.log('📝 instancia_zap valor:', instanceData.instancia_zap);
+          console.log('✅ instancia_zap não é vazio?', instanceData.instancia_zap?.trim() !== '');
+          console.log('📝 status_instancia valor:', instanceData.status_instancia);
+          console.log('✅ status_instancia é "conectado"?', instanceData.status_instancia === 'conectado');
         }
         
         // LÓGICA CORRETA: Verificar se tem instância E se está conectada
@@ -63,8 +63,8 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           instanceData.status_instancia === 'conectado' // DEVE ESTAR CONECTADO
         );
         
-        console.log('=== RESULTADO DA VALIDAÇÃO ===');
-        console.log('hasValidInstance:', hasValidInstance);
+        console.log('🎯 === RESULTADO DA VALIDAÇÃO ===');
+        console.log('🎯 hasValidInstance:', hasValidInstance);
         
         if (hasValidInstance) {
           setHasWhatsAppInstance(true);
@@ -79,7 +79,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           });
         }
       } catch (error) {
-        console.error('Erro ao verificar instância do usuário:', error);
+        console.error('💥 Erro ao verificar instância do usuário:', error);
         setHasWhatsAppInstance(false);
         setUserInstance(null);
       } finally {
@@ -224,27 +224,27 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             <div className="mt-2 space-y-1">
               <p><strong>Email consultado:</strong> {userEmail || 'Não definido'}</p>
               <p><strong>instancia_zap:</strong> 
-                <span className={instanceData?.instancia_zap ? 'text-green-600' : 'text-red-600'}>
-                  {instanceData?.instancia_zap || 'NULL/Vazio'}
+                <span className={userInstance?.instancia_zap ? 'text-green-600' : 'text-red-600'}>
+                  {userInstance?.instancia_zap || 'NULL/Vazio'}
                 </span>
               </p>
               <p><strong>status_instancia:</strong> 
-                <span className={instanceData?.status_instancia === 'conectado' ? 'text-green-600' : 'text-red-600'}>
-                  {instanceData?.status_instancia || 'NULL/Vazio'}
+                <span className={userInstance?.status_instancia === 'conectado' ? 'text-green-600' : 'text-red-600'}>
+                  {userInstance?.status_instancia || 'NULL/Vazio'}
                 </span>
               </p>
-              <p><strong>whatsapp:</strong> {instanceData?.whatsapp || 'NULL/Vazio'}</p>
+              <p><strong>whatsapp:</strong> {userInstance?.whatsapp || 'NULL/Vazio'}</p>
               
               <div className="mt-3 p-2 bg-yellow-100 rounded">
                 <p><strong>🔍 VALIDAÇÕES:</strong></p>
-                <p>✓ Instância existe? {instanceData ? '✅ SIM' : '❌ NÃO'}</p>
-                <p>✓ instancia_zap preenchida? {(instanceData?.instancia_zap && instanceData.instancia_zap.trim() !== '') ? '✅ SIM' : '❌ NÃO'}</p>
-                <p>✓ Status é "conectado"? {instanceData?.status_instancia === 'conectado' ? '✅ SIM' : '❌ NÃO'}</p>
+                <p>✓ Instância existe? {userInstance ? '✅ SIM' : '❌ NÃO'}</p>
+                <p>✓ instancia_zap preenchida? {(userInstance?.instancia_zap && userInstance.instancia_zap.trim() !== '') ? '✅ SIM' : '❌ NÃO'}</p>
+                <p>✓ Status é "conectado"? {userInstance?.status_instancia === 'conectado' ? '✅ SIM' : '❌ NÃO'}</p>
               </div>
               
-              {instanceData?.instancia_zap && instanceData?.status_instancia !== 'conectado' && (
+              {userInstance?.instancia_zap && userInstance?.status_instancia !== 'conectado' && (
                 <p className="text-red-600 font-medium mt-2">
-                  ⚠️ Instância encontrada, mas não está conectada. Status atual: "{instanceData.status_instancia}"
+                  ⚠️ Instância encontrada, mas não está conectada. Status atual: "{userInstance.status_instancia}"
                 </p>
               )}
             </div>
