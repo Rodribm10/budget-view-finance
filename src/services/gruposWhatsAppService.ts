@@ -1,58 +1,89 @@
 
-import { WhatsAppGroup } from "@/types/financialTypes";
-import { createWorkflowInN8n } from "./n8nWorkflowService";
-import { findOrCreateWhatsAppGroup, listWhatsAppGroups, updateWorkflowId } from "./whatsAppGroupsService";
+import { supabase } from '@/integrations/supabase/client';
+import { WhatsAppGroup } from '@/types/financialTypes';
+import { getUserWhatsAppInstance } from './whatsAppInstanceService';
 
 /**
- * Main function to register a WhatsApp group and create its workflow
- * Orchestrates the process using the specialized services
- * @param nomeGrupo Nome definido pelo usuário para o grupo
+ * Lista todos os grupos do WhatsApp do usuário atual
  */
-export async function cadastrarGrupoWhatsApp(nomeGrupo?: string): Promise<WhatsAppGroup | null> {
+export async function listarGruposWhatsApp(): Promise<WhatsAppGroup[]> {
   try {
-    // Find or create a WhatsApp group for the current user
-    const group = await findOrCreateWhatsAppGroup(nomeGrupo);
-    
-    // If no group was found or created, return null
-    if (!group) {
-      console.error('Erro inesperado: não foi possível obter ou criar um grupo');
-      return null;
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+      console.error('Email do usuário não fornecido');
+      throw new Error('Email do usuário não encontrado');
     }
-    
-    // Create workflow in n8n if it doesn't exist
-    try {
-      if (!group.workflow_id) {
-        const userEmail = localStorage.getItem('userEmail')?.trim().toLowerCase();
-        
-        if (!userEmail) {
-          throw new Error('Email do usuário não encontrado no localStorage');
-        }
-        
-        console.log(`Iniciando criação de workflow para o email: ${userEmail} e grupo ID: ${group.id}`);
-        const workflowResponse = await createWorkflowInN8n(userEmail);
-        
-        if (workflowResponse && workflowResponse.id) {
-          // Update the group with workflow_id
-          await updateWorkflowId(group.id, workflowResponse.id);
-          group.workflow_id = workflowResponse.id;
-          console.log('Workflow criado com sucesso no n8n:', workflowResponse.id);
-        } else {
-          console.log('Resposta do n8n não contém ID de workflow válido:', workflowResponse);
-        }
-      }
-    } catch (n8nError) {
-      console.error('Erro ao criar workflow no n8n:', n8nError);
-      // Don't prevent group creation, just continue without workflow_id
+
+    console.log('Buscando grupos para o usuário:', userEmail);
+
+    // Primeiro verificar se o usuário tem instância WhatsApp
+    const instanceData = await getUserWhatsAppInstance(userEmail);
+    console.log('Dados da instância do usuário:', instanceData);
+
+    if (!instanceData || !instanceData.instancia_zap) {
+      console.log('Usuário não tem instância WhatsApp válida ou dados estão incompletos');
+      return [];
     }
-    
-    // Always return the group, even if workflow creation fails
-    return group;
+
+    // Buscar grupos usando o email como user_id
+    const { data: grupos, error } = await supabase
+      .from('grupos_whatsapp')
+      .select('*')
+      .eq('user_id', userEmail.trim().toLowerCase())
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao listar grupos do WhatsApp:', error);
+      throw new Error('Não foi possível listar os grupos de WhatsApp');
+    }
+
+    console.log('Grupos encontrados:', grupos);
+    return grupos || [];
+
   } catch (error) {
-    console.error('Erro ao cadastrar grupo do WhatsApp:', error);
-    throw error; // Propagate error to be handled in the component
+    console.error('Erro ao listar grupos do WhatsApp:', error);
+    throw error;
   }
 }
 
-// Re-export functions from the specialized services for backward compatibility
-export { listWhatsAppGroups as listarGruposWhatsApp };
-export { updateWorkflowId as atualizarWorkflowId };
+/**
+ * Verifica se o usuário tem uma instância WhatsApp conectada
+ */
+export async function verificarInstanciaWhatsApp(): Promise<{
+  hasInstance: boolean;
+  instanceName: string | null;
+  status: string | null;
+}> {
+  try {
+    const userEmail = localStorage.getItem('userEmail');
+    if (!userEmail) {
+      console.log('Email do usuário não fornecido');
+      return { hasInstance: false, instanceName: null, status: null };
+    }
+
+    console.log('Verificando instância para o usuário:', userEmail);
+    const instanceData = await getUserWhatsAppInstance(userEmail);
+
+    if (!instanceData) {
+      console.log('Usuário não possui instância');
+      return { hasInstance: false, instanceName: null, status: null };
+    }
+
+    const hasInstance = !!(instanceData.instancia_zap && instanceData.instancia_zap.trim() !== '');
+    console.log('Resultado da verificação:', {
+      hasInstance,
+      instanceName: instanceData.instancia_zap,
+      status: instanceData.status_instancia
+    });
+
+    return {
+      hasInstance,
+      instanceName: instanceData.instancia_zap,
+      status: instanceData.status_instancia
+    };
+
+  } catch (error) {
+    console.error('Erro ao verificar instância WhatsApp:', error);
+    return { hasInstance: false, instanceName: null, status: null };
+  }
+}
