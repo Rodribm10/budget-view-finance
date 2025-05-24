@@ -10,6 +10,8 @@ export async function updateUserWhatsAppInstance(
   status: 'conectado' | 'desconectado'
 ): Promise<void> {
   try {
+    console.log(`Atualizando instância no banco: ${userEmail} -> ${instanceName} (${status})`);
+    
     const { error } = await supabase
       .from('usuarios')
       .update({ 
@@ -23,7 +25,7 @@ export async function updateUserWhatsAppInstance(
       throw error;
     }
     
-    console.log(`Instância WhatsApp atualizada: ${instanceName} - ${status}`);
+    console.log(`Instância WhatsApp atualizada com sucesso: ${instanceName} - ${status}`);
   } catch (error) {
     console.error('Erro ao atualizar instância WhatsApp no banco:', error);
     throw error;
@@ -45,7 +47,7 @@ export async function getUserWhatsAppInstance(userEmail: string): Promise<{
       .from('usuarios')
       .select('instancia_zap, status_instancia, whatsapp')
       .eq('email', userEmail.trim().toLowerCase())
-      .maybeSingle(); // Use maybeSingle em vez de single para evitar erro quando não encontrar
+      .maybeSingle();
     
     if (error) {
       console.error('Erro ao buscar instância WhatsApp:', error);
@@ -57,5 +59,45 @@ export async function getUserWhatsAppInstance(userEmail: string): Promise<{
   } catch (error) {
     console.error('Erro ao buscar instância WhatsApp:', error);
     return null;
+  }
+}
+
+/**
+ * Verifica se o usuário já possui uma instância ativa
+ */
+export async function checkUserHasInstance(userEmail: string): Promise<boolean> {
+  try {
+    const instanceData = await getUserWhatsAppInstance(userEmail);
+    return !!(instanceData && instanceData.instancia_zap && instanceData.instancia_zap.trim() !== '');
+  } catch (error) {
+    console.error('Erro ao verificar se usuário tem instância:', error);
+    return false;
+  }
+}
+
+/**
+ * Remove a instância WhatsApp do usuário
+ */
+export async function removeUserWhatsAppInstance(userEmail: string): Promise<void> {
+  try {
+    console.log(`Removendo instância do usuário: ${userEmail}`);
+    
+    const { error } = await supabase
+      .from('usuarios')
+      .update({ 
+        instancia_zap: null,
+        status_instancia: 'desconectado'
+      })
+      .eq('email', userEmail.trim().toLowerCase());
+    
+    if (error) {
+      console.error('Erro ao remover instância WhatsApp:', error);
+      throw error;
+    }
+    
+    console.log('Instância WhatsApp removida com sucesso');
+  } catch (error) {
+    console.error('Erro ao remover instância WhatsApp do banco:', error);
+    throw error;
   }
 }

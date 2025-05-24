@@ -4,11 +4,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createWhatsAppInstance } from '@/services/whatsAppService';
-import { updateUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
+import { updateUserWhatsAppInstance, getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface CreateInstanceFormProps {
   onInstanceCreated: (instance: WhatsAppInstance) => void;
@@ -22,11 +23,43 @@ const CreateInstanceForm = ({
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [hasExistingInstance, setHasExistingInstance] = useState(false);
+  const [checkingExistingInstance, setCheckingExistingInstance] = useState(true);
   const currentUserId = localStorage.getItem('userId') || '';
   const userEmail = localStorage.getItem('userEmail') || '';
   
   // Nome da instância será sempre o email do usuário
   const instanceName = userEmail;
+
+  // Verificar se o usuário já tem uma instância
+  useEffect(() => {
+    const checkExistingInstance = async () => {
+      if (!userEmail) {
+        setCheckingExistingInstance(false);
+        return;
+      }
+
+      try {
+        console.log('Verificando se usuário já tem instância:', userEmail);
+        const existingInstance = await getUserWhatsAppInstance(userEmail);
+        
+        if (existingInstance && existingInstance.instancia_zap) {
+          console.log('Usuário já possui instância:', existingInstance.instancia_zap);
+          setHasExistingInstance(true);
+        } else {
+          console.log('Usuário não possui instância');
+          setHasExistingInstance(false);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar instância existente:', error);
+        setHasExistingInstance(false);
+      } finally {
+        setCheckingExistingInstance(false);
+      }
+    };
+
+    checkExistingInstance();
+  }, [userEmail]);
 
   const handleCreateInstance = async () => {
     // Validate form fields
@@ -58,37 +91,46 @@ const CreateInstanceForm = ({
       return;
     }
 
+    // Verificar novamente se já existe instância antes de criar
+    if (hasExistingInstance) {
+      toast({
+        title: "Erro",
+        description: "Você já possui uma instância WhatsApp. Apenas uma instância por usuário é permitida.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      console.log(`Creating instance with name ${instanceName} and number ${phoneNumber}`);
-      const data = await createWhatsAppInstance(instanceName, phoneNumber);
+      console.log(`Criando instância com nome ${instanceName} e número ${phoneNumber}`);
       
-      console.log('API response for create instance:', data);
+      // 1. Primeiro atualizar o banco de dados com a instância
+      await updateUserWhatsAppInstance(userEmail, instanceName, 'desconectado');
+      console.log('Instância registrada no banco de dados');
 
-      // Create new instance object with user ID
+      // 2. Criar instância na API
+      const data = await createWhatsAppInstance(instanceName, phoneNumber);
+      console.log('Resposta da API de criação de instância:', data);
+
+      // 3. Criar objeto da instância
       const newInstance: WhatsAppInstance = {
         instanceName,
-        instanceId: instanceName, // Use instanceName as the ID for consistency
+        instanceId: instanceName,
         phoneNumber,
-        userId: currentUserId, // Associate with current user
+        userId: currentUserId,
         status: data.instance?.status || 'created',
         qrcode: data.qrcode?.base64 || null,
-        connectionState: 'closed' // Default to closed/disconnected
+        connectionState: 'closed'
       };
       
-      console.log('New instance created:', newInstance);
+      console.log('Nova instância criada:', newInstance);
       
-      // Atualizar o banco de dados com a instância
-      try {
-        await updateUserWhatsAppInstance(userEmail, instanceName, 'desconectado');
-        console.log('Instância salva no banco de dados');
-      } catch (dbError) {
-        console.error('Erro ao salvar instância no banco:', dbError);
-        // Não bloquear o processo se falhar ao salvar no banco
-      }
+      // 4. Atualizar estado para evitar nova criação
+      setHasExistingInstance(true);
       
-      // Notify parent component about the new instance
+      // 5. Notificar componente pai
       onInstanceCreated(newInstance);
       
       toast({
@@ -100,7 +142,16 @@ const CreateInstanceForm = ({
       setPhoneNumber('');
       
     } catch (error) {
-      console.error("Error creating WhatsApp instance:", error);
+      console.error("Erro ao criar instância WhatsApp:", error);
+      
+      // Se houve erro na API, remover do banco de dados
+      try {
+        await updateUserWhatsAppInstance(userEmail, '', 'desconectado');
+        console.log('Instância removida do banco devido ao erro na API');
+      } catch (dbError) {
+        console.error('Erro ao remover instância do banco:', dbError);
+      }
+      
       toast({
         title: "Erro na criação da instância",
         description: "Ocorreu um erro ao conectar com a API. Tente novamente mais tarde.",
@@ -110,6 +161,53 @@ const CreateInstanceForm = ({
       setLoading(false);
     }
   };
+
+  if (checkingExistingInstance) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <p>Verificando instâncias existentes...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (hasExistingInstance) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center mb-2">
+            <MessageCircle className="h-6 w-6 mr-2 text-green-600" />
+            <CardTitle>WhatsApp já Conectado</CardTitle>
+          </div>
+          <CardDescription>
+            Você já possui uma instância WhatsApp vinculada ao seu email
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Apenas uma instância WhatsApp por usuário é permitida. 
+              Sua instância atual: <strong>{instanceName}</strong>
+            </AlertDescription>
+          </Alert>
+          
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
+            <p className="text-green-800 text-sm">
+              <strong>✓ Instância ativa:</strong> {instanceName}
+            </p>
+            <p className="text-green-700 text-sm mt-1">
+              Para gerenciar sua instância, utilize os botões na lista de instâncias acima.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -155,6 +253,15 @@ const CreateInstanceForm = ({
         >
           {loading ? "Criando..." : "Criar Instância"}
         </Button>
+        
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+          <h4 className="font-medium text-blue-800 mb-2">Importante:</h4>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>• Apenas uma instância por usuário é permitida</li>
+            <li>• O nome da instância será seu email de login</li>
+            <li>• Após criar, você precisará escanear o QR Code para conectar</li>
+          </ul>
+        </div>
       </CardContent>
     </Card>
   );
