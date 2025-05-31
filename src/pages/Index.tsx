@@ -5,6 +5,7 @@ import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
+import { MonthFilter } from '@/components/filters/MonthFilter';
 import { Wallet, ArrowUp, ArrowDown, PiggyBank, CreditCard } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
@@ -24,6 +25,14 @@ const Dashboard = () => {
   const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0, cartoes: 0 });
   const { toast } = useToast();
 
+  // Função para obter o mês atual no formato YYYY-MM
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
+
   // Use useCallback to ensure this function doesn't change on every render
   const setupUserId = useCallback(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -42,19 +51,19 @@ const Dashboard = () => {
     setupUserId();
   }, [setupUserId]);
 
-  // Load data only once when component mounts
+  // Load data when component mounts or month changes
   useEffect(() => {
     async function loadData() {
       try {
         setIsLoading(true);
-        console.log("Iniciando carregamento de dados...");
+        console.log("Iniciando carregamento de dados para o mês:", selectedMonth);
         
-        // Buscar todos os dados necessários
+        // Buscar todos os dados necessários com filtro de mês
         const [transacoesData, totalsData, categoriesData, monthlyDataResult, cartoesData] = await Promise.all([
-          getTransacoes(),
-          getTransactionSummary(),
-          getCategorySummary(),
-          getMonthlyData(),
+          getTransacoes(selectedMonth),
+          getTransactionSummary(selectedMonth),
+          getCategorySummary('despesa', selectedMonth),
+          getMonthlyData(), // Monthly data não precisa de filtro pois já mostra todos os meses
           getCartoes()
         ]);
         
@@ -67,7 +76,8 @@ const Dashboard = () => {
           categories: categoriesData.length,
           monthlyData: monthlyDataResult.length,
           cartoes: cartoesData.length,
-          totalCartoes: totalCartoes
+          totalCartoes: totalCartoes,
+          mesEscolhido: selectedMonth
         });
         
         setTransactions(transacoesData);
@@ -82,7 +92,7 @@ const Dashboard = () => {
         
         toast({
           title: "Dados carregados com sucesso",
-          description: "Seus dados financeiros foram atualizados"
+          description: `Dados financeiros de ${selectedMonth} foram atualizados`
         });
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -97,9 +107,8 @@ const Dashboard = () => {
     }
     
     loadData();
-    // Ensure toast doesn't cause re-renders by removing it from dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedMonth]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -111,14 +120,30 @@ const Dashboard = () => {
   // Calculate total of all expenses (regular + credit cards)
   const totalDespesasGeral = totals.despesas + totals.cartoes;
 
+  // Função para formatar o mês para exibição
+  const formatMonthDisplay = (month: string) => {
+    const [year, monthNum] = month.split('-');
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return `${months[parseInt(monthNum) - 1]} ${year}`;
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard Financeiro</h1>
-          <p className="text-sm text-muted-foreground">
-            Última atualização: {new Date().toLocaleDateString('pt-BR')}
-          </p>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">Dashboard Financeiro</h1>
+            <p className="text-sm text-muted-foreground">
+              Dados de: {formatMonthDisplay(selectedMonth)}
+            </p>
+          </div>
+          <MonthFilter 
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

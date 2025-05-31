@@ -4,11 +4,12 @@ import { CategorySummary, MonthlyData } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
 
 /**
- * Get transaction summary (totals for incomes and expenses)
+ * Get transaction summary (totals for incomes and expenses) with optional month filter
+ * @param monthFilter - Optional month filter in format 'YYYY-MM'
  * @returns Promise with summary data
  */
-export async function getTransactionSummary() {
-  console.log("Buscando resumo das transações...");
+export async function getTransactionSummary(monthFilter?: string) {
+  console.log("Buscando resumo das transações...", monthFilter ? `Filtro do mês: ${monthFilter}` : "Sem filtro de mês");
   
   const normalizedEmail = getUserEmail();
   
@@ -20,11 +21,25 @@ export async function getTransactionSummary() {
     // Get user groups by email
     const groupIds = await getUserGroups(normalizedEmail);
     
-    // Fetch transaction summary with enhanced filter based on email (login) or group_id
-    const { data, error } = await supabase
+    // Build the query with month filter if provided
+    let query = supabase
       .from('transacoes')
       .select('tipo, valor')
       .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+
+    // Apply month filter if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of the month
+      
+      query = query
+        .gte('quando', startDate)
+        .lte('quando', `${endDate}T23:59:59.999Z`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar resumo das transações:', error);
@@ -56,12 +71,13 @@ export async function getTransactionSummary() {
 }
 
 /**
- * Get category summary for transactions
+ * Get category summary for transactions with optional month filter
  * @param tipoFiltro Filter by transaction type ('receita', 'despesa', or 'all')
+ * @param monthFilter - Optional month filter in format 'YYYY-MM'
  * @returns Promise with category summary data
  */
-export async function getCategorySummary(tipoFiltro: string = 'despesa'): Promise<CategorySummary[]> {
-  console.log(`Buscando resumo de categorias para tipo: ${tipoFiltro}`);
+export async function getCategorySummary(tipoFiltro: string = 'despesa', monthFilter?: string): Promise<CategorySummary[]> {
+  console.log(`Buscando resumo de categorias para tipo: ${tipoFiltro}`, monthFilter ? `Filtro do mês: ${monthFilter}` : "Sem filtro de mês");
   
   const normalizedEmail = getUserEmail();
   
@@ -73,11 +89,25 @@ export async function getCategorySummary(tipoFiltro: string = 'despesa'): Promis
     // Get user groups by email
     const groupIds = await getUserGroups(normalizedEmail);
     
-    // Fetch category summary with enhanced filter based on email (login) or group_id
-    const { data, error } = await supabase
+    // Build the query with month filter if provided
+    let query = supabase
       .from('transacoes')
       .select('categoria, valor, tipo')
       .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+
+    // Apply month filter if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of the month
+      
+      query = query
+        .gte('quando', startDate)
+        .lte('quando', `${endDate}T23:59:59.999Z`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar resumo de categorias:', error);

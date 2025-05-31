@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Transaction } from '@/types/financialTypes';
 import { CartaoCredito } from '@/types/cartaoTypes';
@@ -6,7 +5,11 @@ import { useToast } from '@/hooks/use-toast';
 import { getTransacoes } from '@/services/transacao';
 import { getCartoes } from '@/services/cartaoCreditoService';
 
-export const useTransactions = () => {
+interface UseTransactionsProps {
+  monthFilter?: string;
+}
+
+export const useTransactions = ({ monthFilter }: UseTransactionsProps = {}) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -20,8 +23,8 @@ export const useTransactions = () => {
   const loadTransactions = async () => {
     try {
       setIsLoading(true);
-      console.log("Carregando todas as transações...");
-      const data = await getTransacoes();
+      console.log("Carregando transações com filtro:", monthFilter);
+      const data = await getTransacoes(monthFilter);
       console.log(`${data.length} transações carregadas com sucesso`);
       setTransactions(data);
     } catch (error) {
@@ -53,7 +56,7 @@ export const useTransactions = () => {
   useEffect(() => {
     loadTransactions();
     loadCartoes();
-  }, []);
+  }, [monthFilter]);
 
   const handleTransactionSuccess = () => {
     setIsDialogOpen(false);

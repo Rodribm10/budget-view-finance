@@ -1,13 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { useTransactions } from '@/hooks/useTransactions';
 import { TransactionHeader } from '@/components/transacoes/TransactionHeader';
 import { TransactionSummaryCards } from '@/components/transacoes/TransactionSummaryCards';
 import { TransactionDialogs } from '@/components/transacoes/TransactionDialogs';
+import { MonthFilter } from '@/components/filters/MonthFilter';
 
 const TransacoesPage = () => {
+  // Função para obter o mês atual no formato YYYY-MM
+  const getCurrentMonth = () => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  };
+
+  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
+
   const {
     transactions,
     isLoading,
@@ -29,11 +38,34 @@ const TransacoesPage = () => {
     handleOpenDialog,
     handleOpenCartaoCreditoDialog,
     loadTransactions
-  } = useTransactions();
+  } = useTransactions({ monthFilter: selectedMonth });
+
+  // Função para formatar o mês para exibição
+  const formatMonthDisplay = (month: string) => {
+    const [year, monthNum] = month.split('-');
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return `${months[parseInt(monthNum) - 1]} ${year}`;
+  };
 
   return (
     <Layout>
       <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">Transações</h1>
+            <p className="text-sm text-muted-foreground">
+              Dados de: {formatMonthDisplay(selectedMonth)}
+            </p>
+          </div>
+          <MonthFilter 
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
+        </div>
+
         <TransactionHeader 
           onOpenDialog={handleOpenDialog}
           onOpenCartaoCreditoDialog={handleOpenCartaoCreditoDialog}

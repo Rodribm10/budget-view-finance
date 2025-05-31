@@ -144,6 +144,39 @@ export type Database = {
         }
         Relationships: []
       }
+      conversas_zap: {
+        Row: {
+          created_at: string
+          date_time: string | null
+          id: number
+          id_transacao_gerada: number | null
+          login: string | null
+          msg_recebida: string | null
+          remote_jid: string | null
+          status_processamento: string | null
+        }
+        Insert: {
+          created_at?: string
+          date_time?: string | null
+          id?: number
+          id_transacao_gerada?: number | null
+          login?: string | null
+          msg_recebida?: string | null
+          remote_jid?: string | null
+          status_processamento?: string | null
+        }
+        Update: {
+          created_at?: string
+          date_time?: string | null
+          id?: number
+          id_transacao_gerada?: number | null
+          login?: string | null
+          msg_recebida?: string | null
+          remote_jid?: string | null
+          status_processamento?: string | null
+        }
+        Relationships: []
+      }
       despesas_cartao: {
         Row: {
           cartao_id: string | null
@@ -294,10 +327,11 @@ export type Database = {
           empresa: string | null
           id: string
           instancia_zap: string | null
-          nome: string
+          nome: string | null
           remote_jid: string | null
-          senha: string
+          senha: string | null
           status_instancia: string | null
+          webhook: string | null
           whatsapp: string
         }
         Insert: {
@@ -306,10 +340,11 @@ export type Database = {
           empresa?: string | null
           id?: string
           instancia_zap?: string | null
-          nome: string
+          nome?: string | null
           remote_jid?: string | null
-          senha: string
+          senha?: string | null
           status_instancia?: string | null
+          webhook?: string | null
           whatsapp: string
         }
         Update: {
@@ -318,10 +353,11 @@ export type Database = {
           empresa?: string | null
           id?: string
           instancia_zap?: string | null
-          nome?: string
+          nome?: string | null
           remote_jid?: string | null
-          senha?: string
+          senha?: string | null
           status_instancia?: string | null
+          webhook?: string | null
           whatsapp?: string
         }
         Relationships: []

@@ -4,11 +4,12 @@ import { Transaction } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
 
 /**
- * Fetch all transactions for the current user
+ * Fetch all transactions for the current user with optional month filter
+ * @param monthFilter - Optional month filter in format 'YYYY-MM'
  * @returns Promise with array of transactions
  */
-export async function getTransacoes(): Promise<Transaction[]> {
-  console.log("Buscando transações do Supabase...");
+export async function getTransacoes(monthFilter?: string): Promise<Transaction[]> {
+  console.log("Buscando transações do Supabase...", monthFilter ? `Filtro do mês: ${monthFilter}` : "Sem filtro de mês");
   
   // Get the user's email from localStorage
   const normalizedEmail = getUserEmail();
@@ -24,12 +25,28 @@ export async function getTransacoes(): Promise<Transaction[]> {
     const groupIds = await getUserGroups(normalizedEmail);
     console.log(`Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
     
-    // Fetch transactions with filter based on email (login) or group_id
-    const { data, error } = await supabase
+    // Build the query with month filter if provided
+    let query = supabase
       .from('transacoes')
       .select('*')
       .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`)
       .order('quando', { ascending: false });
+
+    // Apply month filter if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of the month
+      
+      query = query
+        .gte('quando', startDate)
+        .lte('quando', `${endDate}T23:59:59.999Z`);
+      
+      console.log(`Aplicando filtro de mês: ${startDate} até ${endDate}`);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar transações:', error);
