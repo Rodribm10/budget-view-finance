@@ -11,7 +11,6 @@ import {
   Legend,
   ResponsiveContainer,
   Cell,
-  LabelList,
 } from 'recharts';
 import { MonthlyData } from '@/types/financialTypes';
 
@@ -29,10 +28,24 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
       maximumFractionDigits: 0,
     }).format(value);
   };
-  
-  // Adicionar formatação condicional para os barras
-  const getBarColor = (dataPoint: MonthlyData) => {
-    return dataPoint.receitas > dataPoint.despesas ? '#10B981' : '#EF4444';
+
+  const formatCompactCurrency = (value: number) => {
+    if (value === 0) return '';
+    if (value >= 1000) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1,
+        notation: 'compact'
+      }).format(value);
+    }
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
   };
   
   const customTooltip = ({ active, payload, label }: any) => {
@@ -55,6 +68,28 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
     return null;
   };
 
+  // Custom label component that only shows values above a threshold
+  const CustomLabel = ({ x, y, width, value, dataKey }: any) => {
+    // Only show label if value is significant (above 100)
+    if (!value || value < 100) return null;
+    
+    const isReceita = dataKey === 'receitas';
+    const yPosition = isReceita ? y - 5 : y - 5;
+    
+    return (
+      <text
+        x={x + width / 2}
+        y={yPosition}
+        fill={isReceita ? '#10B981' : '#EF4444'}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        className="text-xs font-semibold"
+      >
+        {formatCompactCurrency(value)}
+      </text>
+    );
+  };
+
   return (
     <Card className="dashboard-card h-full shadow-md">
       <CardHeader className="pb-2 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
@@ -74,8 +109,8 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data}
-                margin={{ top: 20, right: 30, left: 20, bottom: 15 }}
-                barGap={0}
+                margin={{ top: 30, right: 30, left: 20, bottom: 15 }}
+                barGap={8}
               >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.4} />
                 <XAxis 
@@ -86,7 +121,7 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
                   dy={10}
                 />
                 <YAxis 
-                  tickFormatter={formatCurrency}
+                  tickFormatter={formatCompactCurrency}
                   axisLine={false}
                   tickLine={false}
                   tick={{ fontSize: 12 }}
@@ -107,8 +142,9 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
                   dataKey="receitas" 
                   fill="#10B981"
                   radius={[4, 4, 0, 0]}
-                  barSize={30}
+                  barSize={35}
                   animationDuration={1000}
+                  label={<CustomLabel dataKey="receitas" />}
                 >
                   {data.map((entry, index) => (
                     <Cell 
@@ -117,20 +153,15 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
                       style={{ filter: 'drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.1))' }}
                     />
                   ))}
-                  <LabelList 
-                    dataKey="receitas"
-                    position="top"
-                    formatter={formatCurrency}
-                    style={{ fontSize: 10, fontWeight: 600, fill: '#10B981' }}
-                  />
                 </Bar>
                 <Bar 
                   name="Despesas" 
                   dataKey="despesas" 
                   fill="#EF4444" 
                   radius={[4, 4, 0, 0]} 
-                  barSize={30}
+                  barSize={35}
                   animationDuration={1000}
+                  label={<CustomLabel dataKey="despesas" />}
                 >
                   {data.map((entry, index) => (
                     <Cell 
@@ -139,12 +170,6 @@ const MonthlyChart: React.FC<MonthlyChartProps> = ({ data, isLoading = false }) 
                       style={{ filter: 'drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.1))' }}
                     />
                   ))}
-                  <LabelList 
-                    dataKey="despesas"
-                    position="top"
-                    formatter={formatCurrency}
-                    style={{ fontSize: 10, fontWeight: 600, fill: '#EF4444' }}
-                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
