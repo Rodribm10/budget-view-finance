@@ -6,7 +6,7 @@ import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import { MonthFilter } from '@/components/filters/MonthFilter';
-import { Wallet, ArrowUp, ArrowDown, PiggyBank, CreditCard } from 'lucide-react';
+import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
 import { 
@@ -107,8 +107,7 @@ const Dashboard = () => {
     }
     
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedMonth]);
+  }, [selectedMonth, toast]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
