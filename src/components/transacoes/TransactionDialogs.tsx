@@ -40,7 +40,11 @@ export const TransactionDialogs = ({
   return (
     <>
       {/* Dialog para transações */}
-      <Dialog open={isDialogOpen} onOpenChange={onCloseDialog}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          onCloseDialog();
+        }
+      }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>
@@ -67,7 +71,11 @@ export const TransactionDialogs = ({
       </Dialog>
 
       {/* Dialog para despesas de cartão */}
-      <Dialog open={isCartaoCreditoDialogOpen} onOpenChange={onCloseCartaoCreditoDialog}>
+      <Dialog open={isCartaoCreditoDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          onCloseCartaoCreditoDialog();
+        }
+      }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Nova Despesa de Cartão</DialogTitle>

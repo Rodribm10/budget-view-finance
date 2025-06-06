@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -31,26 +32,30 @@ export const useTransactionForm = (
   const { toast } = useToast();
   
   // Fetch user groups when the form loads
-  const fetchGrupos = async () => {
-    const userEmail = localStorage.getItem('userEmail');
-    if (!userEmail) {
-      console.error('Email do usuário não encontrado');
-      return;
-    }
-    
-    const normalizedEmail = userEmail.trim().toLowerCase();
-    
-    const { data, error } = await supabase
-      .from('grupos_whatsapp')
-      .select('remote_jid, nome_grupo')
-      .eq('login', normalizedEmail);
+  const fetchGrupos = useCallback(async () => {
+    try {
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        console.error('Email do usuário não encontrado');
+        return;
+      }
       
-    if (error) {
+      const normalizedEmail = userEmail.trim().toLowerCase();
+      
+      const { data, error } = await supabase
+        .from('grupos_whatsapp')
+        .select('remote_jid, nome_grupo')
+        .eq('login', normalizedEmail);
+        
+      if (error) {
+        console.error('Erro ao buscar grupos:', error);
+      } else if (data) {
+        setGrupos(data);
+      }
+    } catch (error) {
       console.error('Erro ao buscar grupos:', error);
-    } else if (data) {
-      setGrupos(data);
     }
-  };
+  }, []);
 
   // Set up form with default values or transaction data if editing
   const form = useForm<TransactionFormValues>({
@@ -68,7 +73,7 @@ export const useTransactionForm = (
     }
   });
 
-  async function onSubmit(data: TransactionFormValues) {
+  const onSubmit = async (data: TransactionFormValues) => {
     setIsSubmitting(true);
     
     try {
@@ -92,10 +97,10 @@ export const useTransactionForm = (
       
       const valorNumerico = parseFloat(data.valor.replace(',', '.'));
       
-      if (isNaN(valorNumerico)) {
+      if (isNaN(valorNumerico) || valorNumerico <= 0) {
         toast({
           title: "Erro no formulário",
-          description: "O valor precisa ser um número válido",
+          description: "O valor precisa ser um número válido e maior que zero",
           variant: "destructive"
         });
         return;
@@ -176,7 +181,7 @@ export const useTransactionForm = (
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   return {
     form,

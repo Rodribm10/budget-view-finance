@@ -43,7 +43,7 @@ export function TransactionForm({
   // Fetch user groups when the form loads
   useEffect(() => {
     fetchGrupos();
-  }, []);
+  }, [fetchGrupos]);
 
   return (
     <Form {...form}>
