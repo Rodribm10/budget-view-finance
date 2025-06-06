@@ -29,8 +29,8 @@ export function GroupSelectField({ form, grupos }: GroupSelectFieldProps) {
         <FormItem>
           <FormLabel>Grupo (Opcional)</FormLabel>
           <Select 
-            onValueChange={(value) => field.onChange(value || null)} 
-            value={field.value || ""}
+            onValueChange={(value) => field.onChange(value === "none" ? null : value)} 
+            value={field.value || "none"}
           >
             <FormControl>
               <SelectTrigger>
@@ -38,7 +38,7 @@ export function GroupSelectField({ form, grupos }: GroupSelectFieldProps) {
               </SelectTrigger>
             </FormControl>
             <SelectContent>
-              <SelectItem value="">Nenhum grupo</SelectItem>
+              <SelectItem value="none">Nenhum grupo</SelectItem>
               {gruposValidos.map((grupo) => (
                 <SelectItem 
                   key={grupo.remote_jid} 
