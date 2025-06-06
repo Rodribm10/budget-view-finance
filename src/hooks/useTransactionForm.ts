@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,6 +38,7 @@ export const useTransactionForm = (
       
       if (!userEmail) {
         console.error('❌ Email do usuário não encontrado no localStorage');
+        setGrupos([]);
         return;
       }
       
@@ -59,18 +59,28 @@ export const useTransactionForm = (
         
       if (error) {
         console.error('❌ Erro ao buscar grupos:', error);
-        // Não bloquear o formulário se não conseguir buscar grupos
         setGrupos([]);
       } else if (data) {
-        console.log(`✅ ${data.length} grupos encontrados`);
-        setGrupos(data);
+        // Filtrar grupos que têm remote_jid válido (não vazio e não null)
+        const gruposValidos = data.filter(grupo => 
+          grupo.remote_jid && 
+          grupo.remote_jid.trim() !== '' && 
+          grupo.remote_jid !== null
+        );
+        
+        console.log(`✅ ${data.length} grupos encontrados, ${gruposValidos.length} grupos válidos`);
+        
+        if (gruposValidos.length !== data.length) {
+          console.warn('⚠️ Alguns grupos foram filtrados por terem remote_jid inválido');
+        }
+        
+        setGrupos(gruposValidos);
       } else {
         console.log('📝 Nenhum grupo encontrado, definindo array vazio');
         setGrupos([]);
       }
     } catch (error) {
       console.error('💥 Erro inesperado ao buscar grupos:', error);
-      // Garantir que sempre temos um array vazio em caso de erro
       setGrupos([]);
     }
   }, []);
