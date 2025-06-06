@@ -35,25 +35,43 @@ export const useTransactionForm = (
   const fetchGrupos = useCallback(async () => {
     try {
       const userEmail = localStorage.getItem('userEmail');
+      console.log('🔍 Buscando grupos para usuário:', userEmail);
+      
       if (!userEmail) {
-        console.error('Email do usuário não encontrado');
+        console.error('❌ Email do usuário não encontrado no localStorage');
         return;
       }
       
       const normalizedEmail = userEmail.trim().toLowerCase();
+      console.log('📧 Email normalizado:', normalizedEmail);
+      
+      // Log específico para o usuário problemático
+      if (normalizedEmail === 'leopootz10@gmail.com') {
+        console.log('🐆 Usuário específico detectado - leopootz10@gmail.com');
+      }
       
       const { data, error } = await supabase
         .from('grupos_whatsapp')
         .select('remote_jid, nome_grupo')
         .eq('login', normalizedEmail);
         
+      console.log('📊 Resultado da busca de grupos:', { data, error });
+        
       if (error) {
-        console.error('Erro ao buscar grupos:', error);
+        console.error('❌ Erro ao buscar grupos:', error);
+        // Não bloquear o formulário se não conseguir buscar grupos
+        setGrupos([]);
       } else if (data) {
+        console.log(`✅ ${data.length} grupos encontrados`);
         setGrupos(data);
+      } else {
+        console.log('📝 Nenhum grupo encontrado, definindo array vazio');
+        setGrupos([]);
       }
     } catch (error) {
-      console.error('Erro ao buscar grupos:', error);
+      console.error('💥 Erro inesperado ao buscar grupos:', error);
+      // Garantir que sempre temos um array vazio em caso de erro
+      setGrupos([]);
     }
   }, []);
 
@@ -74,6 +92,7 @@ export const useTransactionForm = (
   });
 
   const onSubmit = async (data: TransactionFormValues) => {
+    console.log('🚀 Iniciando submissão do formulário:', data);
     setIsSubmitting(true);
     
     try {
@@ -81,6 +100,7 @@ export const useTransactionForm = (
       const userEmail = localStorage.getItem('userEmail');
       
       if (!userEmail) {
+        console.error('❌ Email não encontrado no localStorage');
         toast({
           title: "Erro no formulário",
           description: "Email do usuário não encontrado",
@@ -91,13 +111,22 @@ export const useTransactionForm = (
       
       // Normalize the email (lowercase and trim spaces)
       const normalizedEmail = userEmail.trim().toLowerCase();
+      console.log('📧 Email para salvar transação:', normalizedEmail);
       
       // Get user ID from localStorage - kept for compatibility
       const userId = localStorage.getItem('userId') || '';
       
-      const valorNumerico = parseFloat(data.valor.replace(',', '.'));
-      
-      if (isNaN(valorNumerico) || valorNumerico <= 0) {
+      // Validação mais robusta do valor
+      let valorNumerico: number;
+      try {
+        const valorString = String(data.valor).replace(',', '.');
+        valorNumerico = parseFloat(valorString);
+        
+        if (!valorString || isNaN(valorNumerico) || valorNumerico <= 0) {
+          throw new Error('Valor inválido');
+        }
+      } catch (error) {
+        console.error('❌ Erro na validação do valor:', data.valor);
         toast({
           title: "Erro no formulário",
           description: "O valor precisa ser um número válido e maior que zero",
@@ -111,10 +140,12 @@ export const useTransactionForm = (
         ? Math.abs(valorNumerico) 
         : Math.abs(valorNumerico);
       
-      console.log(`Salvando transação para usuário: ${normalizedEmail} (ID: ${userId})`);
+      console.log(`💰 Valor final calculado: ${valorFinal} (tipo: ${data.tipo})`);
+      console.log(`📅 Data da transação: ${data.quando}`);
       
       // Handle editing vs creating new transaction
       if (isEditing && transaction) {
+        console.log('✏️ Atualizando transação existente:', transaction.id);
         // Update existing transaction
         const updatedTransaction = {
           ...transaction,
@@ -134,6 +165,7 @@ export const useTransactionForm = (
         });
         onSuccess();
       } else {
+        console.log('➕ Criando nova transação');
         // Create new transaction
         // Prepare transaction data including login and grupo_id
         const transactionData = {
@@ -148,7 +180,7 @@ export const useTransactionForm = (
           grupo_id: data.grupo_id || null
         };
         
-        console.log('Dados da transação a serem salvos:', transactionData);
+        console.log('📊 Dados da transação a serem salvos:', transactionData);
         
         // With RLS disabled, we can insert directly to the fixed table
         const { error } = await supabase
@@ -156,7 +188,7 @@ export const useTransactionForm = (
           .insert([transactionData]);
           
         if (error) {
-          console.error('Erro ao salvar transação:', error);
+          console.error('❌ Erro ao salvar transação no Supabase:', error);
           
           toast({
             title: "Erro ao salvar",
@@ -164,6 +196,7 @@ export const useTransactionForm = (
             variant: "destructive"
           });
         } else {
+          console.log('✅ Transação salva com sucesso');
           toast({
             title: "Transação salva",
             description: "Transação registrada com sucesso",
@@ -172,7 +205,7 @@ export const useTransactionForm = (
         }
       }
     } catch (error) {
-      console.error('Erro ao processar formulário:', error);
+      console.error('💥 Erro inesperado ao processar formulário:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao processar sua solicitação",

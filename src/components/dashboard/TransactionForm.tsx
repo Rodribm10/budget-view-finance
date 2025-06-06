@@ -42,8 +42,16 @@ export function TransactionForm({
 
   // Fetch user groups when the form loads
   useEffect(() => {
-    fetchGrupos();
+    console.log('🔄 TransactionForm useEffect - carregando grupos');
+    const userEmail = localStorage.getItem('userEmail');
+    console.log('👤 Usuário atual:', userEmail);
+    
+    fetchGrupos().catch(error => {
+      console.error('❌ Erro ao carregar grupos no useEffect:', error);
+    });
   }, [fetchGrupos]);
+
+  console.log('🎯 TransactionForm renderizando - grupos disponíveis:', grupos.length);
 
   return (
     <Form {...form}>
