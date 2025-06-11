@@ -101,23 +101,38 @@ export type Database = {
       }
       cartoes_credito: {
         Row: {
+          banco: string | null
+          bandeira: string | null
           created_at: string
+          dia_vencimento: number | null
           id: string
+          limite_total: number | null
           login: string | null
+          melhor_dia_compra: number | null
           nome: string
           user_id: string
         }
         Insert: {
+          banco?: string | null
+          bandeira?: string | null
           created_at?: string
+          dia_vencimento?: number | null
           id?: string
+          limite_total?: number | null
           login?: string | null
+          melhor_dia_compra?: number | null
           nome: string
           user_id: string
         }
         Update: {
+          banco?: string | null
+          bandeira?: string | null
           created_at?: string
+          dia_vencimento?: number | null
           id?: string
+          limite_total?: number | null
           login?: string | null
+          melhor_dia_compra?: number | null
           nome?: string
           user_id?: string
         }
@@ -179,38 +194,116 @@ export type Database = {
       }
       despesas_cartao: {
         Row: {
+          ano_fatura: number | null
           cartao_id: string | null
           created_at: string
           data_despesa: string
           descricao: string
+          despesa_pai_id: string | null
           id: string
           login: string | null
+          mes_fatura: number | null
           nome: string | null
+          observacoes: string | null
+          parcela_atual: number | null
+          status_conciliacao: string | null
+          total_parcelas: number | null
           valor: number
+          valor_original: number | null
         }
         Insert: {
+          ano_fatura?: number | null
           cartao_id?: string | null
           created_at?: string
           data_despesa: string
           descricao: string
+          despesa_pai_id?: string | null
           id?: string
           login?: string | null
+          mes_fatura?: number | null
           nome?: string | null
+          observacoes?: string | null
+          parcela_atual?: number | null
+          status_conciliacao?: string | null
+          total_parcelas?: number | null
           valor: number
+          valor_original?: number | null
         }
         Update: {
+          ano_fatura?: number | null
           cartao_id?: string | null
           created_at?: string
           data_despesa?: string
           descricao?: string
+          despesa_pai_id?: string | null
           id?: string
           login?: string | null
+          mes_fatura?: number | null
           nome?: string | null
+          observacoes?: string | null
+          parcela_atual?: number | null
+          status_conciliacao?: string | null
+          total_parcelas?: number | null
           valor?: number
+          valor_original?: number | null
         }
         Relationships: [
           {
             foreignKeyName: "despesas_cartao_cartao_id_fkey"
+            columns: ["cartao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "despesas_cartao_despesa_pai_id_fkey"
+            columns: ["despesa_pai_id"]
+            isOneToOne: false
+            referencedRelation: "despesas_cartao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faturas_cartao: {
+        Row: {
+          ano: number
+          cartao_id: string | null
+          created_at: string | null
+          data_pagamento: string | null
+          data_vencimento: string | null
+          id: string
+          login: string | null
+          mes: number
+          status_pagamento: string | null
+          valor_total: number | null
+        }
+        Insert: {
+          ano: number
+          cartao_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          id?: string
+          login?: string | null
+          mes: number
+          status_pagamento?: string | null
+          valor_total?: number | null
+        }
+        Update: {
+          ano?: number
+          cartao_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          id?: string
+          login?: string | null
+          mes?: number
+          status_pagamento?: string | null
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faturas_cartao_cartao_id_fkey"
             columns: ["cartao_id"]
             isOneToOne: false
             referencedRelation: "cartoes_credito"

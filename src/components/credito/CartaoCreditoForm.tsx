@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -22,7 +23,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Opções para as listas suspensas
 const bandeirasCartao = [
   'Visa', 'Mastercard', 'Elo', 'American Express', 'Hipercard', 
   'Diners Club', 'Credicard', 'Sorocred', 'Cabal', 'Banescard', 
@@ -39,6 +39,9 @@ const cartaoSchema = z.object({
   nome: z.string().min(1, { message: 'Nome do cartão é obrigatório' }),
   bandeira: z.string({ required_error: 'Selecione uma bandeira' }),
   banco: z.string({ required_error: 'Selecione um banco' }),
+  limite_total: z.string().optional(),
+  dia_vencimento: z.string().optional(),
+  melhor_dia_compra: z.string().optional(),
 });
 
 type CartaoFormValues = z.infer<typeof cartaoSchema>;
@@ -58,6 +61,9 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
       nome: '',
       bandeira: '',
       banco: '',
+      limite_total: '',
+      dia_vencimento: '10',
+      melhor_dia_compra: '5',
     }
   });
 
@@ -65,7 +71,6 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
     setIsSubmitting(true);
     
     try {
-      // Removed the fourth argument that was causing the error
       const resultado = await criarCartao(
         data.nome, 
         data.bandeira, 
@@ -73,6 +78,23 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
       );
       
       if (resultado) {
+        // Atualizar campos adicionais se fornecidos
+        if (data.limite_total || data.dia_vencimento || data.melhor_dia_compra) {
+          const { supabase } = await import('@/integrations/supabase/client');
+          const userEmail = localStorage.getItem('userEmail');
+          
+          const updateData: any = {};
+          if (data.limite_total) updateData.limite_total = parseFloat(data.limite_total);
+          if (data.dia_vencimento) updateData.dia_vencimento = parseInt(data.dia_vencimento);
+          if (data.melhor_dia_compra) updateData.melhor_dia_compra = parseInt(data.melhor_dia_compra);
+          
+          await supabase
+            .from('cartoes_credito')
+            .update(updateData)
+            .eq('id', resultado.id)
+            .eq('login', userEmail?.trim().toLowerCase());
+        }
+        
         toast({
           title: "Cartão adicionado",
           description: "Cartão de crédito cadastrado com sucesso",
@@ -163,6 +185,67 @@ export function CartaoCreditoForm({ onSuccess, onCancel }: CartaoCreditoFormProp
             </FormItem>
           )}
         />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <FormField
+            control={form.control}
+            name="limite_total"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Limite Total (Opcional)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    placeholder="0,00" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="dia_vencimento"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Dia do Vencimento</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    max="31"
+                    placeholder="10" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="melhor_dia_compra"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Melhor Dia de Compra</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    min="1" 
+                    max="31"
+                    placeholder="5" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <div className="flex justify-end space-x-2 pt-2">
           <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>

@@ -5,7 +5,7 @@ import { CartaoCredito, DespesaCartao } from '@/types/cartaoTypes';
 import { getCartoes, getDespesasCartao, getTotalDespesasCartao } from '@/services/cartaoCreditoService';
 import { useToast } from "@/components/ui/use-toast";
 import { CartaoActions } from '@/components/credito/CartaoActions';
-import { CartaoDetalhes } from '@/components/credito/CartaoDetalhes';
+import { CartaoDetalhesAvancado } from '@/components/credito/CartaoDetalhesAvancado';
 import { CartaoListView } from '@/components/credito/CartaoListView';
 
 const CartoesCreditoPage = () => {
@@ -21,7 +21,6 @@ const CartoesCreditoPage = () => {
       setIsLoading(true);
       const data = await getCartoes();
       
-      // Load the totals for each card
       const cartoesWithTotals = await Promise.all(
         data.map(async (cartao) => {
           const total_despesas = await getTotalDespesasCartao(cartao.id);
@@ -43,18 +42,12 @@ const CartoesCreditoPage = () => {
     }
   };
 
-  useEffect(() => {
-    loadCartoes();
-  }, []);
-
   const loadDespesasCartao = async (cartaoId: string) => {
     try {
       setIsLoading(true);
-      // This function now uses login+nome matching internally instead of cartao_id
       const despesasData = await getDespesasCartao(cartaoId);
       setDespesas(despesasData);
       
-      // Also refresh the total for the selected card
       if (cartaoSelecionado) {
         const totalDespesas = await getTotalDespesasCartao(cartaoId);
         console.log(`Total atualizado para cartão ${cartaoSelecionado.nome}: ${totalDespesas}`);
@@ -84,10 +77,8 @@ const CartoesCreditoPage = () => {
   };
 
   const handleDespesaSuccess = () => {
-    // Recarregar detalhes do cartão após adicionar despesa
     if (cartaoSelecionado) {
       loadDespesasCartao(cartaoSelecionado.id);
-      // Recarregar também a lista de cartões para atualizar os totais
       loadCartoes();
     }
     toast({
@@ -97,7 +88,6 @@ const CartoesCreditoPage = () => {
   };
 
   const handleCartaoClick = async (cartao: CartaoCredito) => {
-    // Refresh the total first
     const totalDespesas = await getTotalDespesasCartao(cartao.id);
     const updatedCartao = { ...cartao, total_despesas: totalDespesas };
     
@@ -111,6 +101,10 @@ const CartoesCreditoPage = () => {
     setCartaoSelecionado(null);
     setDespesas([]);
   };
+
+  useEffect(() => {
+    loadCartoes();
+  }, []);
 
   return (
     <Layout>
@@ -130,10 +124,11 @@ const CartoesCreditoPage = () => {
             onCartaoClick={handleCartaoClick}
           />
         ) : cartaoSelecionado && (
-          <CartaoDetalhes
+          <CartaoDetalhesAvancado
             cartao={cartaoSelecionado}
             despesas={despesas}
             isLoading={isLoading}
+            onDespesaSuccess={handleDespesaSuccess}
           />
         )}
       </div>
