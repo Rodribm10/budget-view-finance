@@ -44,7 +44,14 @@ export function useFaturas({ cartaoId }: UseFaturasProps) {
         .order('mes', { ascending: false });
 
       if (error) throw error;
-      setFaturas(data || []);
+      
+      // Mapear os dados para garantir que status_pagamento seja do tipo correto
+      const faturasMapeadas = (data || []).map(fatura => ({
+        ...fatura,
+        status_pagamento: fatura.status_pagamento as 'pendente' | 'pago' | 'vencido'
+      })) as FaturaCartao[];
+      
+      setFaturas(faturasMapeadas);
     } catch (error) {
       console.error('Erro ao carregar faturas:', error);
     } finally {
