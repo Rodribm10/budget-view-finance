@@ -8,21 +8,16 @@ import { WhatsAppGroup } from '@/types/financialTypes';
 import { useToast } from '@/hooks/use-toast';
 import CreateGroupForm from '@/components/whatsappGroups/CreateGroupForm';
 import GroupsList from '@/components/whatsappGroups/GroupsList';
-import DebugInfo from '@/components/whatsappGroups/DebugInfo';
 
 const GruposWhatsApp = () => {
   const { toast } = useToast();
   const [grupos, setGrupos] = useState<WhatsAppGroup[]>([]);
   const [carregando, setCarregando] = useState<boolean>(true);
   const [userEmail, setUserEmail] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Buscar os grupos do usuário ao carregar a página
   const buscarGrupos = async () => {
     setCarregando(true);
-    setErrorMessage(null);
-    setDebugInfo(null);
     try {
       const gruposData = await listarGruposWhatsApp();
       setGrupos(gruposData);
@@ -66,7 +61,6 @@ const GruposWhatsApp = () => {
           </div>
         </div>
 
-        <DebugInfo errorMessage={errorMessage} debugInfo={debugInfo} />
         <CreateGroupForm userEmail={userEmail} onSuccess={buscarGrupos} />
         <GroupsList grupos={grupos} carregando={carregando} />
       </div>
