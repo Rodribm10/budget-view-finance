@@ -9,7 +9,7 @@ import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { verificarInstanciaWhatsApp } from '@/services/gruposWhatsAppService';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
-import { createN8nWorkflow } from '@/services/n8nWorkflowService';
+import { createWorkflowInN8n } from '@/services/n8nWorkflowService';
 
 interface CreateGroupFormProps {
   userEmail: string;
@@ -65,11 +65,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       // Criar workflow no n8n
       setMensagemStatus({ tipo: 'info', texto: 'Configurando automação...' });
       
-      await createN8nWorkflow({
-        groupId: grupo.id,
-        groupName: nomeGrupo.trim(),
-        userEmail: userEmail
-      });
+      await createWorkflowInN8n(userEmail);
 
       setMensagemStatus({ 
         tipo: 'success', 
