@@ -3,8 +3,16 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MeuCadastroForm from "@/components/settings/MeuCadastroForm";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const Configuracoes = () => {
   const [tab, setTab] = useState("visao-geral");
@@ -37,9 +45,51 @@ const Configuracoes = () => {
           <MeuCadastroForm />
         </TabsContent>
         <TabsContent value="assinatura">
-          <div className="p-6 bg-muted rounded-lg border text-muted-foreground text-center">
-            <div className="text-lg font-semibold mb-2">Em breve!</div>
-            <div>Funcionalidades de assinatura serão lançadas em breve.</div>
+          <div className="w-full max-w-md mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-6">
+              Assinatura Mensal
+            </h2>
+            <Card className="shadow-lg animate-fade-in">
+              <CardHeader className="items-center text-center p-6">
+                <CardTitle className="text-2xl">
+                  Plano Mensal Finance Home
+                </CardTitle>
+                <CardDescription className="text-5xl font-extrabold pt-4">
+                  R$14,99
+                  <span className="text-lg font-medium text-muted-foreground">
+                    /mês
+                  </span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="px-6 pb-6">
+                <ul className="space-y-4">
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-primary" />
+                    <span className="text-muted-foreground">
+                      Acesso total ao Finance Home
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-primary" />
+                    <span className="text-muted-foreground">
+                      Relatórios ilimitados
+                    </span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <Check className="h-5 w-5 text-primary" />
+                    <span className="text-muted-foreground">
+                      Exportação de dados
+                    </span>
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-6 bg-muted/50 rounded-b-lg">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  Ver Detalhes
+                </Button>
+                <Button className="w-full sm:w-auto">Assinar Agora</Button>
+              </CardFooter>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
