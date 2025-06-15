@@ -1,12 +1,11 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { formatarWhatsapp } from '@/utils/whatsappFormatter';
 import { validateRegisterForm } from '@/utils/registerValidation';
-import { registerUser, loginAfterRegister } from '@/services/registerService';
 import RegisterFormFields from './RegisterFormFields';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from "sonner";
 
 interface RegisterFormProps {
   isLoading: boolean;
@@ -14,22 +13,16 @@ interface RegisterFormProps {
 }
 
 const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  // Estado do formulário de cadastro
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [email, setEmail] = useState('');
-  const [whatsapp, setWhatsapp] = useState('55()');
+  const [whatsapp, setWhatsapp] = useState('55');
   const [senha, setSenha] = useState('');
   const [confirmaSenha, setConfirmaSenha] = useState('');
 
-  // Função para cadastrar usuário
   const handleCadastro = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validações básicas
     const validationError = validateRegisterForm({
       nome,
       empresa,
@@ -40,52 +33,42 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     });
     
     if (validationError) {
-      toast({
-        title: "Campos obrigatórios",
-        description: validationError,
-        variant: "destructive"
-      });
+      toast.error("Campos obrigatórios", { description: validationError });
       return;
     }
     
     setIsLoading(true);
     
-    try {
-      const { userId, whatsappLimpo } = await registerUser({
-        nome,
-        empresa,
-        email,
-        whatsapp,
-        senha
-      });
-      
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso!"
-      });
-      
-      // Fazer login automaticamente após o cadastro
-      const loginData = await loginAfterRegister(email, senha);
-      
-      if (loginData) {
-        localStorage.setItem('autenticado', 'true');
-        localStorage.setItem('userId', loginData);
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userName', nome);
-        localStorage.setItem('userWhatsapp', whatsappLimpo);
-        
-        // Redirecionamento para a página principal após cadastro bem-sucedido
-        navigate('/');
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: {
+          nome,
+          empresa: empresa || null,
+          whatsapp: whatsapp.replace(/\D/g, ''),
+        }
       }
-    } catch (error: any) {
-      console.error("Erro ao cadastrar:", error);
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Não foi possível completar o cadastro",
-        variant: "destructive"
+    });
+
+    setIsLoading(false);
+
+    if (error) {
+       toast.error("Erro no cadastro", {
+        description: error.message || "Não foi possível completar o cadastro. O e-mail já pode estar em uso.",
       });
-    } finally {
-      setIsLoading(false);
+    } else if (data.user) {
+        if (data.user.identities && data.user.identities.length === 0) {
+             toast.error("Erro no cadastro", {
+                description: "Este e-mail já está em uso. Tente fazer login.",
+            });
+        } else {
+            toast.success("Cadastro realizado com sucesso!", {
+                description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam.",
+                duration: 10000,
+            });
+        }
     }
   };
 

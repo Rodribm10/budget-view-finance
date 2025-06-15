@@ -475,7 +475,6 @@ export type Database = {
           instancia_zap: string | null
           nome: string | null
           remote_jid: string | null
-          senha: string | null
           status_instancia: string | null
           webhook: string | null
           whatsapp: string
@@ -488,7 +487,6 @@ export type Database = {
           instancia_zap?: string | null
           nome?: string | null
           remote_jid?: string | null
-          senha?: string | null
           status_instancia?: string | null
           webhook?: string | null
           whatsapp: string
@@ -501,7 +499,6 @@ export type Database = {
           instancia_zap?: string | null
           nome?: string | null
           remote_jid?: string | null
-          senha?: string | null
           status_instancia?: string | null
           webhook?: string | null
           whatsapp?: string
