@@ -1,43 +1,42 @@
-
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { PlusCircle, CreditCard } from 'lucide-react';
 
 interface TransactionHeaderProps {
   onOpenDialog: (tipo: 'receita' | 'despesa') => void;
   onOpenCartaoCreditoDialog: () => void;
+  disableAdicionar?: boolean;
 }
 
-export const TransactionHeader = ({ 
-  onOpenDialog, 
-  onOpenCartaoCreditoDialog 
-}: TransactionHeaderProps) => {
+export function TransactionHeader({
+  onOpenDialog,
+  onOpenCartaoCreditoDialog,
+  disableAdicionar = false,
+}: TransactionHeaderProps) {
   return (
-    <div className="flex justify-between items-center">
-      <h1 className="text-2xl font-bold tracking-tight">Todas as Transações</h1>
-      <div className="flex gap-2">
-        <Button 
-          className="flex items-center gap-2 bg-finance-green hover:bg-finance-green/90"
-          onClick={() => onOpenDialog('receita')}
-        >
-          <PlusCircle className="h-4 w-4" />
-          Nova Receita
-        </Button>
-        <Button 
-          className="flex items-center gap-2 bg-finance-red hover:bg-finance-red/90"
-          onClick={() => onOpenDialog('despesa')}
-        >
-          <PlusCircle className="h-4 w-4" />
-          Nova Despesa
-        </Button>
-        <Button 
-          className="flex items-center gap-2"
-          onClick={onOpenCartaoCreditoDialog}
-        >
-          <CreditCard className="h-4 w-4" />
-          Despesa Cartão
-        </Button>
-      </div>
+    <div className="flex gap-2">
+      <button
+        className={`bg-finance-green hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition-colors ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={disableAdicionar}
+        onClick={() => onOpenDialog('receita')}
+        type="button"
+      >
+        Nova Receita
+      </button>
+      <button
+        className={`bg-finance-red hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition-colors ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={disableAdicionar}
+        onClick={() => onOpenDialog('despesa')}
+        type="button"
+      >
+        Nova Despesa
+      </button>
+      <button
+        className={`bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded transition-colors ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
+        disabled={disableAdicionar}
+        onClick={onOpenCartaoCreditoDialog}
+        type="button"
+      >
+        Despesa de Cartão
+      </button>
     </div>
   );
-};
+}

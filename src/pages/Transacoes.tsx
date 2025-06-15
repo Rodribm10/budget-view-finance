@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from '@/components/layout/Layout';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { useTransactions } from '@/hooks/useTransactions';
@@ -7,6 +6,7 @@ import { TransactionHeader } from '@/components/transacoes/TransactionHeader';
 import { TransactionSummaryCards } from '@/components/transacoes/TransactionSummaryCards';
 import { TransactionDialogs } from '@/components/transacoes/TransactionDialogs';
 import { MonthFilter } from '@/components/filters/MonthFilter';
+import { useAccessControl } from '@/hooks/useAccessControl';
 
 const TransacoesPage = () => {
   // Função para obter o mês atual no formato YYYY-MM
@@ -16,6 +16,8 @@ const TransacoesPage = () => {
   };
 
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
+
+  const access = useAccessControl();
 
   const {
     transactions,
@@ -59,6 +61,11 @@ const TransacoesPage = () => {
             <p className="text-sm text-muted-foreground">
               Dados de: {formatMonthDisplay(selectedMonth)}
             </p>
+            {!access.loading && access.podeAdicionarTransacao && access.diasRestantesTrial > 0 && (
+              <div className="mt-1 text-xs text-blue-600 font-medium">
+                {`Você está em período gratuito. ${access.diasRestantesTrial} dia(s) restante(s) de teste.`}
+              </div>
+            )}
           </div>
           <MonthFilter 
             selectedMonth={selectedMonth}
@@ -66,9 +73,17 @@ const TransacoesPage = () => {
           />
         </div>
 
+        {!access.loading && !access.podeAdicionarTransacao && (
+          <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded relative mb-4">
+            <span className="font-medium">Atenção:</span> {access.motivo}
+          </div>
+        )}
+
+        {/* Só passa as funções de adicionar se permitido */}
         <TransactionHeader 
-          onOpenDialog={handleOpenDialog}
-          onOpenCartaoCreditoDialog={handleOpenCartaoCreditoDialog}
+          onOpenDialog={access.podeAdicionarTransacao ? handleOpenDialog : () => {}}
+          onOpenCartaoCreditoDialog={access.podeAdicionarTransacao ? handleOpenCartaoCreditoDialog : () => {}}
+          disableAdicionar={!access.podeAdicionarTransacao}
         />
 
         {/* Resumo em Cards */}
