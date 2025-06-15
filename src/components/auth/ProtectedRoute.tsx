@@ -28,6 +28,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         setSession(session);
         setLoggedIn(!!session);
         setUser(session?.user ? { id: session.user.id } : null);
+
+        // Store or remove user email from localStorage
+        if (session?.user?.email) {
+          localStorage.setItem('userEmail', session.user.email);
+        } else {
+          localStorage.removeItem('userEmail');
+        }
+
         setIsLoading(false);
       }
     );

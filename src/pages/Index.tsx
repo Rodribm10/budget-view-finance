@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
@@ -32,24 +31,6 @@ const Dashboard = () => {
   };
 
   const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
-
-  // Use useCallback to ensure this function doesn't change on every render
-  const setupUserId = useCallback(() => {
-    const storedUserId = localStorage.getItem('userId');
-    const finDashUser = localStorage.getItem('finDashUser');
-    
-    if (!storedUserId && finDashUser) {
-      localStorage.setItem('userId', finDashUser);
-    } else if (!storedUserId && !finDashUser) {
-      const defaultId = '9f267008-9128-4a2f-b730-de0a0b5602a9';
-      localStorage.setItem('userId', defaultId);
-    }
-  }, []);
-
-  // Run the userId setup only once
-  useEffect(() => {
-    setupUserId();
-  }, [setupUserId]);
 
   // Load data when component mounts or month changes
   useEffect(() => {
