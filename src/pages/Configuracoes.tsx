@@ -1,4 +1,3 @@
-
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MeuCadastroForm from "@/components/settings/MeuCadastroForm";
 import { useState } from "react";
@@ -16,6 +15,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Configuracoes = () => {
   const [tab, setTab] = useState("visao-geral");
@@ -28,47 +28,29 @@ const Configuracoes = () => {
 
   const handleSubscribe = async () => {
     setIsSubscribing(true);
-    // TODO: O e-mail do usuário deve ser obtido dinamicamente do estado de autenticação.
-    const userEmail = "test@example.com"; 
-
-    const body = {
-      reason: "Plano Mensal Finance Home",
-      auto_recurring: {
-        frequency: 1,
-        frequency_type: "months",
-        transaction_amount: 14.99,
-        currency_id: "BRL"
-      },
-      back_url: "https://meusite.com/sucesso",
-      payer_email: userEmail
-    };
-
     try {
-      const response = await fetch("https://api.mercadopago.com/preapproval", {
-        method: "POST",
-        headers: {
-          // ATENÇÃO: O ideal é que este token não esteja no código do frontend.
-          // Deve ser movido para uma variável de ambiente segura no backend.
-          "Authorization": "Bearer APP_USR-7056966967213571-061515-4157ceccce3dbae552ddee5cd5ec685e-163267528",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
-      });
+      // A edge function buscará o e-mail do usuário a partir da sessão de autenticação.
+      const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe');
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Erro ao criar a assinatura.");
+      if (error) {
+        // Lida com erros de rede ou falhas na invocação da função.
+        throw new Error(`Erro de comunicação: ${error.message}`);
+      }
+      
+      if (data.error) {
+        // Lida com erros retornados pela lógica da função.
+        throw new Error(data.error);
       }
       
       if (data.init_point) {
         window.location.href = data.init_point;
       } else {
-         throw new Error("URL de checkout não foi encontrada na resposta.");
+         throw new Error("Não foi possível obter a URL de checkout. Tente novamente.");
       }
 
     } catch (error: any) {
-      toast.error(error.message || "Ocorreu um erro inesperado. Tente novamente mais tarde.");
+      console.error("Erro ao criar a assinatura:", error);
+      toast.error(error.message || "Ocorreu um erro inesperado. Por favor, tente mais tarde.");
     } finally {
         setIsSubscribing(false);
     }
