@@ -8,13 +8,23 @@ import { supabase } from "@/integrations/supabase/client";
 export const getUserEmail = (): string | null => {
   const userEmail = localStorage.getItem('userEmail');
   
+  console.log("📧 [getUserEmail] Email raw do localStorage:", userEmail);
+  
   if (!userEmail) {
-    console.error('Email do usuário não encontrado no localStorage');
+    console.error('❌ [getUserEmail] Email do usuário não encontrado no localStorage');
+    console.log("🔍 [getUserEmail] Verificando todas as chaves do localStorage:");
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      console.log(`   ${key}: ${localStorage.getItem(key)}`);
+    }
     return null;
   }
   
   // Normalize the email (lowercase and trim spaces)
-  return userEmail.trim().toLowerCase();
+  const normalizedEmail = userEmail.trim().toLowerCase();
+  console.log("✅ [getUserEmail] Email normalizado:", normalizedEmail);
+  
+  return normalizedEmail;
 };
 
 /**
@@ -24,20 +34,27 @@ export const getUserEmail = (): string | null => {
  */
 export const getUserGroups = async (userEmail: string): Promise<string[]> => {
   try {
+    console.log("👥 [getUserGroups] Buscando grupos para email:", userEmail);
+    
     const { data: userGroups, error: groupsError } = await supabase
       .from('grupos_whatsapp')
       .select('remote_jid')
       .eq('login', userEmail);
       
     if (groupsError) {
-      console.error('Erro ao buscar grupos do usuário:', groupsError);
+      console.error('❌ [getUserGroups] Erro ao buscar grupos do usuário:', groupsError);
       return [];
     }
     
+    console.log("👥 [getUserGroups] Grupos encontrados:", userGroups);
+    
     // Extract IDs of the groups to use in the filter
-    return userGroups ? userGroups.map(group => group.remote_jid) : [];
+    const groupIds = userGroups ? userGroups.map(group => group.remote_jid) : [];
+    console.log("👥 [getUserGroups] IDs dos grupos extraídos:", groupIds);
+    
+    return groupIds;
   } catch (error) {
-    console.error('Erro ao obter grupos do usuário:', error);
+    console.error('💥 [getUserGroups] Erro ao obter grupos do usuário:', error);
     return [];
   }
 };

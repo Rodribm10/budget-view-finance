@@ -9,28 +9,54 @@ import { getUserEmail, getUserGroups } from "./baseService";
  * @returns Promise with array of transactions
  */
 export async function getTransacoes(monthFilter?: string): Promise<Transaction[]> {
-  console.log("Buscando transações do Supabase...", monthFilter ? `Filtro do mês: ${monthFilter}` : "Sem filtro de mês");
+  console.log("🔍 [getTransacoes] Iniciando busca de transações...");
+  console.log("🔍 [getTransacoes] Filtro de mês:", monthFilter);
   
   // Get the user's email from localStorage
   const normalizedEmail = getUserEmail();
   
+  console.log("📧 [getTransacoes] Email do usuário obtido:", normalizedEmail);
+  
   if (!normalizedEmail) {
+    console.error("❌ [getTransacoes] Email não encontrado no localStorage");
     return [];
   }
   
-  console.log("Buscando transações para o usuário com email:", normalizedEmail);
-  
   try {
     // First, get all user's groups by email
+    console.log("👥 [getTransacoes] Buscando grupos do usuário...");
     const groupIds = await getUserGroups(normalizedEmail);
-    console.log(`Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
+    console.log(`👥 [getTransacoes] Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
     
     // Build the query with month filter if provided
+    console.log("🏗️ [getTransacoes] Construindo query...");
+    
     let query = supabase
       .from('transacoes')
+      .select('*');
+    
+    // Debug: First, let's see what's in the transacoes table
+    console.log("🔎 [getTransacoes] Verificando todas as transações na tabela...");
+    const { data: allTransactions, error: allError } = await supabase
+      .from('transacoes')
       .select('*')
-      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`)
-      .order('quando', { ascending: false });
+      .limit(10);
+    
+    if (allError) {
+      console.error("❌ [getTransacoes] Erro ao buscar todas as transações:", allError);
+    } else {
+      console.log("📊 [getTransacoes] Total de transações na tabela (primeiras 10):", allTransactions);
+      console.log("📊 [getTransacoes] Estrutura da primeira transação:", allTransactions[0]);
+    }
+    
+    // Now let's build the proper filter
+    if (groupIds.length > 0) {
+      query = query.or(`login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`);
+      console.log("🔍 [getTransacoes] Query com grupos:", `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`);
+    } else {
+      query = query.eq('login', normalizedEmail);
+      console.log("🔍 [getTransacoes] Query apenas por email:", normalizedEmail);
+    }
 
     // Apply month filter if provided
     if (monthFilter) {
@@ -43,20 +69,40 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
         .gte('quando', startDate)
         .lte('quando', `${endDate}T23:59:59.999Z`);
       
-      console.log(`Aplicando filtro de mês: ${startDate} até ${endDate}`);
+      console.log(`📅 [getTransacoes] Aplicando filtro de mês: ${startDate} até ${endDate}`);
     }
 
+    query = query.order('quando', { ascending: false });
+
+    console.log("🚀 [getTransacoes] Executando query final...");
     const { data, error } = await query;
 
     if (error) {
-      console.error('Erro ao buscar transações:', error);
+      console.error('❌ [getTransacoes] Erro ao executar query:', error);
       throw new Error('Não foi possível carregar as transações');
     }
 
-    console.log("Transações encontradas:", data);
+    console.log("✅ [getTransacoes] Transações encontradas:", data?.length || 0);
+    console.log("📋 [getTransacoes] Dados retornados:", data);
+
+    if (!data || data.length === 0) {
+      console.warn("⚠️ [getTransacoes] Nenhuma transação encontrada para o usuário:", normalizedEmail);
+      
+      // Let's check if there are transactions with similar emails
+      console.log("🔍 [getTransacoes] Verificando emails similares na tabela...");
+      const { data: similarEmails } = await supabase
+        .from('transacoes')
+        .select('login, count(*)')
+        .not('login', 'is', null)
+        .limit(20);
+      
+      console.log("📧 [getTransacoes] Emails encontrados na tabela transacoes:", similarEmails);
+      
+      return [];
+    }
 
     // Transform the received data to the expected format, normalizing the types
-    return data.map((item: any) => ({
+    const transformedData = data.map((item: any) => ({
       id: item.id.toString(),
       user: item.user || '',
       login: item.login || normalizedEmail, // Ensure the login field is filled
@@ -69,8 +115,13 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
       categoria: item.categoria || 'Outros',
       grupo_id: item.grupo_id || null
     }));
+
+    console.log("🔄 [getTransacoes] Transações transformadas:", transformedData.length);
+    console.log("🔄 [getTransacoes] Primeira transação transformada:", transformedData[0]);
+
+    return transformedData;
   } catch (error) {
-    console.error('Erro ao buscar transações:', error);
+    console.error('💥 [getTransacoes] Erro geral na função:', error);
     return [];
   }
 }

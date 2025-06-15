@@ -37,9 +37,24 @@ const Dashboard = () => {
     async function loadData() {
       try {
         setIsLoading(true);
-        console.log("Iniciando carregamento de dados para o mês:", selectedMonth);
+        console.log("🚀 [Dashboard] Iniciando carregamento de dados para o mês:", selectedMonth);
+        
+        // Verificar se existe email no localStorage
+        const userEmail = localStorage.getItem('userEmail');
+        console.log("📧 [Dashboard] Email no localStorage:", userEmail);
+        
+        if (!userEmail) {
+          console.error("❌ [Dashboard] Email não encontrado no localStorage!");
+          toast({
+            title: "Erro de autenticação",
+            description: "Email do usuário não encontrado. Faça login novamente.",
+            variant: "destructive"
+          });
+          return;
+        }
         
         // Buscar todos os dados necessários com filtro de mês
+        console.log("📊 [Dashboard] Buscando dados do Supabase...");
         const [transacoesData, totalsData, categoriesData, monthlyDataResult, cartoesData] = await Promise.all([
           getTransacoes(selectedMonth),
           getTransactionSummary(selectedMonth),
@@ -51,7 +66,7 @@ const Dashboard = () => {
         // Calcular total dos cartões
         const totalCartoes = cartoesData.reduce((sum, cartao) => sum + (cartao.total_despesas || 0), 0);
         
-        console.log("Dados obtidos com sucesso:", {
+        console.log("✅ [Dashboard] Dados obtidos com sucesso:", {
           transacoes: transacoesData.length,
           totals: totalsData,
           categories: categoriesData.length,
@@ -71,12 +86,20 @@ const Dashboard = () => {
         setCategories(categoriesData);
         setMonthlyData(monthlyDataResult);
         
-        toast({
-          title: "Dados carregados com sucesso",
-          description: `Dados financeiros de ${selectedMonth} foram atualizados`
-        });
+        if (transacoesData.length > 0 || categoriesData.length > 0 || monthlyDataResult.length > 0) {
+          toast({
+            title: "Dados carregados com sucesso",
+            description: `${transacoesData.length} transações encontradas para ${selectedMonth}`
+          });
+        } else {
+          toast({
+            title: "Nenhum dado encontrado",
+            description: `Não foram encontradas transações para ${selectedMonth}`,
+            variant: "destructive"
+          });
+        }
       } catch (error) {
-        console.error("Erro ao carregar dados:", error);
+        console.error("💥 [Dashboard] Erro ao carregar dados:", error);
         toast({
           title: "Erro ao carregar dados",
           description: "Verifique a conexão com o Supabase",
