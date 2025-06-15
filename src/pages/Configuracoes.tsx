@@ -1,4 +1,3 @@
-
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MeuCadastroForm from "@/components/settings/MeuCadastroForm";
 import { useState } from "react";
@@ -30,17 +29,16 @@ const Configuracoes = () => {
   const handleSubscribe = async () => {
     setIsSubscribing(true);
     try {
-      const userEmail = localStorage.getItem('userEmail');
-      const userId = localStorage.getItem('userId');
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!userEmail || !userId) {
+      if (!user || !user.id || !user.email) {
         toast.error("Sessão inválida. Por favor, faça login novamente.");
         setIsSubscribing(false);
         return;
       }
 
       const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe', {
-        body: { email: userEmail, userId: userId },
+        body: { email: user.email, userId: user.id },
       });
 
       if (error) {
