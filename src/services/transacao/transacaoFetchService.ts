@@ -28,51 +28,8 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
     const groupIds = await getUserGroups(normalizedEmail);
     console.log(`👥 [getTransacoes] Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
     
-    // ===== TESTE DIRETO SEM FILTROS =====
-    console.log("🧪 [DEBUG] Testando query direta para o email...");
-    const { data: directEmailTest, error: directEmailError } = await supabase
-      .from('transacoes')
-      .select('*')
-      .eq('login', normalizedEmail);
-    
-    console.log("🧪 [DEBUG] Resultado query direta:", directEmailTest?.length || 0, "registros");
-    if (directEmailError) {
-      console.error("🧪 [DEBUG] Erro na query direta:", directEmailError);
-    }
-    
-    // ===== TESTE COM ILIKE PARA EMAILS CASE-INSENSITIVE =====
-    console.log("🧪 [DEBUG] Testando query com ilike (case-insensitive)...");
-    const { data: ilikeTest, error: ilikeError } = await supabase
-      .from('transacoes')
-      .select('*')
-      .ilike('login', normalizedEmail);
-    
-    console.log("🧪 [DEBUG] Resultado query ilike:", ilikeTest?.length || 0, "registros");
-    if (ilikeError) {
-      console.error("🧪 [DEBUG] Erro na query ilike:", ilikeError);
-    }
-    
-    // ===== TESTE COM TRIM =====
-    console.log("🧪 [DEBUG] Testando diferentes variações do email...");
-    const emailVariations = [
-      normalizedEmail,
-      normalizedEmail.trim(),
-      normalizedEmail.toLowerCase(),
-      normalizedEmail.toUpperCase()
-    ];
-    
-    for (const emailVar of emailVariations) {
-      const { data: varTest } = await supabase
-        .from('transacoes')
-        .select('*')
-        .eq('login', emailVar)
-        .limit(1);
-      
-      console.log(`🧪 [DEBUG] Email "${emailVar}": ${varTest?.length || 0} registros`);
-    }
-    
-    // ===== QUERY ORIGINAL COM LOGS DETALHADOS =====
-    console.log("🏗️ [getTransacoes] Iniciando query original...");
+    // Build the main query
+    console.log("🏗️ [getTransacoes] Iniciando query principal...");
     
     let query = supabase.from('transacoes').select('*');
     
@@ -84,7 +41,7 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
       filterDescription = `OR filter: ${orFilter}`;
       query = query.or(orFilter);
     } else {
-      filterDescription = `Simple email filter: login = ${normalizedEmail}`;
+      filterDescription = `Simple login filter: login = ${normalizedEmail}`;
       query = query.eq('login', normalizedEmail);
     }
     
