@@ -56,16 +56,19 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
 
     if (error) {
        toast.error("Erro no cadastro", {
-        description: error.message || "Não foi possível completar o cadastro. O e-mail já pode estar em uso.",
+        description: error.message || "Não foi possível completar o cadastro. Por favor, tente novamente.",
       });
     } else if (data.user) {
+        // This condition (empty identities) indicates that the user already exists in Supabase Auth.
+        // In this case, `signUp` resends the confirmation/invitation email.
         if (data.user.identities && data.user.identities.length === 0) {
-             toast.error("Erro no cadastro", {
-                description: "Este e-mail já está em uso. Tente fazer login.",
+             toast.info("E-mail já cadastrado. Verifique sua caixa de entrada!", {
+                description: "Enviamos um novo link para você definir sua senha e acessar sua conta. Não se esqueça de checar a pasta de spam.",
+                duration: 10000,
             });
         } else {
             toast.success("Cadastro realizado com sucesso!", {
-                description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam.",
+                description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam para ativar sua conta.",
                 duration: 10000,
             });
         }
