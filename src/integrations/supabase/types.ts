@@ -371,6 +371,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pagamentos_mercadopago: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          event_type: string
+          id: string
+          payer_email: string | null
+          raw_body: Json
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          event_type: string
+          id?: string
+          payer_email?: string | null
+          raw_body: Json
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          payer_email?: string | null
+          raw_body?: Json
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       perfis_usuario: {
         Row: {
           aniversario: string | null
