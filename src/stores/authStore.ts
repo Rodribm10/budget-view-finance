@@ -3,10 +3,21 @@ import { create } from 'zustand';
 
 interface AuthState {
   isLoggedIn: boolean;
+  user: { id: string } | null;
   setLoggedIn: (status: boolean) => void;
+  setUser: (user: { id: string } | null) => void;
 }
 
-// Initialize with the persisted value from localStorage
+// Função para recuperar o userId inicial (se existir)
+const getInitialUser = (): { id: string } | null => {
+  try {
+    const id = localStorage.getItem('userId');
+    return id ? { id } : null;
+  } catch (e) {
+    return null;
+  }
+};
+
 const getInitialState = (): boolean => {
   try {
     return localStorage.getItem('autenticado') === 'true';
@@ -17,5 +28,7 @@ const getInitialState = (): boolean => {
 
 export const authStore = create<AuthState>((set) => ({
   isLoggedIn: getInitialState(),
+  user: getInitialUser(),
   setLoggedIn: (status) => set({ isLoggedIn: status }),
+  setUser: (user) => set({ user }),
 }));
