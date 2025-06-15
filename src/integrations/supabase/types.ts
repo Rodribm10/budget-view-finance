@@ -371,6 +371,59 @@ export type Database = {
         }
         Relationships: []
       }
+      perfis_usuario: {
+        Row: {
+          aniversario: string | null
+          atualizado_em: string | null
+          cep: string | null
+          cidade: string | null
+          cpf: string | null
+          estado: string | null
+          id: string
+          nacionalidade: string | null
+          nome_preferido: string | null
+          objetivo_financeiro: string | null
+          participa_pesquisas: boolean | null
+          sexo: string | null
+        }
+        Insert: {
+          aniversario?: string | null
+          atualizado_em?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf?: string | null
+          estado?: string | null
+          id: string
+          nacionalidade?: string | null
+          nome_preferido?: string | null
+          objetivo_financeiro?: string | null
+          participa_pesquisas?: boolean | null
+          sexo?: string | null
+        }
+        Update: {
+          aniversario?: string | null
+          atualizado_em?: string | null
+          cep?: string | null
+          cidade?: string | null
+          cpf?: string | null
+          estado?: string | null
+          id?: string
+          nacionalidade?: string | null
+          nome_preferido?: string | null
+          objetivo_financeiro?: string | null
+          participa_pesquisas?: boolean | null
+          sexo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfis_usuario_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transacoes: {
         Row: {
           categoria: string | null
