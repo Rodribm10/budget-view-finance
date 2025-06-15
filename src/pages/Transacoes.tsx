@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { useTransactions } from '@/hooks/useTransactions';
