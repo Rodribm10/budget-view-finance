@@ -13,9 +13,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 const Configuracoes = () => {
   const [tab, setTab] = useState("visao-geral");
+  const [subscription] = useState({
+    active: true,
+    planName: "Plano Mensal Finance Home",
+    expires_at: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15),
+  });
 
   return (
     <div className="p-6">
@@ -45,10 +52,7 @@ const Configuracoes = () => {
           <MeuCadastroForm />
         </TabsContent>
         <TabsContent value="assinatura">
-          <div className="w-full max-w-md mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-6">
-              Assinatura Mensal
-            </h2>
+          <div className="w-full max-w-md mx-auto space-y-6">
             <Card className="shadow-lg animate-fade-in">
               <CardHeader className="items-center text-center p-6">
                 <CardTitle className="text-2xl">
@@ -78,7 +82,7 @@ const Configuracoes = () => {
                   <li className="flex items-center gap-3">
                     <Check className="h-5 w-5 text-primary" />
                     <span className="text-muted-foreground">
-                      Exportação de dados
+                      Integração com WhatsApp
                     </span>
                   </li>
                 </ul>
@@ -90,6 +94,36 @@ const Configuracoes = () => {
                 <Button className="w-full sm:w-auto">Assinar Agora</Button>
               </CardFooter>
             </Card>
+
+            {subscription.active && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Sua Assinatura Atual</CardTitle>
+                  <CardDescription>
+                    Obrigado por ser um assinante!
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="font-medium">
+                    Plano:{" "}
+                    <span className="font-normal text-muted-foreground">
+                      {subscription.planName}
+                    </span>
+                  </p>
+                  <p className="font-medium">
+                    Vence em:{" "}
+                    <span className="font-normal text-muted-foreground">
+                      {format(subscription.expires_at, "dd 'de' MMMM 'de' yyyy", {
+                        locale: ptBR,
+                      })}
+                    </span>
+                  </p>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline">Gerenciar Assinatura</Button>
+                </CardFooter>
+              </Card>
+            )}
           </div>
         </TabsContent>
       </Tabs>
