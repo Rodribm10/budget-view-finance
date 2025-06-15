@@ -506,6 +506,7 @@ export type Database = {
           empresa: string | null
           id: string
           instancia_zap: string | null
+          liberado_permanente: boolean | null
           nome: string | null
           remote_jid: string | null
           status_instancia: string | null
@@ -518,6 +519,7 @@ export type Database = {
           empresa?: string | null
           id?: string
           instancia_zap?: string | null
+          liberado_permanente?: boolean | null
           nome?: string | null
           remote_jid?: string | null
           status_instancia?: string | null
@@ -530,6 +532,7 @@ export type Database = {
           empresa?: string | null
           id?: string
           instancia_zap?: string | null
+          liberado_permanente?: boolean | null
           nome?: string | null
           remote_jid?: string | null
           status_instancia?: string | null

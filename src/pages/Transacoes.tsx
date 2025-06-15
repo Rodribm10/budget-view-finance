@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Layout from '@/components/layout/Layout';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
@@ -61,10 +62,17 @@ const TransacoesPage = () => {
             <p className="text-sm text-muted-foreground">
               Dados de: {formatMonthDisplay(selectedMonth)}
             </p>
-            {!access.loading && access.podeAdicionarTransacao && access.diasRestantesTrial > 0 && (
-              <div className="mt-1 text-xs text-blue-600 font-medium">
-                {`Você está em período gratuito. ${access.diasRestantesTrial} dia(s) restante(s) de teste.`}
-              </div>
+            {/* Exibe mensagem para trial OU para admin-liberou */}
+            {!access.loading && access.podeAdicionarTransacao && (
+              access.adminLiberou ? (
+                <div className="mt-1 text-xs text-green-600 font-bold">
+                  {access.motivo}
+                </div>
+              ) : (access.diasRestantesTrial > 0 && (
+                <div className="mt-1 text-xs text-blue-600 font-medium">
+                  {`Você está em período gratuito. ${access.diasRestantesTrial} dia(s) restante(s) de teste.`}
+                </div>
+              ))
             )}
           </div>
           <MonthFilter 
@@ -73,6 +81,7 @@ const TransacoesPage = () => {
           />
         </div>
 
+        {/* Mensagem de bloqueio */}
         {!access.loading && !access.podeAdicionarTransacao && (
           <div className="bg-yellow-100 border border-yellow-300 text-yellow-800 px-4 py-3 rounded relative mb-4">
             <span className="font-medium">Atenção:</span> {access.motivo}

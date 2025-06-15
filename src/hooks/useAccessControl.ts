@@ -8,6 +8,7 @@ interface AccessControlResult {
   motivo: string | null; // mensagem para exibir ao usuário se bloqueado
   diasRestantesTrial: number;
   trialExpiraEm: Date | null;
+  adminLiberou: boolean;
 }
 
 export function useAccessControl(): AccessControlResult {
@@ -17,6 +18,7 @@ export function useAccessControl(): AccessControlResult {
     motivo: null,
     diasRestantesTrial: 0,
     trialExpiraEm: null,
+    adminLiberou: false,
   });
 
   useEffect(() => {
@@ -29,14 +31,15 @@ export function useAccessControl(): AccessControlResult {
           motivo: "Erro ao identificar usuário. Faça login novamente.",
           diasRestantesTrial: 0,
           trialExpiraEm: null,
+          adminLiberou: false,
         });
         return;
       }
 
-      // Buscar data de cadastro do usuário
+      // Buscar data de cadastro e liberado_permanente do usuário
       const { data: usuarios, error: userError } = await supabase
         .from("usuarios")
-        .select("created_at")
+        .select("created_at, liberado_permanente")
         .eq("email", userEmail.trim().toLowerCase());
 
       if (userError || !usuarios || usuarios.length === 0) {
@@ -46,6 +49,7 @@ export function useAccessControl(): AccessControlResult {
           motivo: "Erro ao buscar dados do usuário. Tente novamente mais tarde.",
           diasRestantesTrial: 0,
           trialExpiraEm: null,
+          adminLiberou: false,
         });
         return;
       }
@@ -56,6 +60,19 @@ export function useAccessControl(): AccessControlResult {
       trialExpiraEm.setDate(trialExpiraEm.getDate() + 30);
       const dentroTrial = agora < trialExpiraEm;
       const diasRestantes = Math.ceil((trialExpiraEm.getTime() - agora.getTime()) / (1000 * 60 * 60 * 24));
+      const liberadoPermanente = usuarios[0].liberado_permanente === true;
+
+      if (liberadoPermanente) {
+        setResult({
+          loading: false,
+          podeAdicionarTransacao: true,
+          motivo: "Seu acesso foi liberado permanentemente pelo administrador.",
+          diasRestantesTrial: 0,
+          trialExpiraEm,
+          adminLiberou: true,
+        });
+        return;
+      }
 
       if (dentroTrial) {
         setResult({
@@ -64,6 +81,7 @@ export function useAccessControl(): AccessControlResult {
           motivo: null,
           diasRestantesTrial: diasRestantes,
           trialExpiraEm,
+          adminLiberou: false,
         });
         return;
       }
@@ -82,17 +100,24 @@ export function useAccessControl(): AccessControlResult {
           motivo: "Erro ao verificar status de pagamento.",
           diasRestantesTrial: 0,
           trialExpiraEm,
+          adminLiberou: false,
         });
         return;
       }
 
-      if (pagamentos && pagamentos.length > 0) {
+      const pagamentoMesVigente = pagamentos && pagamentos.some((p: any) => {
+        const pgDate = new Date(p.created_at);
+        return pgDate.getFullYear() === agora.getFullYear() && pgDate.getMonth() === agora.getMonth();
+      });
+
+      if (pagamentoMesVigente) {
         setResult({
           loading: false,
           podeAdicionarTransacao: true,
           motivo: null,
           diasRestantesTrial: 0,
           trialExpiraEm,
+          adminLiberou: false,
         });
         return;
       }
@@ -101,9 +126,10 @@ export function useAccessControl(): AccessControlResult {
         loading: false,
         podeAdicionarTransacao: false,
         motivo:
-          "Seu período de teste acabou. Para continuar adicionando transações realize o pagamento da assinatura.",
+          "Seu período de teste acabou. Para continuar adicionando transações, realize o pagamento da assinatura.",
         diasRestantesTrial: 0,
         trialExpiraEm,
+        adminLiberou: false,
       });
     }
 
