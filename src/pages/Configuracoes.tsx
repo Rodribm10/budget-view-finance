@@ -4,23 +4,16 @@ import MeuCadastroForm from "@/components/settings/MeuCadastroForm";
 import { useState } from "react";
 
 const Configuracoes = () => {
-  // Por padrão "visao-geral"
   const [tab, setTab] = useState("visao-geral");
 
   return (
     <>
-      <h1 className="text-2xl font-bold mb-6">Configurações</h1>
+      <h1 className="text-2xl font-bold mb-4">Configurações</h1>
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="visao-geral" className="min-w-[120px]">
-            Visão Geral
-          </TabsTrigger>
-          <TabsTrigger value="meu-cadastro" className="min-w-[120px]">
-            Meu cadastro
-          </TabsTrigger>
-          <TabsTrigger value="assinatura" className="min-w-[120px]">
-            Assinatura
-          </TabsTrigger>
+        <TabsList className="mb-4">
+          <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
+          <TabsTrigger value="meu-cadastro">Meu cadastro</TabsTrigger>
+          <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
         </TabsList>
         <TabsContent value="visao-geral">
           <div className="p-6 bg-muted rounded-lg border text-muted-foreground text-center">
@@ -43,4 +36,3 @@ const Configuracoes = () => {
 };
 
 export default Configuracoes;
-
