@@ -1,59 +1,45 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useToast } from "@/components/ui/use-toast";
 import LoadingState from '../whatsapp/LoadingState';
 import { authStore } from '@/stores/authStore';
+import { supabase } from '@/integrations/supabase/client';
+import { Session } from '@supabase/supabase-js';
 
 interface ProtectedRouteProps {
   children: ReactNode;
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
   const location = useLocation();
   const setLoggedIn = authStore((state) => state.setLoggedIn);
+  const setUser = authStore((state) => state.setUser);
   
-  // Use a single state variable to track authentication status
-  const [authStatus, setAuthStatus] = useState<'loading' | 'authenticated' | 'unauthenticated'>('loading');
-
   useEffect(() => {
-    const checkAuthentication = () => {
-      try {
-        // Check if we have stored authentication status
-        const storedAuth = localStorage.getItem('autenticado') === 'true';
-        const userId = localStorage.getItem('userId');
-        
-        if (storedAuth && userId) {
-          console.log('Usando autenticação armazenada: autenticado');
-          setAuthStatus('authenticated');
-          setLoggedIn(true);
-        } else {
-          console.log('Nenhuma sessão encontrada, redirecionando para login');
-          setAuthStatus('unauthenticated');
-          setLoggedIn(false);
-          
-          // Only show toast once when transitioning to unauthenticated
-          toast({
-            title: "Autenticação necessária",
-            description: "Por favor, faça login para acessar esta página"
-          });
-        }
-      } catch (error) {
-        console.error('Erro ao verificar autenticação:', error);
-        setAuthStatus('unauthenticated');
-        setLoggedIn(false);
-      } finally {
+    // Checa a sessão ao carregar o componente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setIsLoading(false);
+    });
+    
+    // Escuta por mudanças no estado de autenticação (login/logout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setLoggedIn(!!session);
+        setUser(session?.user ? { id: session.user.id } : null);
         setIsLoading(false);
       }
-    };
-    
-    checkAuthentication();
-  }, [toast, setLoggedIn]); // Only check once on mount, with stable dependencies
+    );
 
-  // Se estiver carregando, mostrar estado de carregamento
-  if (isLoading || authStatus === 'loading') {
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [setLoggedIn, setUser]);
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <LoadingState message="Verificando autenticação..." />
@@ -61,12 +47,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
   
-  // Se não estiver autenticado, redirecionar para a página de login - use replace para evitar histórico
-  if (authStatus === 'unauthenticated') {
+  if (!session) {
+    // Redireciona para a página de login se não houver sessão
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Se estiver autenticado, renderizar o conteúdo protegido
+  // Renderiza o conteúdo protegido se houver sessão
   return <>{children}</>;
 };
 

@@ -12,48 +12,47 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { supabase } from '@/integrations/supabase/client';
 
 const Header = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [userName, setUserName] = useState(() => {
-    // Obter o nome do usuário do localStorage ou usar seu email como fallback
-    return localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'Usuário';
-  });
+  const [userName, setUserName] = useState('Usuário');
 
-  // Atualize o nome se mudar no localStorage
   useEffect(() => {
-    const handleStorageChange = () => {
-      setUserName(localStorage.getItem('userName') || localStorage.getItem('userEmail') || 'Usuário');
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserName(user.email || 'Usuário');
+      }
     };
     
-    window.addEventListener('storage', handleStorageChange);
+    fetchUser();
     
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
-  const handleLogout = () => {
-    // Limpar informações de sessão
-    localStorage.removeItem('autenticado');
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userName');
-    localStorage.removeItem('userEmail');
-    
-    // Dispatch a storage event to notify other components about logout
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'autenticado',
-      newValue: null
-    }));
-    
-    toast({
-      title: "Logout realizado",
-      description: "Você foi desconectado com sucesso"
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserName(session?.user?.email || 'Usuário');
     });
     
-    // Redirecionar para a página de login
-    navigate('/auth');
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      console.error('Error logging out:', error);
+      toast({
+        title: "Erro no logout",
+        description: "Não foi possível desconectar. Tente novamente.",
+        variant: 'destructive'
+      });
+    } else {
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso"
+      });
+      navigate('/auth', { replace: true });
+    }
   };
 
   return (
