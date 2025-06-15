@@ -1,3 +1,4 @@
+
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import MeuCadastroForm from "@/components/settings/MeuCadastroForm";
 import { useState } from "react";
@@ -29,8 +30,18 @@ const Configuracoes = () => {
   const handleSubscribe = async () => {
     setIsSubscribing(true);
     try {
-      // A edge function buscará o e-mail do usuário a partir da sessão de autenticação.
-      const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe');
+      const userEmail = localStorage.getItem('userEmail');
+      const userId = localStorage.getItem('userId');
+
+      if (!userEmail || !userId) {
+        toast.error("Sessão inválida. Por favor, faça login novamente.");
+        setIsSubscribing(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe', {
+        body: { email: userEmail, userId: userId },
+      });
 
       if (error) {
         // Lida com erros de rede ou falhas na invocação da função.

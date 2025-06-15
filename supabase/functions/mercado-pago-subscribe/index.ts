@@ -14,22 +14,38 @@ serve(async (req) => {
   }
 
   try {
-    // Cria um cliente Supabase com o contexto de autenticação do usuário logado.
-    const supabaseClient = createClient(
+    const { email, userId } = await req.json();
+    
+    if (!email || !userId) {
+      return new Response(JSON.stringify({ error: 'E-mail ou ID do usuário não fornecido.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    // Cria um cliente Supabase com a service_role_key para verificar o usuário
+    const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    )
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    );
+    
+    // Verifica se o usuário existe no banco de dados
+    const { data: userData, error: userError } = await supabaseAdmin
+      .from('usuarios')
+      .select('id')
+      .eq('id', userId)
+      .eq('email', email)
+      .single();
 
-    // Obtém o usuário a partir da sessão
-    const { data: { user } } = await supabaseClient.auth.getUser()
-
-    if (!user || !user.email) {
-      return new Response(JSON.stringify({ error: 'Usuário não autenticado ou e-mail não encontrado.' }), {
+    if (userError || !userData) {
+      console.error('Falha na verificação do usuário:', userError);
+      return new Response(JSON.stringify({ error: 'Usuário não autorizado.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 401,
-      })
+      });
     }
+
 
     const MERCADO_PAGO_ACCESS_TOKEN = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
     if (!MERCADO_PAGO_ACCESS_TOKEN) {
@@ -48,7 +64,7 @@ serve(async (req) => {
         currency_id: "BRL"
       },
       back_url: req.headers.get("origin") || "http://localhost:5173/configuracoes",
-      payer_email: user.email
+      payer_email: email
     };
 
     const mpResponse = await fetch("https://api.mercadopago.com/preapproval", {
@@ -83,4 +99,3 @@ serve(async (req) => {
     })
   }
 })
-
