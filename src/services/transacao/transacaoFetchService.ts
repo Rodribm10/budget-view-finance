@@ -28,26 +28,77 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
     const groupIds = await getUserGroups(normalizedEmail);
     console.log(`👥 [getTransacoes] Encontrados ${groupIds.length} grupos vinculados ao usuário:`, groupIds);
     
+    // ===== VERIFICAÇÕES DE DEBUG =====
+    
+    // 1. Verificar total de registros na tabela
+    console.log("🔍 [DEBUG] Verificando total de registros na tabela transacoes...");
+    const { data: totalCount, error: countError } = await supabase
+      .from('transacoes')
+      .select('*', { count: 'exact' });
+    
+    if (countError) {
+      console.error("❌ [DEBUG] Erro ao contar registros:", countError);
+    } else {
+      console.log("📊 [DEBUG] Total de registros na tabela transacoes:", totalCount?.length || 0);
+    }
+    
+    // 2. Verificar registros com o email específico
+    console.log("🔍 [DEBUG] Verificando registros para o email específico...");
+    const { data: emailData, error: emailError } = await supabase
+      .from('transacoes')
+      .select('*')
+      .eq('login', normalizedEmail);
+    
+    if (emailError) {
+      console.error("❌ [DEBUG] Erro ao buscar por email:", emailError);
+    } else {
+      console.log("📧 [DEBUG] Registros encontrados para o email:", emailData?.length || 0);
+      if (emailData && emailData.length > 0) {
+        console.log("📧 [DEBUG] Primeiro registro encontrado:", emailData[0]);
+      }
+    }
+    
+    // 3. Verificar todos os emails únicos na tabela
+    console.log("🔍 [DEBUG] Verificando todos os emails únicos na tabela...");
+    const { data: uniqueEmails, error: uniqueError } = await supabase
+      .from('transacoes')
+      .select('login')
+      .not('login', 'is', null);
+    
+    if (uniqueError) {
+      console.error("❌ [DEBUG] Erro ao buscar emails únicos:", uniqueError);
+    } else {
+      const emails = [...new Set(uniqueEmails?.map(item => item.login))];
+      console.log("📧 [DEBUG] Emails únicos encontrados na tabela:", emails);
+      console.log("📧 [DEBUG] Email procurado existe na lista?", emails.includes(normalizedEmail));
+    }
+    
+    // 4. Verificar registros por grupo_id
+    if (groupIds.length > 0) {
+      console.log("🔍 [DEBUG] Verificando registros por grupo_id...");
+      const { data: groupData, error: groupError } = await supabase
+        .from('transacoes')
+        .select('*')
+        .in('grupo_id', groupIds);
+      
+      if (groupError) {
+        console.error("❌ [DEBUG] Erro ao buscar por grupo_id:", groupError);
+      } else {
+        console.log("👥 [DEBUG] Registros encontrados por grupo_id:", groupData?.length || 0);
+        if (groupData && groupData.length > 0) {
+          console.log("👥 [DEBUG] Primeiro registro por grupo:", groupData[0]);
+        }
+      }
+    }
+    
+    // ===== QUERY ORIGINAL =====
+    
     // Build the query with month filter if provided
-    console.log("🏗️ [getTransacoes] Construindo query...");
+    console.log("🏗️ [getTransacoes] Construindo query original...");
     
     let query = supabase
       .from('transacoes')
       .select('*');
-    
-    // Debug: First, let's see what's in the transacoes table
-    console.log("🔎 [getTransacoes] Verificando todas as transações na tabela...");
-    const { data: allTransactions, error: allError } = await supabase
-      .from('transacoes')
-      .select('*')
-      .limit(10);
-    
-    if (allError) {
-      console.error("❌ [getTransacoes] Erro ao buscar todas as transações:", allError);
-    } else {
-      console.log("📊 [getTransacoes] Total de transações na tabela (primeiras 10):", allTransactions);
-      console.log("📊 [getTransacoes] Estrutura da primeira transação:", allTransactions[0]);
-    }
     
     // Now let's build the proper filter
     if (groupIds.length > 0) {
@@ -87,17 +138,6 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
 
     if (!data || data.length === 0) {
       console.warn("⚠️ [getTransacoes] Nenhuma transação encontrada para o usuário:", normalizedEmail);
-      
-      // Let's check if there are transactions with similar emails
-      console.log("🔍 [getTransacoes] Verificando emails similares na tabela...");
-      const { data: similarEmails } = await supabase
-        .from('transacoes')
-        .select('login, count(*)')
-        .not('login', 'is', null)
-        .limit(20);
-      
-      console.log("📧 [getTransacoes] Emails encontrados na tabela transacoes:", similarEmails);
-      
       return [];
     }
 
