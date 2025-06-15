@@ -1,4 +1,3 @@
-
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
@@ -11,7 +10,8 @@ import {
   MessageSquareText,
   Users,
   Menu,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -122,6 +122,21 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
               <Users className="mr-2 h-4 w-4" />
               <span>Grupos</span>
+            </NavLink>
+          </div>
+        </div>
+        <div className="px-3 py-2">
+          <h2 className="mb-2 px-3 text-sm font-semibold tracking-tight">
+            Configurações
+          </h2>
+          <div className="space-y-1">
+            <NavLink 
+              to="/configuracoes"
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Configurações</span>
             </NavLink>
           </div>
         </div>
