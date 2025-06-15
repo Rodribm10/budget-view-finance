@@ -126,6 +126,7 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* Resumo em cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             title="Receitas"
@@ -161,9 +162,10 @@ const Dashboard = () => {
           />
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <CategoryChart categories={categories} isLoading={isLoading} />
+        {/* ---- GRÁFICOS EM COLUNA ---- */}
+        <div className="flex flex-col gap-6 w-full">
           <MonthlyChart data={monthlyData} isLoading={isLoading} />
+          <CategoryChart categories={categories} isLoading={isLoading} />
         </div>
 
         <div className="space-y-2">
