@@ -7,10 +7,10 @@ const Configuracoes = () => {
   const [tab, setTab] = useState("visao-geral");
 
   return (
-    <>
-      <h1 className="text-2xl font-bold mb-4">Configurações</h1>
+    <div>
+      <h1 className="text-2xl font-bold">Configurações</h1>
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="mb-4">
+        <TabsList className="mt-4 mb-6">
           <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
           <TabsTrigger value="meu-cadastro">Meu cadastro</TabsTrigger>
           <TabsTrigger value="assinatura">Assinatura</TabsTrigger>
@@ -31,7 +31,7 @@ const Configuracoes = () => {
           </div>
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   );
 };
 
