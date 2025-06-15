@@ -29,6 +29,7 @@ const Configuracoes = () => {
   const handleSubscribe = async () => {
     setIsSubscribing(true);
     try {
+      // Puxa os dados mais atuais do usuário logado NO MOMENTO do click!
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user || !user.id || !user.email) {
@@ -37,17 +38,18 @@ const Configuracoes = () => {
         return;
       }
 
+      // log para debug - remova depois de testar!
+      console.log("Assinatura MercadoPago - email enviado:", user.email, "id:", user.id);
+
       const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe', {
         body: { email: user.email, userId: user.id },
       });
 
       if (error) {
-        // Lida com erros de rede ou falhas na invocação da função.
         throw new Error(`Erro de comunicação: ${error.message}`);
       }
       
       if (data.error) {
-        // Lida com erros retornados pela lógica da função.
         throw new Error(data.error);
       }
       
