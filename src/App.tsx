@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import Auth from './pages/Auth';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -19,14 +19,7 @@ const Configuracoes = lazy(() => import('./pages/Configuracoes'));
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
-  const setLoggedIn = authStore((state) => state.setLoggedIn);
   
-  // Initialize authStore state once at mount time
-  useEffect(() => {
-    const storedAuth = localStorage.getItem('autenticado') === 'true';
-    setLoggedIn(storedAuth);
-  }, [setLoggedIn]);
-
   return (
     <Router>
       <Toaster />

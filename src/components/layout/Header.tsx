@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -20,15 +19,6 @@ const Header = () => {
   const [userName, setUserName] = useState('Usuário');
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserName(user.email || 'Usuário');
-      }
-    };
-    
-    fetchUser();
-    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserName(session?.user?.email || 'Usuário');
     });

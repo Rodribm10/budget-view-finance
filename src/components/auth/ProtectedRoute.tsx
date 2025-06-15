@@ -11,20 +11,18 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  // We use local state here to avoid re-renders of the whole app
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
+
+  // We still update the global store for other components to use
   const setLoggedIn = authStore((state) => state.setLoggedIn);
   const setUser = authStore((state) => state.setUser);
   
   useEffect(() => {
-    // Checa a sessão ao carregar o componente
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setIsLoading(false);
-    });
-    
-    // Escuta por mudanças no estado de autenticação (login/logout)
+    // onAuthStateChange fires once on initial load with the current session,
+    // and then every time the auth state changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -48,11 +46,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
   
   if (!session) {
-    // Redireciona para a página de login se não houver sessão
+    // Redirect to the login page if there is no session
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Renderiza o conteúdo protegido se houver sessão
+  // Render the protected content if a session exists
   return <>{children}</>;
 };
 
