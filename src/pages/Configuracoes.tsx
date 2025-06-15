@@ -15,14 +15,64 @@ import {
 } from "@/components/ui/card";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 const Configuracoes = () => {
   const [tab, setTab] = useState("visao-geral");
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const [subscription] = useState({
     active: true,
     planName: "Plano Mensal Finance Home",
     expires_at: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 15),
   });
+
+  const handleSubscribe = async () => {
+    setIsSubscribing(true);
+    // TODO: O e-mail do usuário deve ser obtido dinamicamente do estado de autenticação.
+    const userEmail = "test@example.com"; 
+
+    const body = {
+      reason: "Plano Mensal Finance Home",
+      auto_recurring: {
+        frequency: 1,
+        frequency_type: "months",
+        transaction_amount: 14.99,
+        currency_id: "BRL"
+      },
+      back_url: "https://meusite.com/sucesso",
+      payer_email: userEmail
+    };
+
+    try {
+      const response = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: {
+          // ATENÇÃO: O ideal é que este token não esteja no código do frontend.
+          // Deve ser movido para uma variável de ambiente segura no backend.
+          "Authorization": "Bearer APP_USR-7056966967213571-061515-4157ceccce3dbae552ddee5cd5ec685e-163267528",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Erro ao criar a assinatura.");
+      }
+      
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      } else {
+         throw new Error("URL de checkout não foi encontrada na resposta.");
+      }
+
+    } catch (error: any) {
+      toast.error(error.message || "Ocorreu um erro inesperado. Tente novamente mais tarde.");
+    } finally {
+        setIsSubscribing(false);
+    }
+  };
 
   return (
     <div className="p-6">
@@ -91,7 +141,13 @@ const Configuracoes = () => {
                 <Button variant="outline" className="w-full sm:w-auto">
                   Ver Detalhes
                 </Button>
-                <Button className="w-full sm:w-auto">Assinar Agora</Button>
+                <Button 
+                  className="w-full sm:w-auto" 
+                  onClick={handleSubscribe} 
+                  disabled={isSubscribing}
+                >
+                  {isSubscribing ? 'Processando...' : 'Assinar Agora'}
+                </Button>
               </CardFooter>
             </Card>
 
