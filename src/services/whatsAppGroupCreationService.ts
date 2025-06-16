@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateGroupResponse {
@@ -9,20 +8,17 @@ interface CreateGroupResponse {
 }
 
 /**
- * Cria um grupo WhatsApp via API da Evolution usando o padrão correto
+ * Cria um grupo WhatsApp via API da Evolution usando o nome escolhido pelo usuário
  */
 export async function createWhatsAppGroup(
-  userEmail: string
+  userEmail: string,
+  groupName: string
 ): Promise<CreateGroupResponse> {
   try {
-    // Extrair nome do usuário do email (parte antes do @)
-    const userName = userEmail.split('@')[0];
-    const groupSubject = `finance${userName}`;
-    
     const url = `https://evolutionapi2.innova1001.com.br/group/create/${userEmail}`;
     
     const requestBody = {
-      subject: groupSubject,
+      subject: groupName,
       description: "Finance Home seu controle sem complicação",
       participants: ["5561992444275"]
     };

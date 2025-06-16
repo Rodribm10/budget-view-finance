@@ -117,9 +117,9 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         throw new Error('Não foi possível cadastrar o grupo no banco de dados');
       }
 
-      // 2. Criar grupo no WhatsApp via API com os parâmetros corretos
+      // 2. Criar grupo no WhatsApp via API com o nome escolhido pelo usuário
       try {
-        const groupResponse = await createWhatsAppGroup(userEmail);
+        const groupResponse = await createWhatsAppGroup(userEmail, nomeGrupo.trim());
         
         console.log('Resposta da criação do grupo:', groupResponse);
         
@@ -129,7 +129,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           
           toast({
             title: 'Sucesso!',
-            description: `Grupo "${groupResponse.subject}" criado com sucesso no seu WhatsApp!`,
+            description: `Grupo "${nomeGrupo}" criado com sucesso no seu WhatsApp!`,
             variant: 'default',
           });
         } else {
@@ -260,7 +260,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li>O grupo será criado automaticamente no seu WhatsApp</li>
             <li>Você será adicionado como participante do grupo</li>
-            <li>O grupo terá o nome: finance{userEmail.split('@')[0]}</li>
+            <li>O grupo terá o nome que você escolheu: {nomeGrupo || 'Digite um nome acima'}</li>
           </ul>
         </div>
       </CardContent>

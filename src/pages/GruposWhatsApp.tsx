@@ -4,6 +4,7 @@ import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { listarGruposWhatsApp } from '@/services/gruposWhatsAppService';
+import { deleteWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { WhatsAppGroup } from '@/types/financialTypes';
 import { useToast } from '@/hooks/use-toast';
 import CreateGroupForm from '@/components/whatsappGroups/CreateGroupForm';
@@ -30,6 +31,26 @@ const GruposWhatsApp = () => {
       });
     } finally {
       setCarregando(false);
+    }
+  };
+
+  // Deletar grupo
+  const handleDeleteGroup = async (groupId: number) => {
+    try {
+      await deleteWhatsAppGroup(groupId);
+      toast({
+        title: 'Sucesso',
+        description: 'Grupo deletado com sucesso',
+      });
+      // Atualizar a lista após deletar
+      buscarGrupos();
+    } catch (error) {
+      console.error('Erro ao deletar grupo:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar o grupo',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -62,7 +83,11 @@ const GruposWhatsApp = () => {
         </div>
 
         <CreateGroupForm userEmail={userEmail} onSuccess={buscarGrupos} />
-        <GroupsList grupos={grupos} carregando={carregando} />
+        <GroupsList 
+          grupos={grupos} 
+          carregando={carregando} 
+          onDeleteGroup={handleDeleteGroup}
+        />
       </div>
     </Layout>
   );

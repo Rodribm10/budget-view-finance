@@ -1,4 +1,3 @@
-
 // Service dedicated to WhatsApp groups database operations
 import { supabase } from "@/integrations/supabase/client";
 import { WhatsAppGroup } from "@/types/financialTypes";
@@ -110,6 +109,29 @@ export async function findOrCreateWhatsAppGroup(nomeGrupo?: string): Promise<Wha
     return groupToUse;
   } catch (error) {
     console.error('Erro ao encontrar ou criar grupo do WhatsApp:', error);
+    throw error;
+  }
+}
+
+/**
+ * Deletes a WhatsApp group from the database
+ * @param groupId The ID of the group to delete
+ */
+export async function deleteWhatsAppGroup(groupId: number): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('grupos_whatsapp')
+      .delete()
+      .eq('id', groupId);
+    
+    if (error) {
+      console.error('Erro ao deletar grupo:', error);
+      throw error;
+    }
+    
+    console.log(`Grupo ${groupId} deletado com sucesso`);
+  } catch (error) {
+    console.error('Erro ao deletar grupo do WhatsApp:', error);
     throw error;
   }
 }
