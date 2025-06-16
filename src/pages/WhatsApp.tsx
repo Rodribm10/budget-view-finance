@@ -32,6 +32,7 @@ const WhatsApp = () => {
     setQrDialogOpen,
     handleRestartInstance,
     handleLogoutInstance,
+    handleDisconnectInstance,
     handleSetPresence,
     handleDeleteInstance,
     handleViewQrCode
@@ -149,6 +150,7 @@ const WhatsApp = () => {
               onDelete={handleDeleteInstanceWrapper}
               onRestart={handleRestartInstance}
               onLogout={handleLogoutInstance}
+              onDisconnect={handleDisconnectInstance}
               onSetPresence={handleSetPresence}
               onRefreshInstances={refreshInstances}
               isRefreshing={isRefreshing}

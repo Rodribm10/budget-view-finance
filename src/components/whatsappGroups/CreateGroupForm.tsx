@@ -32,66 +32,41 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   useEffect(() => {
     const checkUserInstance = async () => {
       if (!userEmail) {
-        console.log('🔍 Email do usuário não fornecido');
+        console.log('Email do usuário não fornecido');
         setCheckingInstance(false);
         return;
       }
       
       setCheckingInstance(true);
       try {
-        console.log('🔍 === VERIFICAÇÃO DE INSTÂNCIA INICIADA ===');
-        console.log('🔍 Email fornecido:', userEmail);
-        console.log('🔍 Tipo do email:', typeof userEmail);
-        console.log('🔍 Email length:', userEmail.length);
-        
-        // TESTE: Verificar se o email está sendo usado corretamente
-        const emailTrimmed = userEmail.trim().toLowerCase();
-        console.log('📧 Email após trim/lower:', emailTrimmed);
+        console.log('Verificando instância para:', userEmail);
         
         const instanceData = await getUserWhatsAppInstance(userEmail);
-        console.log('📊 === DADOS RETORNADOS DA FUNÇÃO ===');
-        console.log('📊 instanceData completo:', JSON.stringify(instanceData, null, 2));
+        console.log('Dados da instância:', instanceData);
         
         if (instanceData) {
-          console.log('🔍 === ANÁLISE DETALHADA DOS DADOS ===');
-          console.log('✅ instanceData existe:', !!instanceData);
-          console.log('📝 instancia_zap valor:', instanceData.instancia_zap);
-          console.log('📝 instancia_zap tipo:', typeof instanceData.instancia_zap);
-          console.log('✅ instancia_zap não é null:', instanceData.instancia_zap !== null);
-          console.log('✅ instancia_zap não é vazio após trim:', instanceData.instancia_zap?.trim() !== '');
-          console.log('📝 status_instancia valor:', instanceData.status_instancia);
-          console.log('📝 status_instancia tipo:', typeof instanceData.status_instancia);
-          console.log('✅ status_instancia é "conectado":', instanceData.status_instancia === 'conectado');
-        } else {
-          console.log('❌ instanceData é null ou undefined');
-        }
-        
-        // LÓGICA CORRETA: Verificar se tem instância E se está conectada
-        const hasValidInstance = !!(
-          instanceData && 
-          instanceData.instancia_zap && 
-          instanceData.instancia_zap.trim() !== '' &&
-          instanceData.status_instancia === 'conectado'
-        );
-        
-        console.log('🎯 === RESULTADO FINAL DA VALIDAÇÃO ===');
-        console.log('🎯 hasValidInstance:', hasValidInstance);
-        
-        if (hasValidInstance) {
-          setHasWhatsAppInstance(true);
-          setUserInstance(instanceData);
-          console.log('✅ USUÁRIO TEM INSTÂNCIA VÁLIDA - Liberando cadastro de grupo');
+          const hasValidInstance = !!(
+            instanceData && 
+            instanceData.instancia_zap && 
+            instanceData.instancia_zap.trim() !== '' &&
+            instanceData.status_instancia === 'conectado'
+          );
+          
+          console.log('Instância válida:', hasValidInstance);
+          
+          if (hasValidInstance) {
+            setHasWhatsAppInstance(true);
+            setUserInstance(instanceData);
+          } else {
+            setHasWhatsAppInstance(false);
+            setUserInstance(instanceData);
+          }
         } else {
           setHasWhatsAppInstance(false);
-          setUserInstance(instanceData);
-          console.log('❌ USUÁRIO NÃO TEM INSTÂNCIA VÁLIDA:', {
-            temInstanceData: !!instanceData,
-            instancia_zap: instanceData?.instancia_zap || 'NULL',
-            status_instancia: instanceData?.status_instancia || 'NULL'
-          });
+          setUserInstance(null);
         }
       } catch (error) {
-        console.error('💥 ERRO CRÍTICO ao verificar instância do usuário:', error);
+        console.error('Erro ao verificar instância do usuário:', error);
         setHasWhatsAppInstance(false);
         setUserInstance(null);
       } finally {
@@ -142,13 +117,9 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         throw new Error('Não foi possível cadastrar o grupo no banco de dados');
       }
 
-      // 2. Criar grupo no WhatsApp via API
+      // 2. Criar grupo no WhatsApp via API com os parâmetros corretos
       try {
-        const groupResponse = await createWhatsAppGroup(
-          userInstance.instancia_zap,
-          userEmail,
-          userInstance.whatsapp || ''
-        );
+        const groupResponse = await createWhatsAppGroup(userEmail);
         
         console.log('Resposta da criação do grupo:', groupResponse);
         
@@ -229,53 +200,6 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
               Acesse o menu "Conectar WhatsApp" e realize a conexão primeiro.
             </AlertDescription>
           </Alert>
-          
-          {/* Informações de debug SUPER DETALHADAS */}
-          <div className="mt-4 p-4 bg-gray-100 rounded text-sm">
-            <p><strong>🔧 DEBUG COMPLETO - CONEXÃO COM BANCO:</strong></p>
-            <div className="mt-2 space-y-1">
-              <p><strong>Email original:</strong> {userEmail || 'Não definido'}</p>
-              <p><strong>Email processado:</strong> {userEmail?.trim().toLowerCase() || 'Não processado'}</p>
-              
-              <div className="mt-3 p-2 bg-blue-100 rounded">
-                <p><strong>📊 DADOS DO BANCO DE DADOS:</strong></p>
-                {userInstance ? (
-                  <>
-                    <p><strong>instancia_zap:</strong> 
-                      <span className={userInstance.instancia_zap ? 'text-green-600' : 'text-red-600'}>
-                        "{userInstance.instancia_zap || 'NULL'}" (tipo: {typeof userInstance.instancia_zap})
-                      </span>
-                    </p>
-                    <p><strong>status_instancia:</strong> 
-                      <span className={userInstance.status_instancia === 'conectado' ? 'text-green-600' : 'text-red-600'}>
-                        "{userInstance.status_instancia || 'NULL'}" (tipo: {typeof userInstance.status_instancia})
-                      </span>
-                    </p>
-                    <p><strong>whatsapp:</strong> "{userInstance.whatsapp || 'NULL'}"</p>
-                  </>
-                ) : (
-                  <p className="text-red-600">❌ Nenhum dado retornado do banco de dados!</p>
-                )}
-              </div>
-              
-              <div className="mt-3 p-2 bg-yellow-100 rounded">
-                <p><strong>🔍 VALIDAÇÕES STEP-BY-STEP:</strong></p>
-                <p>1. Dados existem? {userInstance ? '✅ SIM' : '❌ NÃO'}</p>
-                <p>2. instancia_zap preenchida? {(userInstance?.instancia_zap && userInstance.instancia_zap.trim() !== '') ? '✅ SIM' : '❌ NÃO'}</p>
-                <p>3. Status é "conectado"? {userInstance?.status_instancia === 'conectado' ? '✅ SIM' : '❌ NÃO'}</p>
-                
-                {userInstance?.instancia_zap && userInstance?.status_instancia !== 'conectado' && (
-                  <p className="text-red-600 font-medium mt-2">
-                    ⚠️ Instância encontrada mas status incorreto: "{userInstance.status_instancia}"
-                  </p>
-                )}
-              </div>
-            </div>
-            
-            <div className="mt-3 text-xs text-gray-600">
-              <p>💡 Abra o Console do navegador (F12) para ver logs detalhados da consulta ao banco de dados</p>
-            </div>
-          </div>
         </CardContent>
       </Card>
     );
@@ -336,7 +260,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
             <li>O grupo será criado automaticamente no seu WhatsApp</li>
             <li>Você será adicionado como participante do grupo</li>
-            <li>O grupo terá o nome: FinDash - {userEmail.split('@')[0]}</li>
+            <li>O grupo terá o nome: finance{userEmail.split('@')[0]}</li>
           </ul>
         </div>
       </CardContent>

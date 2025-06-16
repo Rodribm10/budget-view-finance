@@ -7,6 +7,7 @@ import {
   logoutInstance,
   deleteInstance,
   setInstancePresence,
+  disconnectInstance,
   fetchQrCode
 } from '@/services/whatsAppService';
 
@@ -73,6 +74,43 @@ export const useWhatsAppActions = (
       
     } catch (error) {
       console.error(`Error logging out instance ${instance.instanceName}:`, error);
+      toast({
+        title: "Erro",
+        description: `Falha ao desconectar a instância ${instance.instanceName}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler for quando uma instância é desconectada permanentemente
+  const handleDisconnectInstance = async (instance: WhatsAppInstance) => {
+    try {
+      console.log(`Attempting to disconnect instance ${instance.instanceName} permanently`);
+      
+      // Pegar email do usuário
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) {
+        throw new Error('Email do usuário não encontrado');
+      }
+      
+      await disconnectInstance(instance.instanceName, userEmail);
+      
+      // Atualiza o estado da instância para "closed"
+      const updatedInstance = { 
+        ...instance, 
+        connectionState: 'closed' as const,
+        status: 'disconnected'
+      };
+      console.log(`Instance ${instance.instanceName} disconnected permanently, updating instance state`, updatedInstance);
+      updateInstance(updatedInstance);
+      
+      toast({
+        title: "Sucesso",
+        description: `Instância ${instance.instanceName} desconectada permanentemente`
+      });
+      
+    } catch (error) {
+      console.error(`Error disconnecting instance ${instance.instanceName}:`, error);
       toast({
         title: "Erro",
         description: `Falha ao desconectar a instância ${instance.instanceName}`,
@@ -179,6 +217,7 @@ export const useWhatsAppActions = (
     setQrDialogOpen,
     handleRestartInstance,
     handleLogoutInstance,
+    handleDisconnectInstance,
     handleSetPresence,
     handleDeleteInstance,
     handleViewQrCode

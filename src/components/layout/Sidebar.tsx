@@ -1,3 +1,4 @@
+
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
@@ -23,8 +24,8 @@ interface SidebarProps {
 
 const getNavLinkClass = (isActive: boolean) => {
   return cn(
-    "group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:bg-secondary hover:text-foreground",
-    isActive ? "bg-secondary text-foreground" : "text-muted-foreground"
+    "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 hover:scale-105 hover:shadow-sm",
+    isActive ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 shadow-sm" : "text-muted-foreground"
   );
 };
 
@@ -38,8 +39,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       isMobile ? 'fixed left-0 top-0 z-50 w-full transition-all duration-300' : 'relative'
     )}>
       <div className="flex items-center justify-between px-4 py-2">
-        <Link to="/" className="flex items-center space-x-2 font-semibold">
-          <span>FinDash</span>
+        <Link to="/" className="flex items-center space-x-2 font-semibold text-blue-700 hover:text-blue-800 transition-colors">
+          <span className="text-lg">Finance Home</span>
         </Link>
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={onClose}>
@@ -56,7 +57,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <Home className="mr-2 h-4 w-4" />
+              <Home className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Dashboard</span>
             </NavLink>
             <NavLink 
@@ -64,7 +65,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <Receipt className="mr-2 h-4 w-4" />
+              <Receipt className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Transações</span>
             </NavLink>
             <NavLink 
@@ -72,7 +73,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <CreditCard className="mr-2 h-4 w-4" />
+              <CreditCard className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Cartões de Crédito</span>
             </NavLink>
             <NavLink 
@@ -80,7 +81,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <ListFilter className="mr-2 h-4 w-4" />
+              <ListFilter className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Categorias</span>
             </NavLink>
             <NavLink 
@@ -88,7 +89,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <Target className="mr-2 h-4 w-4" />
+              <Target className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Metas</span>
             </NavLink>
             <NavLink 
@@ -96,14 +97,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Calendário</span>
             </NavLink>
           </div>
         </div>
         
         <div className="px-3 py-2">
-          <h2 className="mb-2 px-3 text-sm font-semibold tracking-tight">
+          <h2 className="mb-2 px-3 text-sm font-semibold tracking-tight text-gray-600">
             WhatsApp
           </h2>
           <div className="space-y-1">
@@ -112,7 +113,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <MessageSquareText className="mr-2 h-4 w-4" />
+              <MessageSquareText className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Conectar WhatsApp</span>
             </NavLink>
             <NavLink 
@@ -120,13 +121,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <Users className="mr-2 h-4 w-4" />
+              <Users className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Grupos</span>
             </NavLink>
           </div>
         </div>
         <div className="px-3 py-2">
-          <h2 className="mb-2 px-3 text-sm font-semibold tracking-tight">
+          <h2 className="mb-2 px-3 text-sm font-semibold tracking-tight text-gray-600">
             Configurações
           </h2>
           <div className="space-y-1">
@@ -135,7 +136,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
             >
-              <Settings className="mr-2 h-4 w-4" />
+              <Settings className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Configurações</span>
             </NavLink>
           </div>

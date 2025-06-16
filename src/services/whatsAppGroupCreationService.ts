@@ -9,24 +9,22 @@ interface CreateGroupResponse {
 }
 
 /**
- * Cria um grupo WhatsApp via API da Evolution
+ * Cria um grupo WhatsApp via API da Evolution usando o padrão correto
  */
 export async function createWhatsAppGroup(
-  instanceName: string,
-  userEmail: string,
-  userPhone: string
+  userEmail: string
 ): Promise<CreateGroupResponse> {
   try {
-    // Extrair a parte antes do @ do email
-    const emailPrefix = userEmail.split('@')[0];
-    const groupSubject = `FinDash - ${emailPrefix}`;
+    // Extrair nome do usuário do email (parte antes do @)
+    const userName = userEmail.split('@')[0];
+    const groupSubject = `finance${userName}`;
     
-    const url = `https://evolutionapi2.innova1001.com.br/group/create/${instanceName}`;
+    const url = `https://evolutionapi2.innova1001.com.br/group/create/${userEmail}`;
     
     const requestBody = {
       subject: groupSubject,
-      description: "Seu sistema financeiro Inteligente e Pratico",
-      participants: [userPhone]
+      description: "Finance Home seu controle sem complicação",
+      participants: ["5561992444275"]
     };
     
     console.log('Criando grupo WhatsApp:', { url, requestBody });
@@ -35,6 +33,7 @@ export async function createWhatsAppGroup(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': 'beeb77fbd7f48f91db2cd539a573c130'
       },
       body: JSON.stringify(requestBody)
     });

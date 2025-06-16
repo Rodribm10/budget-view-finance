@@ -13,6 +13,7 @@ interface InstanceCardProps {
   onDelete: (instanceId: string) => void;
   onRestart: (instance: WhatsAppInstance) => Promise<void>;
   onLogout: (instance: WhatsAppInstance) => Promise<void>;
+  onDisconnect?: (instance: WhatsAppInstance) => Promise<void>;
   onSetPresence: (instance: WhatsAppInstance, presence: 'online' | 'offline') => Promise<void>;
 }
 
@@ -22,6 +23,7 @@ const InstanceCard = ({
   onDelete,
   onRestart,
   onLogout,
+  onDisconnect,
   onSetPresence
 }: InstanceCardProps) => {
   const [loading, setLoading] = useState<string | null>(null);
@@ -83,6 +85,22 @@ const InstanceCard = ({
       `Deseja realmente desconectar a instância "${instance.instanceName}"? Você precisará escanear o QR Code novamente para reconectar.`,
       async () => {
         await onLogout(instance);
+      },
+      "Desconectar"
+    );
+  };
+
+  // Handler para desconectar instância permanentemente
+  const handleDisconnect = () => {
+    if (!onDisconnect) return;
+    
+    handleConfirmAction(
+      "Desconectar Instância",
+      `Deseja realmente desconectar a instância "${instance.instanceName}" permanentemente? Esta ação atualizará seu status no banco de dados para "desconectado".`,
+      async () => {
+        if (onDisconnect) {
+          await onDisconnect(instance);
+        }
       },
       "Desconectar"
     );
@@ -169,6 +187,7 @@ const InstanceCard = ({
             onViewQrCode={onViewQrCode}
             onRestart={handleRestart}
             onLogout={handleLogout}
+            onDisconnect={onDisconnect ? handleDisconnect : undefined}
             onDelete={handleDelete}
             onSetOnline={handleSetOnline}
             onSetOffline={handleSetOffline}

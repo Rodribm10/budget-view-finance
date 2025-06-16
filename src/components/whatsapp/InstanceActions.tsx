@@ -7,7 +7,8 @@ import {
   PowerOff,
   CircleDot,
   CircleOff,
-  X 
+  X,
+  Unplug 
 } from "lucide-react";
 import { WhatsAppInstance } from "@/types/whatsAppTypes";
 
@@ -17,6 +18,7 @@ interface InstanceActionsProps {
   onViewQrCode: (instance: WhatsAppInstance) => void;
   onRestart: () => void;
   onLogout: () => void;
+  onDisconnect?: () => void;
   onDelete: () => void;
   onSetOnline: () => void;
   onSetOffline: () => void;
@@ -28,10 +30,13 @@ const InstanceActions = ({
   onViewQrCode,
   onRestart,
   onLogout,
+  onDisconnect,
   onDelete,
   onSetOnline,
   onSetOffline,
 }: InstanceActionsProps) => {
+  const isConnected = instance.connectionState === 'open' || instance.status === 'connected';
+
   return (
     <>
       <div className="flex justify-between w-full">
@@ -55,6 +60,7 @@ const InstanceActions = ({
           Excluir
         </Button>
       </div>
+      
       <div className="grid grid-cols-2 gap-2 w-full">
         <Button 
           variant="outline" 
@@ -75,6 +81,21 @@ const InstanceActions = ({
           Desconectar
         </Button>
       </div>
+
+      {/* Botão de desconectar instância - apenas quando conectada */}
+      {isConnected && onDisconnect && (
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onDisconnect}
+          disabled={loading !== null}
+          className="w-full bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+        >
+          <Unplug className="h-4 w-4 mr-1" />
+          Desconectar Instância
+        </Button>
+      )}
+      
       <div className="grid grid-cols-2 gap-2 w-full">
         <Button 
           variant="outline" 

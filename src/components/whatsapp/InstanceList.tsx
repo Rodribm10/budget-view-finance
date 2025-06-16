@@ -1,9 +1,8 @@
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import InstanceCard from './InstanceCard';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
-import { RefreshCw } from 'lucide-react';
+import InstanceCard from './InstanceCard';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 interface InstanceListProps {
   instances: WhatsAppInstance[];
@@ -11,41 +10,42 @@ interface InstanceListProps {
   onDelete: (instanceId: string) => void;
   onRestart: (instance: WhatsAppInstance) => Promise<void>;
   onLogout: (instance: WhatsAppInstance) => Promise<void>;
+  onDisconnect?: (instance: WhatsAppInstance) => Promise<void>;
   onSetPresence: (instance: WhatsAppInstance, presence: 'online' | 'offline') => Promise<void>;
-  onRefreshInstances: () => Promise<void>;
+  onRefreshInstances: () => void;
   isRefreshing: boolean;
 }
 
 const InstanceList = ({ 
-  instances, 
-  onViewQrCode, 
+  instances,
+  onViewQrCode,
   onDelete,
   onRestart,
   onLogout,
+  onDisconnect,
   onSetPresence,
   onRefreshInstances,
   isRefreshing
 }: InstanceListProps) => {
-  // Safely check if instances is an array and has elements
-  const hasInstances = Array.isArray(instances) && instances.length > 0;
-
-  if (!hasInstances) {
+  
+  if (isRefreshing && instances.length === 0) {
     return (
       <Card>
-        <CardContent className="py-6">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Carregando instâncias...</span>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (instances.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
           <div className="text-center text-muted-foreground">
-            <p>Nenhuma instância criada ainda.</p>
-            <p className="mt-1">Clique em 'Atualizar Lista' para buscar novamente.</p>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={onRefreshInstances}
-              disabled={isRefreshing}
-              className="mt-4"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
-            </Button>
+            <p className="text-lg mb-2">Nenhuma instância encontrada</p>
+            <p className="text-sm">Crie uma nova instância para começar</p>
           </div>
         </CardContent>
       </Card>
@@ -54,27 +54,23 @@ const InstanceList = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Instâncias Criadas</h2>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onRefreshInstances}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
-        </Button>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold">Suas Instâncias do WhatsApp</h2>
+        <span className="text-sm text-muted-foreground">
+          {instances.length} instância{instances.length !== 1 ? 's' : ''} encontrada{instances.length !== 1 ? 's' : ''}
+        </span>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {instances.map((instance) => (
-          <InstanceCard 
-            key={instance.instanceId} 
-            instance={instance} 
-            onViewQrCode={onViewQrCode} 
+          <InstanceCard
+            key={instance.instanceId}
+            instance={instance}
+            onViewQrCode={onViewQrCode}
             onDelete={onDelete}
             onRestart={onRestart}
             onLogout={onLogout}
+            onDisconnect={onDisconnect}
             onSetPresence={onSetPresence}
           />
         ))}

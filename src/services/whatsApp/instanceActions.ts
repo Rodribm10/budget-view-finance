@@ -1,5 +1,6 @@
 
 import { makeRequest } from './apiHelpers';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Restarts a WhatsApp instance
@@ -31,6 +32,38 @@ export const logoutInstance = async (instanceName: string): Promise<any> => {
     return data;
   } catch (error) {
     console.error(`Error logging out instance ${instanceName}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Disconnects a WhatsApp instance and updates database
+ */
+export const disconnectInstance = async (instanceName: string, userEmail: string): Promise<any> => {
+  try {
+    console.log(`Disconnecting instance: ${instanceName}`);
+    
+    // Primeiro desconecta via API
+    const data = await makeRequest(`/instance/logout/${encodeURIComponent(instanceName)}`, 'DELETE');
+    
+    // Depois atualiza o banco de dados
+    const { error } = await supabase
+      .from('usuarios')
+      .update({ 
+        status_instancia: 'desconectado',
+        instancia_zap: null
+      })
+      .eq('email', userEmail.trim().toLowerCase());
+    
+    if (error) {
+      console.error('Erro ao atualizar status no banco:', error);
+      throw error;
+    }
+    
+    console.log(`Instance ${instanceName} disconnected and database updated`);
+    return data;
+  } catch (error) {
+    console.error(`Error disconnecting instance ${instanceName}:`, error);
     throw error;
   }
 };
