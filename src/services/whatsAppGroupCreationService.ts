@@ -33,7 +33,7 @@ export async function createWhatsAppGroup(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'beeb77fbd7f48f91db2cd539a573c130'
+        'apikey': 'beeb77fbd7f48f91db2cd539a573c130'
       },
       body: JSON.stringify(requestBody)
     });
