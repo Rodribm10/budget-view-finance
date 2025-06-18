@@ -1,3 +1,4 @@
+
 // Service dedicated to WhatsApp groups database operations
 import { supabase } from "@/integrations/supabase/client";
 import { WhatsAppGroup } from "@/types/financialTypes";
@@ -84,7 +85,7 @@ export async function findOrCreateWhatsAppGroup(nomeGrupo?: string): Promise<Wha
       const { data, error } = await supabase
         .from('grupos_whatsapp')
         .insert({
-          user_id: localStorage.getItem('userId') || '',
+          user_id: normalizedEmail, // Usando email também aqui para consistência
           remote_jid: '',
           login: normalizedEmail,
           status: 'pendente',

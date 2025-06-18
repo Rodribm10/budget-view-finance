@@ -16,20 +16,11 @@ export async function listarGruposWhatsApp(): Promise<WhatsAppGroup[]> {
 
     console.log('Buscando grupos para o usuário:', userEmail);
 
-    // Primeiro verificar se o usuário tem instância WhatsApp
-    const instanceData = await getUserWhatsAppInstance(userEmail);
-    console.log('Dados da instância do usuário:', instanceData);
-
-    if (!instanceData || !instanceData.instancia_zap) {
-      console.log('Usuário não tem instância WhatsApp válida ou dados estão incompletos');
-      return [];
-    }
-
-    // Buscar grupos usando o email como user_id
+    // Buscar grupos usando o email como login (não user_id)
     const { data: grupos, error } = await supabase
       .from('grupos_whatsapp')
       .select('*')
-      .eq('user_id', userEmail.trim().toLowerCase())
+      .eq('login', userEmail.trim().toLowerCase())
       .order('created_at', { ascending: false });
 
     if (error) {

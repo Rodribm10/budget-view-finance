@@ -6,6 +6,8 @@ import { validateRegisterForm } from '@/utils/registerValidation';
 import RegisterFormFields from './RegisterFormFields';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
+import { createN8nWorkflowForUser } from '@/services/n8nWorkflowCreationService';
+import { N8N_WORKFLOW_TEMPLATE } from '@/constants/n8nWorkflowTemplate';
 
 interface RegisterFormProps {
   isLoading: boolean;
@@ -39,39 +41,61 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     
     setIsLoading(true);
     
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: senha,
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
-          nome,
-          empresa: empresa || null,
-          whatsapp: whatsapp.replace(/\D/g, ''),
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: senha,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            nome,
+            empresa: empresa || null,
+            whatsapp: whatsapp.replace(/\D/g, ''),
+          }
         }
-      }
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-       toast.error("Erro no cadastro", {
-        description: error.message || "Não foi possível completar o cadastro. Por favor, tente novamente.",
       });
-    } else if (data.user) {
+
+      if (error) {
+        toast.error("Erro no cadastro", {
+          description: error.message || "Não foi possível completar o cadastro. Por favor, tente novamente.",
+        });
+      } else if (data.user) {
         // This condition (empty identities) indicates that the user already exists in Supabase Auth.
         // In this case, `signUp` resends the confirmation/invitation email.
         if (data.user.identities && data.user.identities.length === 0) {
-             toast.info("E-mail já cadastrado. Verifique sua caixa de entrada!", {
-                description: "Enviamos um novo link para você definir sua senha e acessar sua conta. Não se esqueça de checar a pasta de spam.",
-                duration: 10000,
-            });
+          toast.info("E-mail já cadastrado. Verifique sua caixa de entrada!", {
+            description: "Enviamos um novo link para você definir sua senha e acessar sua conta. Não se esqueça de checar a pasta de spam.",
+            duration: 10000,
+          });
         } else {
-            toast.success("Cadastro realizado com sucesso!", {
-                description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam para ativar sua conta.",
-                duration: 10000,
-            });
+          toast.success("Cadastro realizado com sucesso!", {
+            description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam para ativar sua conta.",
+            duration: 10000,
+          });
+          
+          // Create n8n workflow for the new user
+          console.log('User registered successfully, creating n8n workflow...');
+          
+          try {
+            const workflowResult = await createN8nWorkflowForUser(email, N8N_WORKFLOW_TEMPLATE);
+            if (workflowResult) {
+              console.log('N8n workflow created successfully:', workflowResult);
+            } else {
+              console.error('Failed to create n8n workflow');
+            }
+          } catch (workflowError) {
+            console.error('Error creating n8n workflow:', workflowError);
+            // Don't show error to user as the main registration was successful
+          }
         }
+      }
+    } catch (error) {
+      console.error('Error during registration:', error);
+      toast.error("Erro no cadastro", {
+        description: "Ocorreu um erro inesperado. Tente novamente.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
