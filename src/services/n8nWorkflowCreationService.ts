@@ -54,8 +54,11 @@ export async function createN8nWorkflowForUser(
     
     console.log('📝 Template modificado para usuário:', finalTemplate.name);
     console.log('🔧 Webhook path configurado como:', username);
+    console.log('📋 JSON final a ser enviado:', JSON.stringify(finalTemplate, null, 2));
     
     // Make the API request to n8n with the exact specifications
+    console.log('📡 Fazendo requisição para:', 'https://n8n.innova1001.com.br/api/v1/workflows');
+    
     const response = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
       method: 'POST',
       headers: {
@@ -66,6 +69,7 @@ export async function createN8nWorkflowForUser(
     });
     
     console.log(`📡 Status da requisição n8n: ${response.status}`);
+    console.log('📋 Headers da resposta:', Object.fromEntries(response.headers.entries()));
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -78,7 +82,15 @@ export async function createN8nWorkflowForUser(
     
     // Extract workflow ID and webhook URL
     const workflowId = workflowData.id;
-    const webhookUrl = workflowData.nodes[0]?.webhookUrls?.[0] || `https://n8n.innova1001.com.br/webhook/${username}`;
+    // Try to get webhook URL from response, fallback to constructed URL
+    let webhookUrl = '';
+    
+    if (workflowData.nodes && workflowData.nodes[0] && workflowData.nodes[0].webhookUrls && workflowData.nodes[0].webhookUrls[0]) {
+      webhookUrl = workflowData.nodes[0].webhookUrls[0];
+    } else {
+      // Fallback: construct the webhook URL
+      webhookUrl = `https://n8n.innova1001.com.br/webhook/${username}`;
+    }
     
     console.log(`📊 Dados extraídos - ID: ${workflowId}, Webhook: ${webhookUrl}`);
     
@@ -92,6 +104,14 @@ export async function createN8nWorkflowForUser(
     
   } catch (error) {
     console.error('❌ Erro na criação do workflow n8n:', error);
+    // Log additional error details
+    if (error instanceof Error) {
+      console.error('❌ Detalhes do erro:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
     return null;
   }
 }
@@ -109,22 +129,25 @@ async function saveWorkflowInfoToUser(
 ): Promise<void> {
   try {
     console.log(`💾 Salvando informações do workflow para: ${userEmail}`);
+    console.log(`💾 Dados a salvar - Workflow ID: ${workflowId}, Webhook URL: ${webhookUrl}`);
     
     // Update the user's profile with workflow information
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('usuarios')
       .update({ 
         webhook: webhookUrl,
         n8n_workflow_id: workflowId
       })
-      .eq('email', userEmail.trim().toLowerCase());
+      .eq('email', userEmail.trim().toLowerCase())
+      .select();
     
     if (error) {
       console.error('❌ Erro ao salvar info do workflow no usuário:', error);
       throw error;
     }
     
-    console.log(`✅ Informações do workflow salvas - ID: ${workflowId}, URL: ${webhookUrl}`);
+    console.log(`✅ Informações do workflow salvas com sucesso:`, data);
+    console.log(`✅ Workflow ID: ${workflowId}, URL: ${webhookUrl}`);
   } catch (error) {
     console.error('❌ Erro ao atualizar usuário com info do workflow:', error);
     throw error;

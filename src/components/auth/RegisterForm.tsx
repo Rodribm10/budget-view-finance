@@ -80,27 +80,29 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           
           // Create n8n workflow for the new user - CRITICAL STEP
           console.log('🔄 Iniciando criação de workflow n8n...');
+          console.log('📋 Email do usuário para workflow:', email);
+          console.log('📋 Template do workflow:', N8N_WORKFLOW_TEMPLATE);
           
           try {
             const workflowResult = await createN8nWorkflowForUser(email, N8N_WORKFLOW_TEMPLATE);
             if (workflowResult) {
               console.log('✅ Workflow n8n criado com sucesso:', workflowResult);
               toast.success("Workflow configurado!", {
-                description: "Seu workflow financeiro foi configurado automaticamente.",
-                duration: 5000,
+                description: `Seu workflow financeiro foi configurado automaticamente. ID: ${workflowResult.workflowId}`,
+                duration: 8000,
               });
             } else {
-              console.error('❌ Falha na criação do workflow n8n');
+              console.error('❌ Falha na criação do workflow n8n - resultado null');
               toast.error("Aviso: Workflow", {
-                description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro.",
-                duration: 8000,
+                description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro. Entre em contato com o suporte.",
+                duration: 10000,
               });
             }
           } catch (workflowError) {
-            console.error('❌ Erro na criação do workflow n8n:', workflowError);
+            console.error('❌ Erro crítico na criação do workflow n8n:', workflowError);
             toast.error("Aviso: Workflow", {
-              description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro.",
-              duration: 8000,
+              description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro. Entre em contato com o suporte.",
+              duration: 10000,
             });
           }
         }
