@@ -42,6 +42,8 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     setIsLoading(true);
     
     try {
+      console.log(`🔐 Iniciando cadastro para: ${email}`);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: senha,
@@ -56,6 +58,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
       });
 
       if (error) {
+        console.error('❌ Erro no cadastro Supabase:', error);
         toast.error("Erro no cadastro", {
           description: error.message || "Não foi possível completar o cadastro. Por favor, tente novamente.",
         });
@@ -63,34 +66,47 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         // This condition (empty identities) indicates that the user already exists in Supabase Auth.
         // In this case, `signUp` resends the confirmation/invitation email.
         if (data.user.identities && data.user.identities.length === 0) {
+          console.log('👤 Usuário já existe, reenviando confirmação');
           toast.info("E-mail já cadastrado. Verifique sua caixa de entrada!", {
             description: "Enviamos um novo link para você definir sua senha e acessar sua conta. Não se esqueça de checar a pasta de spam.",
             duration: 10000,
           });
         } else {
+          console.log('✅ Novo usuário cadastrado com sucesso');
           toast.success("Cadastro realizado com sucesso!", {
             description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam para ativar sua conta.",
             duration: 10000,
           });
           
-          // Create n8n workflow for the new user
-          console.log('User registered successfully, creating n8n workflow...');
+          // Create n8n workflow for the new user - CRITICAL STEP
+          console.log('🔄 Iniciando criação de workflow n8n...');
           
           try {
             const workflowResult = await createN8nWorkflowForUser(email, N8N_WORKFLOW_TEMPLATE);
             if (workflowResult) {
-              console.log('N8n workflow created successfully:', workflowResult);
+              console.log('✅ Workflow n8n criado com sucesso:', workflowResult);
+              toast.success("Workflow configurado!", {
+                description: "Seu workflow financeiro foi configurado automaticamente.",
+                duration: 5000,
+              });
             } else {
-              console.error('Failed to create n8n workflow');
+              console.error('❌ Falha na criação do workflow n8n');
+              toast.error("Aviso: Workflow", {
+                description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro.",
+                duration: 8000,
+              });
             }
           } catch (workflowError) {
-            console.error('Error creating n8n workflow:', workflowError);
-            // Don't show error to user as the main registration was successful
+            console.error('❌ Erro na criação do workflow n8n:', workflowError);
+            toast.error("Aviso: Workflow", {
+              description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro.",
+              duration: 8000,
+            });
           }
         }
       }
     } catch (error) {
-      console.error('Error during registration:', error);
+      console.error('❌ Erro geral durante cadastro:', error);
       toast.error("Erro no cadastro", {
         description: "Ocorreu um erro inesperado. Tente novamente.",
       });
