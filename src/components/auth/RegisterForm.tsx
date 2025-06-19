@@ -6,8 +6,7 @@ import { validateRegisterForm } from '@/utils/registerValidation';
 import RegisterFormFields from './RegisterFormFields';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
-import { createN8nWorkflowForUser } from '@/services/n8nWorkflowCreationService';
-import { N8N_WORKFLOW_TEMPLATE } from '@/constants/n8nWorkflowTemplate';
+import { sendNewUserWebhook } from '@/services/newUserWebhookService';
 
 interface RegisterFormProps {
   isLoading: boolean;
@@ -78,30 +77,30 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
             duration: 10000,
           });
           
-          // Create n8n workflow for the new user - CRITICAL STEP
-          console.log('🔄 Iniciando criação de workflow n8n...');
-          console.log('📋 Email do usuário para workflow:', email);
-          console.log('📋 Template do workflow:', N8N_WORKFLOW_TEMPLATE);
+          // Send webhook to n8n workflow manager - NEW APPROACH
+          console.log('📡 Enviando webhook para gerenciador n8n...');
+          console.log('📋 Email do usuário:', email);
+          console.log('📋 ID do usuário:', data.user.id);
           
           try {
-            const workflowResult = await createN8nWorkflowForUser(email, N8N_WORKFLOW_TEMPLATE);
-            if (workflowResult) {
-              console.log('✅ Workflow n8n criado com sucesso:', workflowResult);
-              toast.success("Workflow configurado!", {
-                description: `Seu workflow financeiro foi configurado automaticamente. ID: ${workflowResult.workflowId}`,
+            const webhookSuccess = await sendNewUserWebhook(email, data.user.id);
+            if (webhookSuccess) {
+              console.log('✅ Webhook enviado com sucesso para n8n');
+              toast.success("Configuração automática iniciada!", {
+                description: "Sua conta foi criada e a configuração automática do sistema foi iniciada.",
                 duration: 8000,
               });
             } else {
-              console.error('❌ Falha na criação do workflow n8n - resultado null');
-              toast.error("Aviso: Workflow", {
-                description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro. Entre em contato com o suporte.",
+              console.error('❌ Falha no envio do webhook para n8n');
+              toast.error("Aviso: Configuração", {
+                description: "Cadastro realizado, mas houve falha na configuração automática. Entre em contato com o suporte.",
                 duration: 10000,
               });
             }
-          } catch (workflowError) {
-            console.error('❌ Erro crítico na criação do workflow n8n:', workflowError);
-            toast.error("Aviso: Workflow", {
-              description: "Cadastro realizado, mas houve falha na configuração do workflow financeiro. Entre em contato com o suporte.",
+          } catch (webhookError) {
+            console.error('❌ Erro crítico no webhook para n8n:', webhookError);
+            toast.error("Aviso: Configuração", {
+              description: "Cadastro realizado, mas houve falha na configuração automática. Entre em contato com o suporte.",
               duration: 10000,
             });
           }
