@@ -169,3 +169,59 @@ export async function getUserDebugInfo(userEmail: string): Promise<any> {
     throw error;
   }
 }
+
+/**
+ * Ativa o workflow do usuário no n8n
+ */
+export async function activateUserWorkflow(userEmail: string): Promise<void> {
+  try {
+    console.log(`🔄 Iniciando ativação do workflow para usuário: ${userEmail}`);
+    
+    // Primeiro, buscar o workflow_id do usuário
+    const { data: userData, error: fetchError } = await supabase
+      .from('usuarios')
+      .select('workflow_id')
+      .eq('email', userEmail.trim().toLowerCase())
+      .single();
+    
+    if (fetchError) {
+      console.error('❌ Erro ao buscar workflow_id do usuário:', fetchError);
+      throw new Error(`Erro ao buscar workflow_id: ${fetchError.message}`);
+    }
+    
+    if (!userData || !userData.workflow_id) {
+      console.error('⚠️ Usuário não possui workflow_id configurado');
+      throw new Error('Usuário não possui workflow configurado');
+    }
+    
+    const workflowId = userData.workflow_id;
+    console.log(`📋 Workflow ID encontrado: ${workflowId}`);
+    
+    // Fazer a requisição para ativar o workflow
+    const activationUrl = `https://n8n.innova1001.com.br/api/v1/workflows/${workflowId}/activate`;
+    console.log(`🔗 URL de ativação: ${activationUrl}`);
+    
+    const response = await fetch(activationUrl, {
+      method: 'POST',
+      headers: {
+        'X-N8N-API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ5MjA2NTk1fQ.-5mUcQNbVTjAUyneSun9a-3xpwGEMFHSkK4k59W11wk',
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log(`📡 Status da resposta da ativação: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`❌ Erro ao ativar workflow: ${response.status} - ${errorText}`);
+      throw new Error(`Erro ao ativar workflow: ${response.status} - ${errorText}`);
+    }
+    
+    const responseData = await response.json();
+    console.log('✅ Workflow ativado com sucesso:', responseData);
+    
+  } catch (error) {
+    console.error('💥 Erro crítico ao ativar workflow do usuário:', error);
+    throw error;
+  }
+}

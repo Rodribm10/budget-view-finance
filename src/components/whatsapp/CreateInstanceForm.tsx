@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { MessageCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createWhatsAppInstance } from '@/services/whatsAppService';
-import { updateUserWhatsAppInstance, getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
+import { updateUserWhatsAppInstance, getUserWhatsAppInstance, activateUserWorkflow } from '@/services/whatsAppInstanceService';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -104,17 +104,34 @@ const CreateInstanceForm = ({
     setLoading(true);
 
     try {
-      console.log(`Criando instância com nome ${instanceName} e número ${phoneNumber}`);
+      console.log(`🚀 Iniciando criação de instância com nome ${instanceName} e número ${phoneNumber}`);
       
-      // 1. Primeiro atualizar o banco de dados com a instância
-      await updateUserWhatsAppInstance(userEmail, instanceName, 'desconectado');
-      console.log('Instância registrada no banco de dados');
-
-      // 2. Criar instância na API
+      // 1. Criar instância na API
+      console.log('📡 Passo 1: Criando instância na API...');
       const data = await createWhatsAppInstance(instanceName, phoneNumber);
-      console.log('Resposta da API de criação de instância:', data);
+      console.log('✅ Resposta da API de criação de instância:', data);
 
-      // 3. Criar objeto da instância
+      // 2. Atualizar o banco de dados com status "conectado"
+      console.log('💾 Passo 2: Atualizando banco de dados...');
+      await updateUserWhatsAppInstance(userEmail, instanceName, 'conectado');
+      console.log('✅ Instância registrada no banco de dados com status "conectado"');
+
+      // 3. Ativar o workflow do usuário no n8n
+      console.log('🔄 Passo 3: Ativando workflow do usuário no n8n...');
+      try {
+        await activateUserWorkflow(userEmail);
+        console.log('✅ Workflow ativado com sucesso no n8n');
+      } catch (workflowError) {
+        console.error('⚠️ Erro ao ativar workflow, mas instância foi criada:', workflowError);
+        // Não bloquear o fluxo se o workflow falhar, apenas loggar
+        toast({
+          title: "Aviso",
+          description: "Instância criada, mas houve um problema ao ativar a automação. Entre em contato com o suporte.",
+          variant: "destructive",
+        });
+      }
+
+      // 4. Criar objeto da instância
       const newInstance: WhatsAppInstance = {
         instanceName,
         instanceId: instanceName,
@@ -125,31 +142,31 @@ const CreateInstanceForm = ({
         connectionState: 'closed'
       };
       
-      console.log('Nova instância criada:', newInstance);
+      console.log('✅ Nova instância criada:', newInstance);
       
-      // 4. Atualizar estado para evitar nova criação
+      // 5. Atualizar estado para evitar nova criação
       setHasExistingInstance(true);
       
-      // 5. Notificar componente pai
+      // 6. Notificar componente pai
       onInstanceCreated(newInstance);
       
       toast({
         title: "Sucesso!",
-        description: "Instância do WhatsApp criada com sucesso!"
+        description: "Instância do WhatsApp criada e ativada com sucesso!"
       });
       
       // Reset form fields
       setPhoneNumber('');
       
     } catch (error) {
-      console.error("Erro ao criar instância WhatsApp:", error);
+      console.error("💥 Erro ao criar instância WhatsApp:", error);
       
-      // Se houve erro na API, remover do banco de dados
+      // Se houve erro na API, tentar reverter no banco de dados
       try {
         await updateUserWhatsAppInstance(userEmail, '', 'desconectado');
-        console.log('Instância removida do banco devido ao erro na API');
+        console.log('🔄 Instância removida do banco devido ao erro na API');
       } catch (dbError) {
-        console.error('Erro ao remover instância do banco:', dbError);
+        console.error('❌ Erro ao reverter instância no banco:', dbError);
       }
       
       toast({
@@ -260,6 +277,7 @@ const CreateInstanceForm = ({
             <li>• Apenas uma instância por usuário é permitida</li>
             <li>• O nome da instância será seu email de login</li>
             <li>• Após criar, você precisará escanear o QR Code para conectar</li>
+            <li>• Sua automação financeira será ativada automaticamente</li>
           </ul>
         </div>
       </CardContent>

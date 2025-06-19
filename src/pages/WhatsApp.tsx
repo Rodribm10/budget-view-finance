@@ -57,7 +57,7 @@ const WhatsApp = () => {
 
   // Handler para quando o usuário cria uma nova instância
   const handleInstanceCreated = (newInstance: WhatsAppInstance) => {
-    console.log('New instance to be added:', newInstance);
+    console.log('🎉 Nova instância criada:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
     setShowCreateForm(false);
@@ -82,7 +82,7 @@ const WhatsApp = () => {
 
   // Handler for when an instance is deleted
   const handleDeleteInstanceWrapper = (instanceId: string) => {
-    console.log(`Instance deletion requested for ID: ${instanceId}`);
+    console.log(`🗑️ Solicitação de exclusão da instância ID: ${instanceId}`);
     const instanceToDelete = instances.find(i => i.instanceId === instanceId);
     if (instanceToDelete) {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
@@ -93,18 +93,26 @@ const WhatsApp = () => {
         setShowCreateForm(true);
       }
     } else {
-      console.error(`Instance with ID ${instanceId} not found for deletion`);
+      console.error(`❌ Instância com ID ${instanceId} não encontrada para exclusão`);
     }
   };
 
   // Check if we have any instances to show
   const hasInstances = Array.isArray(instances) && instances.length > 0;
+  const userEmail = localStorage.getItem('userEmail') || '';
 
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight">Conectar WhatsApp</h1>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Conectar WhatsApp</h1>
+            {userEmail && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Mostrando instâncias para: <strong>{userEmail}</strong>
+              </p>
+            )}
+          </div>
           
           {/* Update List Button - Always visible */}
           <Button 
