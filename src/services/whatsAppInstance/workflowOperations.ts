@@ -17,7 +17,7 @@ export async function activateUserWorkflow(userEmail: string): Promise<void> {
     const workflowId = await getUserWorkflowId(userEmail);
     console.log(`📋 Workflow ID encontrado: ${workflowId}`);
     
-    // Make activation request
+    // Make activation request - formato exato conforme o print
     const activationUrl = `${N8N_CONFIG.BASE_URL}/workflows/${workflowId}/activate`;
     console.log(`🔗 URL de ativação: ${activationUrl}`);
     
@@ -27,6 +27,7 @@ export async function activateUserWorkflow(userEmail: string): Promise<void> {
         'X-N8N-API-KEY': N8N_CONFIG.API_KEY,
         'Content-Type': 'application/json'
       }
+      // Sem body - conforme mostrado no print, não há body na requisição
     });
     
     console.log(`📡 Status da resposta da ativação: ${response.status}`);
