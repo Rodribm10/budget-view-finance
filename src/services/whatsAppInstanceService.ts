@@ -204,7 +204,7 @@ export async function activateUserWorkflow(userEmail: string): Promise<void> {
     const response = await fetch(activationUrl, {
       method: 'POST',
       headers: {
-        'X-N8N-API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzQ5MjA2NTk1fQ.-5mUcQNbVTjAUyneSun9a-3xpwGEMFHSkK4k59W11wk',
+        'X-N8N-API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwMTA5ODU3fQ.cvqDVnD6ide9WCbtCx7bVDEvkPzJyO4EhGSDhY0xIjE',
         'Content-Type': 'application/json'
       }
     });
