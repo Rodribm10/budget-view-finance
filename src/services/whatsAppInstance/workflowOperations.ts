@@ -1,48 +1,48 @@
 
 import { N8N_CONFIG } from './config';
-import { getUserWorkflowId } from './databaseOperations';
 
 /**
  * N8N workflow operations
  */
 
 /**
- * Activates user workflow in n8n
+ * Notifica o n8n para ativar o workflow do usuário via webhook
  */
 export async function activateUserWorkflow(userEmail: string): Promise<void> {
   try {
-    console.log(`🔄 Iniciando ativação do workflow para usuário: ${userEmail}`);
+    console.log(`🔔 Enviando webhook para ativar workflow do usuário: ${userEmail}`);
     
-    // Get user's workflow ID
-    const workflowId = await getUserWorkflowId(userEmail);
-    console.log(`📋 Workflow ID encontrado: ${workflowId}`);
+    // Nova lógica: webhook simples para o n8n
+    const webhookUrl = 'https://webhookn8n.innova1001.com.br/webhook/ativarworkflow';
+    console.log(`🔗 URL do webhook: ${webhookUrl}`);
     
-    // Make activation request - formato exato conforme o print
-    const activationUrl = `${N8N_CONFIG.BASE_URL}/workflows/${workflowId}/activate`;
-    console.log(`🔗 URL de ativação: ${activationUrl}`);
+    const webhookBody = {
+      email: userEmail
+    };
     
-    const response = await fetch(activationUrl, {
+    console.log('📦 Dados do webhook:', JSON.stringify(webhookBody, null, 2));
+    
+    const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
-        'X-N8N-API-KEY': N8N_CONFIG.API_KEY,
         'Content-Type': 'application/json'
-      }
-      // Sem body - conforme mostrado no print, não há body na requisição
+      },
+      body: JSON.stringify(webhookBody)
     });
     
-    console.log(`📡 Status da resposta da ativação: ${response.status}`);
+    console.log(`📡 Status da resposta do webhook: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`❌ Erro ao ativar workflow: ${response.status} - ${errorText}`);
-      throw new Error(`Erro ao ativar workflow: ${response.status} - ${errorText}`);
+      console.error(`❌ Erro ao enviar webhook: ${response.status} - ${errorText}`);
+      throw new Error(`Erro ao notificar ativação do workflow: ${response.status} - ${errorText}`);
     }
     
-    const responseData = await response.json();
-    console.log('✅ Workflow ativado com sucesso:', responseData);
+    const responseData = await response.text();
+    console.log('✅ Webhook enviado com sucesso:', responseData);
     
   } catch (error) {
-    console.error('💥 Erro crítico ao ativar workflow do usuário:', error);
+    console.error('💥 Erro crítico ao enviar webhook de ativação:', error);
     throw error;
   }
 }
