@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { formatarWhatsapp } from '@/utils/whatsappFormatter';
 import { validateRegisterForm } from '@/utils/registerValidation';
@@ -14,6 +15,7 @@ interface RegisterFormProps {
 }
 
 const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
+  const navigate = useNavigate();
   const [nome, setNome] = useState('');
   const [empresa, setEmpresa] = useState('');
   const [email, setEmail] = useState('');
@@ -72,38 +74,33 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
           });
         } else {
           console.log('✅ Novo usuário cadastrado com sucesso');
-          toast.success("Cadastro realizado com sucesso!", {
-            description: "Enviamos um link de confirmação para o seu e-mail. Por favor, verifique sua caixa de entrada e spam para ativar sua conta.",
-            duration: 10000,
-          });
           
-          // Send webhook to n8n workflow manager - NEW APPROACH
+          // Send webhook to n8n workflow manager in background
           console.log('📡 Enviando webhook para gerenciador n8n...');
           console.log('📋 Email do usuário:', email);
           console.log('📋 ID do usuário:', data.user.id);
+          console.log('📋 WhatsApp do usuário:', whatsapp);
           
-          try {
-            const webhookSuccess = await sendNewUserWebhook(email, data.user.id);
-            if (webhookSuccess) {
-              console.log('✅ Webhook enviado com sucesso para n8n');
-              toast.success("Configuração automática iniciada!", {
-                description: "Sua conta foi criada e a configuração automática do sistema foi iniciada.",
-                duration: 8000,
-              });
-            } else {
-              console.error('❌ Falha no envio do webhook para n8n');
-              toast.error("Aviso: Configuração", {
-                description: "Cadastro realizado, mas houve falha na configuração automática. Entre em contato com o suporte.",
-                duration: 10000,
-              });
-            }
-          } catch (webhookError) {
-            console.error('❌ Erro crítico no webhook para n8n:', webhookError);
-            toast.error("Aviso: Configuração", {
-              description: "Cadastro realizado, mas houve falha na configuração automática. Entre em contato com o suporte.",
-              duration: 10000,
+          // Send webhook in background (don't wait for it)
+          sendNewUserWebhook(email, data.user.id, whatsapp.replace(/\D/g, ''))
+            .then((success) => {
+              if (success) {
+                console.log('✅ Webhook enviado com sucesso para n8n');
+              } else {
+                console.error('❌ Falha no envio do webhook para n8n');
+              }
+            })
+            .catch((error) => {
+              console.error('❌ Erro crítico no webhook para n8n:', error);
             });
-          }
+          
+          // Redirect to login page with success message
+          navigate('/auth', { 
+            state: { 
+              showSuccessMessage: true,
+              message: "✅ Cadastro realizado com sucesso! Agora, faça o login com o e-mail e a senha que você acabou de criar." 
+            } 
+          });
         }
       }
     } catch (error) {

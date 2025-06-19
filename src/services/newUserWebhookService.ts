@@ -5,24 +5,28 @@ import { supabase } from "@/integrations/supabase/client";
 interface NewUserWebhookData {
   email: string;
   userId: string;
+  whatsapp: string;
 }
 
 /**
  * Sends a webhook to the n8n workflow manager when a new user registers
  * @param email User's email
  * @param userId User's ID from Supabase Auth
+ * @param whatsapp User's WhatsApp number
  * @returns Success status
  */
 export async function sendNewUserWebhook(
   email: string, 
-  userId: string
+  userId: string,
+  whatsapp: string
 ): Promise<boolean> {
   try {
-    console.log(`📡 Enviando webhook para n8n - Usuário: ${email}, ID: ${userId}`);
+    console.log(`📡 Enviando webhook para n8n - Usuário: ${email}, ID: ${userId}, WhatsApp: ${whatsapp}`);
     
     const webhookData: NewUserWebhookData = {
       email: email,
-      userId: userId
+      userId: userId,
+      whatsapp: whatsapp
     };
     
     console.log('📋 Dados do webhook:', JSON.stringify(webhookData, null, 2));

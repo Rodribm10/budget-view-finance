@@ -512,6 +512,7 @@ export type Database = {
           status_instancia: string | null
           webhook: string | null
           whatsapp: string
+          workflow_id: string | null
         }
         Insert: {
           created_at?: string
@@ -525,6 +526,7 @@ export type Database = {
           status_instancia?: string | null
           webhook?: string | null
           whatsapp: string
+          workflow_id?: string | null
         }
         Update: {
           created_at?: string
@@ -538,6 +540,7 @@ export type Database = {
           status_instancia?: string | null
           webhook?: string | null
           whatsapp?: string
+          workflow_id?: string | null
         }
         Relationships: []
       }
