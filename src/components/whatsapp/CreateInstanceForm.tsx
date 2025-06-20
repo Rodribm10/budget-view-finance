@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createInstance } from '@/services/whatsAppService';
+import { restartInstance } from '@/services/whatsAppService';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import { updateUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
 import { createEvolutionWebhook } from '@/services/whatsApp/webhookService';
@@ -23,7 +23,6 @@ const CreateInstanceForm = ({ onInstanceCreated, initialInstanceName = '' }: Cre
   const [userEmail, setUserEmail] = useState(initialInstanceName);
   const [ddd, setDdd] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleCreateInstance = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,7 +66,7 @@ const CreateInstanceForm = ({ onInstanceCreated, initialInstanceName = '' }: Cre
       console.log(`🚀 Criando instância para: ${normalizedEmail} com número: ${fullPhoneNumber}`);
 
       // Criar a instância no Evolution API
-      const response = await createInstance(normalizedEmail, fullPhoneNumber);
+      const response = await restartInstance(normalizedEmail, fullPhoneNumber);
       
       if (response && response.instance) {
         const instanceData: WhatsAppInstance = {
@@ -77,7 +76,6 @@ const CreateInstanceForm = ({ onInstanceCreated, initialInstanceName = '' }: Cre
           connectionState: response.instance.state || 'closed',
           qrcode: response.qrcode || null,
           status: response.instance.state === 'open' ? 'connected' : 'disconnected',
-          createdAt: new Date().toISOString(),
           lastSeen: new Date().toISOString(),
           presence: 'offline'
         };
@@ -210,15 +208,13 @@ const CreateInstanceForm = ({ onInstanceCreated, initialInstanceName = '' }: Cre
             )}
           </Button>
 
-          {showAdvanced && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Após criar a instância, você precisará escanear o QR Code com o WhatsApp 
-                do seu celular para estabelecer a conexão.
-              </AlertDescription>
-            </Alert>
-          )}
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Após criar a instância, você precisará escanear o QR Code com o WhatsApp 
+              do seu celular para estabelecer a conexão.
+            </AlertDescription>
+          </Alert>
         </form>
       </CardContent>
     </Card>

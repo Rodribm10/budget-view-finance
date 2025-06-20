@@ -34,8 +34,7 @@ export async function updateUserWhatsAppInstance(
         .from('usuarios')
         .update({
           instancia_zap: normalizedInstanceName,
-          status_instancia: status,
-          updated_at: new Date().toISOString()
+          status_instancia: status
         })
         .eq('email', normalizedEmail);
 
@@ -52,9 +51,7 @@ export async function updateUserWhatsAppInstance(
         .insert({
           email: normalizedEmail,
           instancia_zap: normalizedInstanceName,
-          status_instancia: status,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          status_instancia: status
         });
 
       if (insertError) {
@@ -122,8 +119,7 @@ export async function removeUserWhatsAppInstance(userEmail: string): Promise<voi
       .update({
         instancia_zap: null,
         status_instancia: null,
-        whatsapp: null,
-        updated_at: new Date().toISOString()
+        whatsapp: null
       })
       .eq('email', normalizedEmail);
 

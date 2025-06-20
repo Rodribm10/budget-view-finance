@@ -39,7 +39,7 @@ export const createEvolutionWebhook = async (userEmail: string): Promise<any> =>
     return response;
     
   } catch (error) {
-    console.error(`❌ Erro ao criar webhook for ${normalizedEmail}:`, error);
+    console.error(`❌ Erro ao criar webhook for ${userEmail}:`, error);
     throw error;
   }
 };
