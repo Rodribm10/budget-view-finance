@@ -11,13 +11,11 @@ export const createEvolutionWebhook = async (userEmail: string): Promise<any> =>
     // URL do endpoint - mantém o @ normal no email
     const endpoint = `/webhook/set/${userEmail}`;
     
-    // No body, troca @ por _ no email
-    const emailWithUnderscore = userEmail.replace('@', '_');
-    
+    // Agora mantemos o email original com @ também na URL do webhook
     const webhookBody = {
       webhook: {
         enabled: true,
-        url: `https://webhookn8n.innova1001.com.br/webhook/${emailWithUnderscore}`,
+        url: `https://webhookn8n.innova1001.com.br/webhook/${userEmail}`,
         webhookByEvents: true,
         webhookBase64: true,
         events: [
@@ -29,7 +27,6 @@ export const createEvolutionWebhook = async (userEmail: string): Promise<any> =>
     console.log('Dados do webhook:', {
       endpoint,
       emailOriginal: userEmail,
-      emailComUnderscore: emailWithUnderscore,
       webhookUrl: webhookBody.webhook.url
     });
     
