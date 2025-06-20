@@ -22,13 +22,14 @@ const CreateInstanceForm = ({
 }: CreateInstanceFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [ddd, setDdd] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [hasExistingInstance, setHasExistingInstance] = useState(false);
   const [checkingExistingInstance, setCheckingExistingInstance] = useState(true);
   const currentUserId = localStorage.getItem('userId') || '';
-  const userEmail = localStorage.getItem('userEmail') || '';
+  const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase(); // Padronização obrigatória
   
-  // Nome da instância será sempre o email do usuário
+  // Nome da instância será sempre o email do usuário (já padronizado)
   const instanceName = userEmail;
 
   // Verificar se o usuário já tem uma instância
@@ -72,14 +73,28 @@ const CreateInstanceForm = ({
       return;
     }
 
-    if (!phoneNumber.trim() || !/^[0-9]{10,15}$/.test(phoneNumber)) {
+    // Validar DDD (2 dígitos)
+    if (!ddd.trim() || !/^[0-9]{2}$/.test(ddd)) {
       toast({
         title: "Erro",
-        description: "Insira um número válido com DDD e país (ex: 559999999999)",
+        description: "Insira um DDD válido com 2 dígitos (ex: 11, 21, 31)",
         variant: "destructive",
       });
       return;
     }
+
+    // Validar número (8 ou 9 dígitos)
+    if (!phoneNumber.trim() || !/^[0-9]{8,9}$/.test(phoneNumber)) {
+      toast({
+        title: "Erro",
+        description: "Insira um número válido com 8 ou 9 dígitos (ex: 987654321)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Montar número completo: +55 + DDD + número
+    const fullPhoneNumber = `55${ddd}${phoneNumber}`;
 
     // Ensure user is logged in
     if (!currentUserId) {
@@ -104,16 +119,16 @@ const CreateInstanceForm = ({
     setLoading(true);
 
     try {
-      console.log(`🚀 Iniciando criação de instância com nome ${instanceName} e número ${phoneNumber}`);
+      console.log(`🚀 Iniciando criação de instância com nome ${instanceName} e número ${fullPhoneNumber}`);
       
       // 1. Criar instância na API
       console.log('📡 Passo 1: Criando instância na API...');
-      const data = await createWhatsAppInstance(instanceName, phoneNumber);
+      const data = await createWhatsAppInstance(instanceName, fullPhoneNumber);
       console.log('✅ Resposta da API de criação de instância:', data);
 
       // 2. Atualizar o banco de dados com status "conectado"
       console.log('💾 Passo 2: Atualizando banco de dados...');
-      await updateUserWhatsAppInstance(userEmail, instanceName, 'conectado');
+      await updateUserWhatsAppInstance(userEmail, instanceName, 'conectado', fullPhoneNumber);
       console.log('✅ Instância registrada no banco de dados com status "conectado"');
 
       // 3. Ativar o workflow do usuário no n8n
@@ -135,7 +150,7 @@ const CreateInstanceForm = ({
       const newInstance: WhatsAppInstance = {
         instanceName,
         instanceId: instanceName,
-        phoneNumber,
+        phoneNumber: fullPhoneNumber,
         userId: currentUserId,
         status: data.instance?.status || 'created',
         qrcode: data.qrcode?.base64 || null,
@@ -156,6 +171,7 @@ const CreateInstanceForm = ({
       });
       
       // Reset form fields
+      setDdd('');
       setPhoneNumber('');
       
     } catch (error) {
@@ -163,7 +179,7 @@ const CreateInstanceForm = ({
       
       // Se houve erro na API, tentar reverter no banco de dados
       try {
-        await updateUserWhatsAppInstance(userEmail, '', 'desconectado');
+        await updateUserWhatsAppInstance(userEmail, '', 'desconectado', '');
         console.log('🔄 Instância removida do banco devido ao erro na API');
       } catch (dbError) {
         console.error('❌ Erro ao reverter instância no banco:', dbError);
@@ -252,21 +268,55 @@ const CreateInstanceForm = ({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="phoneNumber">Número do WhatsApp</Label>
-          <Input
-            id="phoneNumber"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder="559999999999"
-            required
-          />
-          <p className="text-xs text-muted-foreground">Digite o número com DDD e código do país</p>
+          <Label>Número do WhatsApp</Label>
+          
+          {/* Código do país fixo */}
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-2 rounded-l border border-r-0 border-gray-300">
+                +55
+              </span>
+            </div>
+            
+            {/* Campo DDD */}
+            <div className="w-20">
+              <Input
+                id="ddd"
+                value={ddd}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 2);
+                  setDdd(value);
+                }}
+                placeholder="11"
+                maxLength={2}
+                className="text-center"
+              />
+            </div>
+            
+            {/* Campo número */}
+            <div className="flex-1">
+              <Input
+                id="phoneNumber"
+                value={phoneNumber}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 9);
+                  setPhoneNumber(value);
+                }}
+                placeholder="987654321"
+                maxLength={9}
+              />
+            </div>
+          </div>
+          
+          <p className="text-xs text-muted-foreground">
+            Digite seu DDD e o número do seu celular
+          </p>
         </div>
         
         <Button 
           className="w-full mt-4" 
           onClick={handleCreateInstance}
-          disabled={loading || !userEmail || !phoneNumber.trim()}
+          disabled={loading || !userEmail || !ddd.trim() || !phoneNumber.trim()}
         >
           {loading ? "Criando..." : "Criar Instância"}
         </Button>
