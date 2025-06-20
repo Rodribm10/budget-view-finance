@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -8,7 +9,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
 import { createWhatsAppGroup, updateGroupRemoteJid } from '@/services/whatsAppGroupCreationService';
-import { activateUserWorkflow } from '@/services/whatsAppInstanceService';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateGroupFormProps {
@@ -39,11 +39,9 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
       
       setCheckingInstance(true);
       try {
-        // ⚠️ PADRONIZAÇÃO CRÍTICA: Converter email para lowercase
-        const normalizedEmail = userEmail.trim().toLowerCase();
-        console.log('Verificando instância para:', normalizedEmail);
+        console.log('Verificando instância para:', userEmail);
         
-        const instanceData = await getUserWhatsAppInstance(normalizedEmail);
+        const instanceData = await getUserWhatsAppInstance(userEmail);
         console.log('Dados da instância:', instanceData);
         
         if (instanceData) {
@@ -110,9 +108,6 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
 
     setCadastrando(true);
     try {
-      // ⚠️ PADRONIZAÇÃO CRÍTICA: Converter email para lowercase
-      const normalizedEmail = userEmail.trim().toLowerCase();
-      
       console.log("Iniciando processo de cadastro de grupo...");
       
       // 1. Cadastrar grupo no banco de dados local
@@ -124,32 +119,24 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
 
       // 2. Criar grupo no WhatsApp via API com o nome escolhido pelo usuário
       try {
-        const groupResponse = await createWhatsAppGroup(normalizedEmail, nomeGrupo.trim());
+        const groupResponse = await createWhatsAppGroup(userEmail, nomeGrupo.trim());
         
         console.log('Resposta da criação do grupo:', groupResponse);
         
         // 3. Atualizar remote_jid no banco de dados
         if (groupResponse.id) {
           await updateGroupRemoteJid(grupo.id, groupResponse.id);
-        }
-        
-        // 4. 🚀 NOVO: Ativar workflow n8n após criar o grupo com sucesso
-        try {
-          console.log('🔔 Ativando workflow n8n para o usuário após criação do grupo...');
-          await activateUserWorkflow(normalizedEmail);
           
           toast({
             title: 'Sucesso!',
-            description: `Grupo "${nomeGrupo}" criado e automação ativada com sucesso!`,
+            description: `Grupo "${nomeGrupo}" criado com sucesso no seu WhatsApp!`,
             variant: 'default',
           });
-        } catch (workflowError) {
-          console.error('Erro ao ativar workflow:', workflowError);
-          // Não falhar o processo todo se o workflow não ativar
+        } else {
           toast({
-            title: 'Grupo criado!',
-            description: `Grupo "${nomeGrupo}" criado com sucesso. Automação será ativada em breve.`,
-            variant: 'default',
+            title: 'Atenção',
+            description: 'Grupo cadastrado no sistema, mas não foi possível criar no WhatsApp',
+            variant: 'destructive',
           });
         }
         
@@ -274,7 +261,6 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             <li>O grupo será criado automaticamente no seu WhatsApp</li>
             <li>Você será adicionado como participante do grupo</li>
             <li>O grupo terá o nome que você escolheu: {nomeGrupo || 'Digite um nome acima'}</li>
-            <li>A automação será ativada automaticamente após a criação</li>
           </ul>
         </div>
       </CardContent>
