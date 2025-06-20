@@ -8,4 +8,5 @@ export interface WhatsAppInstance {
   qrcode?: string | null;
   connectionState?: 'open' | 'closed' | 'connecting' | string;
   presence?: 'online' | 'offline';
+  lastSeen?: string;
 }

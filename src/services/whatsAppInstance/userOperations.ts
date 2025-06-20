@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 export async function updateUserWhatsAppInstance(
   userEmail: string,
   instanceName: string,
-  status: string
+  status: string,
+  phoneNumber?: string
 ): Promise<void> {
   try {
     // ⚠️ PADRONIZAÇÃO CRÍTICA: Converter email para lowercase
@@ -30,12 +31,19 @@ export async function updateUserWhatsAppInstance(
 
     if (existingUser) {
       // Atualizar registro existente
+      const updateData: any = {
+        instancia_zap: normalizedInstanceName,
+        status_instancia: status
+      };
+
+      // Adicionar telefone se fornecido
+      if (phoneNumber) {
+        updateData.whatsapp = phoneNumber;
+      }
+
       const { error: updateError } = await supabase
         .from('usuarios')
-        .update({
-          instancia_zap: normalizedInstanceName,
-          status_instancia: status
-        })
+        .update(updateData)
         .eq('email', normalizedEmail);
 
       if (updateError) {
@@ -45,14 +53,17 @@ export async function updateUserWhatsAppInstance(
 
       console.log(`✅ Instância WhatsApp atualizada para ${normalizedEmail}: ${normalizedInstanceName} (${status})`);
     } else {
-      // Criar novo registro
+      // Criar novo registro - whatsapp é obrigatório na inserção
+      const insertData = {
+        email: normalizedEmail,
+        instancia_zap: normalizedInstanceName,
+        status_instancia: status,
+        whatsapp: phoneNumber || '00000000000' // Valor padrão se não fornecido
+      };
+
       const { error: insertError } = await supabase
         .from('usuarios')
-        .insert({
-          email: normalizedEmail,
-          instancia_zap: normalizedInstanceName,
-          status_instancia: status
-        });
+        .insert(insertData);
 
       if (insertError) {
         console.error('Erro ao criar registro de instância WhatsApp:', insertError);

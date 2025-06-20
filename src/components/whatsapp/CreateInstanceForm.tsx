@@ -9,7 +9,7 @@ import { Loader2, Plus, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { restartInstance } from '@/services/whatsAppService';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
-import { updateUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
+import { updateUserWhatsAppInstance } from '@/services/whatsAppInstance/userOperations';
 import { createEvolutionWebhook } from '@/services/whatsApp/webhookService';
 
 interface CreateInstanceFormProps {
@@ -77,13 +77,14 @@ const CreateInstanceForm = ({ onInstanceCreated, initialInstanceName = '' }: Cre
           qrcode: response.qrcode || null,
           status: response.instance.state === 'open' ? 'connected' : 'disconnected',
           lastSeen: new Date().toISOString(),
-          presence: 'offline'
+          presence: 'offline',
+          userId: normalizedEmail
         };
 
         console.log('✅ Instância criada:', instanceData);
 
-        // Atualizar no banco de dados local
-        await updateUserWhatsAppInstance(normalizedEmail, normalizedEmail, 'conectado');
+        // Atualizar no banco de dados local com o número de telefone
+        await updateUserWhatsAppInstance(normalizedEmail, normalizedEmail, 'conectado', fullPhoneNumber);
         
         // Criar webhook na Evolution API
         await createEvolutionWebhook(normalizedEmail);
