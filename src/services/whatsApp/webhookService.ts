@@ -6,16 +6,19 @@ import { makeRequest } from './apiHelpers';
  */
 export const createEvolutionWebhook = async (userEmail: string): Promise<any> => {
   try {
-    console.log(`Criando webhook para o usuário: ${userEmail}`);
+    // ⚠️ PADRONIZAÇÃO CRÍTICA: Converter email para lowercase
+    const normalizedEmail = userEmail.trim().toLowerCase();
+    
+    console.log(`Criando webhook para o usuário: ${normalizedEmail}`);
     
     // URL do endpoint - mantém o @ normal no email
-    const endpoint = `/webhook/set/${userEmail}`;
+    const endpoint = `/webhook/set/${normalizedEmail}`;
     
     // Agora mantemos o email original com @ também na URL do webhook
     const webhookBody = {
       webhook: {
         enabled: true,
-        url: `https://webhookn8n.innova1001.com.br/webhook/${userEmail}`,
+        url: `https://webhookn8n.innova1001.com.br/webhook/${normalizedEmail}`,
         webhookByEvents: true,
         webhookBase64: true,
         events: [
@@ -26,17 +29,17 @@ export const createEvolutionWebhook = async (userEmail: string): Promise<any> =>
     
     console.log('Dados do webhook:', {
       endpoint,
-      emailOriginal: userEmail,
+      emailOriginal: normalizedEmail,
       webhookUrl: webhookBody.webhook.url
     });
     
     const response = await makeRequest(endpoint, 'POST', webhookBody);
     
-    console.log(`✅ Webhook criado com sucesso para ${userEmail}:`, response);
+    console.log(`✅ Webhook criado com sucesso para ${normalizedEmail}:`, response);
     return response;
     
   } catch (error) {
-    console.error(`❌ Erro ao criar webhook for ${userEmail}:`, error);
+    console.error(`❌ Erro ao criar webhook for ${normalizedEmail}:`, error);
     throw error;
   }
 };

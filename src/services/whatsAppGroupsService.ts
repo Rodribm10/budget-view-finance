@@ -42,7 +42,7 @@ export async function findOrCreateWhatsAppGroup(nomeGrupo?: string): Promise<Wha
       return null;
     }
     
-    // Normalizar o email (minúsculo e sem espaços)
+    // ⚠️ PADRONIZAÇÃO CRÍTICA: Converter email para lowercase
     const normalizedEmail = userEmail.trim().toLowerCase();
     
     // Verificar se já existe um grupo pendente para este usuário
@@ -151,7 +151,7 @@ export async function listWhatsAppGroups(): Promise<WhatsAppGroup[]> {
       return [];
     }
     
-    // Normalizar o email (minúsculo e sem espaços)
+    // ⚠️ PADRONIZAÇÃO CRÍTICA: Converter email para lowercase
     const normalizedEmail = userEmail.trim().toLowerCase();
     
     // Buscar grupos associados ao email do usuário
