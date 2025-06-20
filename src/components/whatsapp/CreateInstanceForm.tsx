@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,8 +64,8 @@ const CreateInstanceForm = ({ onInstanceCreated, initialInstanceName = '' }: Cre
       
       console.log(`🚀 Criando instância para: ${normalizedEmail} com número: ${fullPhoneNumber}`);
 
-      // Criar a instância no Evolution API
-      const response = await restartInstance(normalizedEmail, fullPhoneNumber);
+      // Criar a instância no Evolution API - passar apenas o email
+      const response = await restartInstance(normalizedEmail);
       
       if (response && response.instance) {
         const instanceData: WhatsAppInstance = {
