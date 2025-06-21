@@ -1,4 +1,3 @@
-
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import Layout from '@/components/layout/Layout';
 import CreateInstanceForm from '@/components/whatsapp/CreateInstanceForm';
