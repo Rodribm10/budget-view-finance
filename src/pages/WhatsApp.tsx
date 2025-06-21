@@ -10,10 +10,10 @@ import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
 import { useWhatsAppInstance, WHATSAPP_INSTANCE_KEY } from '@/hooks/whatsApp/useWhatsAppInstance';
 import { usePeriodicStatusCheck } from '@/hooks/whatsApp/usePeriodicStatusCheck';
-import { getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
+import { useExistingInstanceCheck } from '@/hooks/whatsapp/useExistingInstanceCheck';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 const WhatsApp = () => {
   const { 
@@ -49,70 +49,16 @@ const WhatsApp = () => {
     clearInstanceName
   } = useWhatsAppInstance(currentUserId, addInstance);
   
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [hasConnectedInstance, setHasConnectedInstance] = useState(false);
-  const [checkingUserInstance, setCheckingUserInstance] = useState(true);
-  
   const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
 
-  // Verificar se o usuário tem instância CONECTADA no banco de dados
-  useEffect(() => {
-    const checkUserConnectedInstance = async () => {
-      if (!userEmail) {
-        console.log('❌ Email do usuário não encontrado');
-        setCheckingUserInstance(false);
-        setShowCreateForm(true);
-        return;
-      }
-
-      setCheckingUserInstance(true);
-      
-      try {
-        console.log('🔍 [WHATSAPP] Verificando instância conectada para:', userEmail);
-        const instanceData = await getUserWhatsAppInstance(userEmail);
-        
-        console.log('📋 [WHATSAPP] Dados da instância encontrados:', instanceData);
-        
-        // Verificação CORRETA: instancia_zap deve ser igual ao email E status deve ser 'conectado'
-        const hasConnectedInstanceInDB = !!(
-          instanceData && 
-          instanceData.instancia_zap && 
-          instanceData.instancia_zap.trim() !== '' &&
-          instanceData.instancia_zap !== 'null' &&
-          instanceData.instancia_zap !== null &&
-          instanceData.instancia_zap.toLowerCase() === userEmail.toLowerCase() &&
-          instanceData.status_instancia === 'conectado'
-        );
-        
-        console.log('✅ [WHATSAPP] Verificação da instância conectada:', {
-          instanceData,
-          userEmail,
-          instanceMatchesEmail: instanceData?.instancia_zap?.toLowerCase() === userEmail.toLowerCase(),
-          isConnected: instanceData?.status_instancia === 'conectado',
-          hasConnectedInstanceInDB
-        });
-        
-        setHasConnectedInstance(hasConnectedInstanceInDB);
-        setShowCreateForm(!hasConnectedInstanceInDB); // Mostra formulário APENAS se NÃO tiver instância conectada
-        
-        if (hasConnectedInstanceInDB) {
-          setInstanceFound(true);
-          console.log('✅ [WHATSAPP] Usuário já possui instância conectada, ocultando formulário de criação');
-        } else {
-          console.log('❌ [WHATSAPP] Usuário NÃO possui instância conectada, mostrando formulário de criação');
-        }
-        
-      } catch (error) {
-        console.error('❌ [WHATSAPP] Erro ao verificar instância do usuário:', error);
-        setHasConnectedInstance(false);
-        setShowCreateForm(true);
-      } finally {
-        setCheckingUserInstance(false);
-      }
-    };
-
-    checkUserConnectedInstance();
-  }, [userEmail, setInstanceFound]);
+  // Usar o hook centralizado para verificação de instância existente
+  const {
+    hasExistingInstance,
+    checkingExistingInstance,
+    existingInstanceData,
+    setHasExistingInstance,
+    setExistingInstanceData
+  } = useExistingInstanceCheck(userEmail);
   
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
 
@@ -120,8 +66,8 @@ const WhatsApp = () => {
     console.log('🎉 [WHATSAPP] Nova instância criada:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
-    setHasConnectedInstance(true);
-    setShowCreateForm(false);
+    setHasExistingInstance(true);
+    setExistingInstanceData(newInstance);
     
     saveInstanceName(newInstance.instanceName);
     
@@ -146,8 +92,8 @@ const WhatsApp = () => {
       
       if (instanceToDelete.instanceName === instanceName) {
         clearInstanceName();
-        setHasConnectedInstance(false);
-        setShowCreateForm(true);
+        setHasExistingInstance(false);
+        setExistingInstanceData(null);
       }
     } else {
       console.error(`❌ [WHATSAPP] Instância com ID ${instanceId} não encontrada para exclusão`);
@@ -156,13 +102,21 @@ const WhatsApp = () => {
 
   const hasInstances = Array.isArray(instances) && instances.length > 0;
 
-  if (checkingUserInstance || isLoading) {
+  // Mostrar loading enquanto verifica instância existente
+  if (checkingExistingInstance || isLoading) {
     return (
       <Layout>
         <LoadingState message="Verificando suas instâncias..." />
       </Layout>
     );
   }
+
+  console.log('🔍 [WHATSAPP] Estado atual da verificação:', {
+    userEmail,
+    hasExistingInstance,
+    existingInstanceData,
+    checkingExistingInstance
+  });
 
   return (
     <Layout>
@@ -189,17 +143,15 @@ const WhatsApp = () => {
         </div>
         
         {/* Mostra formulário APENAS se NÃO tiver instância conectada */}
-        {showCreateForm && !hasConnectedInstance && (
-          <>
-            <CreateInstanceForm 
-              onInstanceCreated={handleInstanceCreated} 
-              initialInstanceName={instanceName}
-            />
-          </>
+        {!hasExistingInstance && (
+          <CreateInstanceForm 
+            onInstanceCreated={handleInstanceCreated} 
+            initialInstanceName={instanceName}
+          />
         )}
         
         {/* Mensagem informativa quando já possui instância conectada */}
-        {hasConnectedInstance && !showCreateForm && (
+        {hasExistingInstance && existingInstanceData && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -212,7 +164,8 @@ const WhatsApp = () => {
                   WhatsApp Conectado
                 </h3>
                 <div className="mt-2 text-sm text-green-700">
-                  <p>Você já possui uma instância do WhatsApp conectada. Não é necessário criar uma nova.</p>
+                  <p>Você já possui uma instância do WhatsApp conectada: <strong>{existingInstanceData.instancia_zap}</strong></p>
+                  <p>Status: <strong>{existingInstanceData.status_instancia}</strong></p>
                 </div>
               </div>
             </div>
