@@ -19,30 +19,29 @@ export const useExistingInstanceCheck = (userEmail: string) => {
     setCheckingExistingInstance(true);
 
     try {
-      console.log('🔍 [EXISTING_INSTANCE] Verificando se usuário já tem instância CONECTADA:', userEmail);
+      console.log('🔍 [EXISTING_INSTANCE] Verificando instância para:', userEmail);
       const existingInstance = await getUserWhatsAppInstance(userEmail);
       
-      console.log('📋 [EXISTING_INSTANCE] Dados da instância encontrados:', existingInstance);
+      console.log('📋 [EXISTING_INSTANCE] Dados retornados:', existingInstance);
       
-      // Verificação SIMPLES e DIRETA: instancia_zap deve existir E status deve ser 'conectado'
-      const hasValidConnectedInstance = !!(
+      // Verificação DIRETA: se existe instancia_zap E status é 'conectado'
+      const hasValidInstance = !!(
         existingInstance && 
         existingInstance.instancia_zap && 
         existingInstance.status_instancia === 'conectado'
       );
       
-      console.log('✅ [EXISTING_INSTANCE] Resultado final da verificação:', {
+      console.log('✅ [EXISTING_INSTANCE] Resultado:', {
+        hasValidInstance,
         instancia_zap: existingInstance?.instancia_zap,
-        status_instancia: existingInstance?.status_instancia,
-        userEmail: userEmail,
-        hasValidConnectedInstance: hasValidConnectedInstance
+        status_instancia: existingInstance?.status_instancia
       });
       
-      setHasExistingInstance(hasValidConnectedInstance);
-      setExistingInstanceData(hasValidConnectedInstance ? existingInstance : null);
+      setHasExistingInstance(hasValidInstance);
+      setExistingInstanceData(hasValidInstance ? existingInstance : null);
       
     } catch (error) {
-      console.error('❌ [EXISTING_INSTANCE] Erro ao verificar instância existente:', error);
+      console.error('❌ [EXISTING_INSTANCE] Erro:', error);
       setHasExistingInstance(false);
       setExistingInstanceData(null);
     } finally {
@@ -54,9 +53,8 @@ export const useExistingInstanceCheck = (userEmail: string) => {
     checkExistingInstance();
   }, [userEmail]);
 
-  // Função para forçar re-verificação
   const recheckInstance = () => {
-    console.log('🔄 [EXISTING_INSTANCE] Forçando re-verificação da instância');
+    console.log('🔄 [EXISTING_INSTANCE] Re-verificação manual');
     checkExistingInstance();
   };
 

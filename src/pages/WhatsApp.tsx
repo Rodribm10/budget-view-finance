@@ -50,7 +50,7 @@ const WhatsApp = () => {
   
   const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
 
-  // USAR APENAS O HOOK CENTRALIZADO para verificação de instância existente
+  // Hook centralizado para verificação de instância existente
   const {
     hasExistingInstance,
     checkingExistingInstance,
@@ -67,7 +67,7 @@ const WhatsApp = () => {
     addInstance(newInstance);
     setInstanceFound(true);
     
-    // Atualizar o estado do hook centralizado
+    // Atualizar estado do hook centralizado
     setHasExistingInstance(true);
     setExistingInstanceData({
       instancia_zap: newInstance.instanceName,
@@ -83,7 +83,6 @@ const WhatsApp = () => {
     setTimeout(async () => {
       try {
         await checkAllInstancesStatus();
-        // Forçar re-verificação após status check
         recheckInstance();
       } catch (error) {
         console.error("Error checking status after instance creation:", error);
@@ -92,7 +91,7 @@ const WhatsApp = () => {
   };
 
   const handleDeleteInstanceWrapper = (instanceId: string) => {
-    console.log(`🗑️ [WHATSAPP] Solicitação de exclusão da instância ID: ${instanceId}`);
+    console.log(`🗑️ [WHATSAPP] Excluindo instância ID: ${instanceId}`);
     const instanceToDelete = instances.find(i => i.instanceId === instanceId);
     if (instanceToDelete) {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
@@ -102,14 +101,12 @@ const WhatsApp = () => {
         setHasExistingInstance(false);
         setExistingInstanceData(null);
       }
-    } else {
-      console.error(`❌ [WHATSAPP] Instância com ID ${instanceId} não encontrada para exclusão`);
     }
   };
 
   const hasInstances = Array.isArray(instances) && instances.length > 0;
 
-  // Mostrar loading enquanto verifica instância existente
+  // Loading enquanto verifica instância
   if (checkingExistingInstance || isLoading) {
     return (
       <Layout>
@@ -117,14 +114,6 @@ const WhatsApp = () => {
       </Layout>
     );
   }
-
-  console.log('🔍 [WHATSAPP] Estado atual da verificação FINAL:', {
-    userEmail,
-    hasExistingInstance,
-    existingInstanceData,
-    checkingExistingInstance,
-    'Deve mostrar formulário?': !hasExistingInstance
-  });
 
   return (
     <Layout>
@@ -147,29 +136,12 @@ const WhatsApp = () => {
               className="flex items-center gap-2"
             >
               <RefreshCw className={`h-4 w-4 ${checkingExistingInstance ? 'animate-spin' : ''}`} />
-              Verificar Instância
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              onClick={refreshInstances}
-              disabled={isRefreshing}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
+              Atualizar
             </Button>
           </div>
         </div>
         
-        {/* DEBUG: Mostrar estado atual */}
-        <div className="bg-gray-100 p-2 rounded text-xs">
-          <strong>DEBUG:</strong> hasExistingInstance = {hasExistingInstance.toString()}, 
-          status = {existingInstanceData?.status_instancia || 'N/A'}, 
-          instancia = {existingInstanceData?.instancia_zap || 'N/A'}
-        </div>
-        
-        {/* Mostra formulário APENAS se NÃO tiver instância conectada */}
+        {/* Formulário de criação - APENAS se NÃO tiver instância conectada */}
         {!hasExistingInstance && (
           <CreateInstanceForm 
             onInstanceCreated={handleInstanceCreated} 
@@ -177,7 +149,7 @@ const WhatsApp = () => {
           />
         )}
         
-        {/* Mensagem informativa quando já possui instância conectada */}
+        {/* Mensagem quando já tem instância conectada */}
         {hasExistingInstance && existingInstanceData && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center">
