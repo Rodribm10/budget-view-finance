@@ -7,5 +7,5 @@ export * from './whatsApp/instanceActions';
 export * from './whatsApp/localStorage';
 export * from './whatsApp/webhookService';
 
-// Export config values if needed by other parts of the app
-export { SERVER_URL, API_KEY, STORAGE_KEY } from './whatsApp/config';
+// Export only the storage key that still exists in config
+export { STORAGE_KEY } from './whatsApp/config';
