@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { createWhatsAppGroup, updateGroupRemoteJid } from '@/services/whatsAppGroupCreationService';
+import { activateUserWorkflow } from '@/services/whatsAppInstance/workflowOperations';
 
 export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
   const { toast } = useToast();
@@ -56,6 +57,21 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         // 3. Atualizar remote_jid no banco de dados
         if (groupResponse.id) {
           await updateGroupRemoteJid(grupo.id, groupResponse.id);
+          
+          // 4. Enviar webhook para ativar workflow no n8n
+          try {
+            console.log(`🔔 Enviando webhook para ativar workflow para o usuário: ${userEmail}`);
+            await activateUserWorkflow(userEmail);
+            console.log('✅ Webhook de ativação de workflow enviado com sucesso');
+          } catch (webhookError) {
+            console.error('❌ Erro ao enviar webhook de ativação:', webhookError);
+            // Não falha o processo todo se o webhook falhar
+            toast({
+              title: 'Atenção',
+              description: 'Grupo criado com sucesso, mas houve um problema ao ativar a automação. Entre em contato com o suporte.',
+              variant: 'destructive',
+            });
+          }
           
           toast({
             title: 'Sucesso!',
