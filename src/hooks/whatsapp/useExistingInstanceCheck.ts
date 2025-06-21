@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
 
 export const useExistingInstanceCheck = (userEmail: string) => {
@@ -7,9 +7,8 @@ export const useExistingInstanceCheck = (userEmail: string) => {
   const [checkingExistingInstance, setCheckingExistingInstance] = useState(true);
   const [existingInstanceData, setExistingInstanceData] = useState<any>(null);
 
-  const checkExistingInstance = async () => {
+  const checkExistingInstance = useCallback(async () => {
     if (!userEmail) {
-      console.log('❌ [EXISTING_INSTANCE] Email do usuário não encontrado');
       setCheckingExistingInstance(false);
       setHasExistingInstance(false);
       setExistingInstanceData(null);
@@ -17,53 +16,37 @@ export const useExistingInstanceCheck = (userEmail: string) => {
     }
 
     setCheckingExistingInstance(true);
-
+    
     try {
-      console.log('🔍 [EXISTING_INSTANCE] Verificando instância para:', userEmail);
-      const existingInstance = await getUserWhatsAppInstance(userEmail);
+      console.log('🔍 [HOOK] Verificando instância para:', userEmail);
+      const data = await getUserWhatsAppInstance(userEmail);
       
-      console.log('📋 [EXISTING_INSTANCE] Dados retornados:', existingInstance);
+      const hasValidInstance = !!(data && data.instancia_zap && data.status_instancia === 'conectado');
       
-      // Verificação DIRETA: se existe instancia_zap E status é 'conectado'
-      const hasValidInstance = !!(
-        existingInstance && 
-        existingInstance.instancia_zap && 
-        existingInstance.status_instancia === 'conectado'
-      );
-      
-      console.log('✅ [EXISTING_INSTANCE] Resultado:', {
-        hasValidInstance,
-        instancia_zap: existingInstance?.instancia_zap,
-        status_instancia: existingInstance?.status_instancia
-      });
+      console.log('✅ [HOOK] Resultado da verificação:', { hasValidInstance, data });
       
       setHasExistingInstance(hasValidInstance);
-      setExistingInstanceData(hasValidInstance ? existingInstance : null);
-      
+      setExistingInstanceData(data); // Armazena os dados, independentemente do status
     } catch (error) {
-      console.error('❌ [EXISTING_INSTANCE] Erro:', error);
+      console.error('❌ [HOOK] Erro ao verificar instância:', error);
       setHasExistingInstance(false);
       setExistingInstanceData(null);
     } finally {
       setCheckingExistingInstance(false);
     }
-  };
+  }, [userEmail]); // useCallback para evitar re-criações desnecessárias
 
   useEffect(() => {
     checkExistingInstance();
-  }, [userEmail]);
+  }, [checkExistingInstance]); // O useEffect agora depende da função memoizada
 
-  const recheckInstance = () => {
-    console.log('🔄 [EXISTING_INSTANCE] Re-verificação manual');
-    checkExistingInstance();
-  };
-
-  return {
-    hasExistingInstance,
-    checkingExistingInstance,
-    existingInstanceData,
+  // Retornamos a função de verificação para que possa ser chamada manualmente
+  return { 
+    hasExistingInstance, 
+    checkingExistingInstance, 
+    existingInstanceData, 
+    recheckInstance: checkExistingInstance,
     setHasExistingInstance,
-    setExistingInstanceData,
-    recheckInstance
+    setExistingInstanceData
   };
 };

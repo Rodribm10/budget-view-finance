@@ -50,7 +50,7 @@ const WhatsApp = () => {
   
   const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
 
-  // Hook centralizado para verificação de instância existente
+  // Hook UNIFICADO para verificação de instância existente
   const {
     hasExistingInstance,
     checkingExistingInstance,
@@ -62,32 +62,22 @@ const WhatsApp = () => {
   
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
 
-  const handleInstanceCreated = (newInstance: WhatsAppInstance) => {
-    console.log('🎉 [WHATSAPP] Nova instância criada:', newInstance);
+  const handleInstanceCreated = async (newInstance: WhatsAppInstance) => {
+    console.log('🎉 [WHATSAPP_PAGE] Nova instância criada, acionando re-verificação.');
     addInstance(newInstance);
     setInstanceFound(true);
-    
-    // Atualizar estado do hook centralizado
-    setHasExistingInstance(true);
-    setExistingInstanceData({
-      instancia_zap: newInstance.instanceName,
-      status_instancia: 'conectado'
-    });
-    
     saveInstanceName(newInstance.instanceName);
     
     if (newInstance.qrcode) {
       handleViewQrCode(newInstance);
     }
 
-    setTimeout(async () => {
-      try {
-        await checkAllInstancesStatus();
-        recheckInstance();
-      } catch (error) {
-        console.error("Error checking status after instance creation:", error);
-      }
-    }, 2000);
+    // O mais importante: após criar, chame a função para re-verificar do banco de dados!
+    // Isso garante que o estado seja baseado em dados reais, não em uma suposição.
+    setTimeout(() => {
+      recheckInstance();
+      checkAllInstancesStatus();
+    }, 2000); // Um pequeno delay para dar tempo ao backend de atualizar
   };
 
   const handleDeleteInstanceWrapper = (instanceId: string) => {
@@ -128,17 +118,15 @@ const WhatsApp = () => {
             )}
           </div>
           
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={recheckInstance}
-              disabled={checkingExistingInstance}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`h-4 w-4 ${checkingExistingInstance ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={recheckInstance}
+            disabled={checkingExistingInstance}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${checkingExistingInstance ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
         </div>
         
         {/* Formulário de criação - APENAS se NÃO tiver instância conectada */}
