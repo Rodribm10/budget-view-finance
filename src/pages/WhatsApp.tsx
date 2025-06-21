@@ -1,3 +1,4 @@
+
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 import Layout from '@/components/layout/Layout';
 import CreateInstanceForm from '@/components/whatsapp/CreateInstanceForm';
@@ -38,7 +39,6 @@ const WhatsApp = () => {
     handleViewQrCode
   } = useWhatsAppActions(updateInstance, removeInstance, checkAllInstancesStatus);
   
-  // Custom hook for instance fetching and management
   const {
     instanceName,
     isLoading,
@@ -49,28 +49,32 @@ const WhatsApp = () => {
     clearInstanceName
   } = useWhatsAppInstance(currentUserId, addInstance);
   
-  // State para controlar se deve mostrar o formulário de criação
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [hasValidInstance, setHasValidInstance] = useState(false);
+  const [hasConnectedInstance, setHasConnectedInstance] = useState(false);
   const [checkingUserInstance, setCheckingUserInstance] = useState(true);
   
-  const userEmail = localStorage.getItem('userEmail') || '';
+  const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
 
-  // Verificar se o usuário tem instância válida conectada no banco de dados
+  // Verificar se o usuário tem instância CONECTADA no banco de dados
   useEffect(() => {
-    const checkUserInstanceFromDB = async () => {
+    const checkUserConnectedInstance = async () => {
       if (!userEmail) {
+        console.log('❌ Email do usuário não encontrado');
         setCheckingUserInstance(false);
         setShowCreateForm(true);
         return;
       }
 
+      setCheckingUserInstance(true);
+      
       try {
-        console.log('🔍 Verificando instância do usuário no banco:', userEmail);
+        console.log('🔍 [WHATSAPP] Verificando instância conectada para:', userEmail);
         const instanceData = await getUserWhatsAppInstance(userEmail);
         
-        // Lógica corrigida: instancia_zap deve ser igual ao email E status deve ser 'conectado'
-        const hasConnectedInstance = !!(
+        console.log('📋 [WHATSAPP] Dados da instância encontrados:', instanceData);
+        
+        // Verificação CORRETA: instancia_zap deve ser igual ao email E status deve ser 'conectado'
+        const hasConnectedInstanceInDB = !!(
           instanceData && 
           instanceData.instancia_zap && 
           instanceData.instancia_zap.trim() !== '' &&
@@ -80,53 +84,51 @@ const WhatsApp = () => {
           instanceData.status_instancia === 'conectado'
         );
         
-        console.log('📋 Verificação da instância:', {
+        console.log('✅ [WHATSAPP] Verificação da instância conectada:', {
           instanceData,
           userEmail,
           instanceMatchesEmail: instanceData?.instancia_zap?.toLowerCase() === userEmail.toLowerCase(),
           isConnected: instanceData?.status_instancia === 'conectado',
-          hasConnectedInstance
+          hasConnectedInstanceInDB
         });
         
-        setHasValidInstance(hasConnectedInstance);
-        setShowCreateForm(!hasConnectedInstance); // Mostra formulário apenas se NÃO tiver instância conectada
+        setHasConnectedInstance(hasConnectedInstanceInDB);
+        setShowCreateForm(!hasConnectedInstanceInDB); // Mostra formulário APENAS se NÃO tiver instância conectada
         
-        if (hasConnectedInstance) {
+        if (hasConnectedInstanceInDB) {
           setInstanceFound(true);
+          console.log('✅ [WHATSAPP] Usuário já possui instância conectada, ocultando formulário de criação');
+        } else {
+          console.log('❌ [WHATSAPP] Usuário NÃO possui instância conectada, mostrando formulário de criação');
         }
         
       } catch (error) {
-        console.error('❌ Erro ao verificar instância do usuário:', error);
-        setHasValidInstance(false);
+        console.error('❌ [WHATSAPP] Erro ao verificar instância do usuário:', error);
+        setHasConnectedInstance(false);
         setShowCreateForm(true);
       } finally {
         setCheckingUserInstance(false);
       }
     };
 
-    checkUserInstanceFromDB();
+    checkUserConnectedInstance();
   }, [userEmail, setInstanceFound]);
   
-  // Set up periodic status checking only after instances are loaded
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
 
-  // Handler para quando o usuário cria uma nova instância
   const handleInstanceCreated = (newInstance: WhatsAppInstance) => {
-    console.log('🎉 Nova instância criada:', newInstance);
+    console.log('🎉 [WHATSAPP] Nova instância criada:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
-    setHasValidInstance(true);
+    setHasConnectedInstance(true);
     setShowCreateForm(false);
     
-    // Salvar o nome da instância no localStorage para uso futuro
     saveInstanceName(newInstance.instanceName);
     
-    // If there's a QR code in the response, show it
     if (newInstance.qrcode) {
       handleViewQrCode(newInstance);
     }
 
-    // Trigger a status check for all instances with a delay
     setTimeout(async () => {
       try {
         await checkAllInstancesStatus();
@@ -136,25 +138,22 @@ const WhatsApp = () => {
     }, 2000);
   };
 
-  // Handler for when an instance is deleted
   const handleDeleteInstanceWrapper = (instanceId: string) => {
-    console.log(`🗑️ Solicitação de exclusão da instância ID: ${instanceId}`);
+    console.log(`🗑️ [WHATSAPP] Solicitação de exclusão da instância ID: ${instanceId}`);
     const instanceToDelete = instances.find(i => i.instanceId === instanceId);
     if (instanceToDelete) {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
       
-      // Se a instância excluída for a atual, limpar o nome salvo e permitir criação de nova
       if (instanceToDelete.instanceName === instanceName) {
         clearInstanceName();
-        setHasValidInstance(false);
+        setHasConnectedInstance(false);
         setShowCreateForm(true);
       }
     } else {
-      console.error(`❌ Inst ncia com ID ${instanceId} não encontrada para exclusão`);
+      console.error(`❌ [WHATSAPP] Instância com ID ${instanceId} não encontrada para exclusão`);
     }
   };
 
-  // Check if we have any instances to show
   const hasInstances = Array.isArray(instances) && instances.length > 0;
 
   if (checkingUserInstance || isLoading) {
@@ -178,7 +177,6 @@ const WhatsApp = () => {
             )}
           </div>
           
-          {/* Update List Button - Always visible */}
           <Button 
             variant="outline" 
             onClick={refreshInstances}
@@ -190,28 +188,39 @@ const WhatsApp = () => {
           </Button>
         </div>
         
-        {/* Show create form if user doesn't have a connected instance */}
-        {showCreateForm && (
-          <CreateInstanceForm 
-            onInstanceCreated={handleInstanceCreated} 
-            initialInstanceName={instanceName}
-          />
+        {/* Mostra formulário APENAS se NÃO tiver instância conectada */}
+        {showCreateForm && !hasConnectedInstance && (
+          <>
+            <CreateInstanceForm 
+              onInstanceCreated={handleInstanceCreated} 
+              initialInstanceName={instanceName}
+            />
+          </>
         )}
         
-        {/* Toggle Create Form Button - only show if form is hidden and user has connected instance */}
-        {!showCreateForm && hasValidInstance && (
-          <Button 
-            onClick={() => setShowCreateForm(true)}
-            className="mb-4"
-          >
-            Conectar Novo WhatsApp
-          </Button>
+        {/* Mensagem informativa quando já possui instância conectada */}
+        {hasConnectedInstance && !showCreateForm && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800">
+                  WhatsApp Conectado
+                </h3>
+                <div className="mt-2 text-sm text-green-700">
+                  <p>Você já possui uma instância do WhatsApp conectada. Não é necessário criar uma nova.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
         
-        {/* Only show stats if instances are available */}
         {hasInstances && <InstanceStats instances={instances} />}
         
-        {/* List of created instances */}
         <InstanceList 
           instances={instances} 
           onViewQrCode={handleViewQrCode} 
@@ -224,7 +233,6 @@ const WhatsApp = () => {
           isRefreshing={isRefreshing}
         />
         
-        {/* QR Code Dialog */}
         <QrCodeDialog 
           open={qrDialogOpen} 
           onOpenChange={setQrDialogOpen}
