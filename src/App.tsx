@@ -1,9 +1,9 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import Auth from './pages/Auth';
 import EmailConfirmation from './pages/EmailConfirmation';
+import CompleteProfile from './pages/CompleteProfile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { authStore } from './stores/authStore';
 
@@ -27,16 +27,22 @@ function App() {
       <Toaster />
       
       <Routes>
-        {/* The auth route should not be inside ProtectedRoute */}
+        {/* Auth route */}
         <Route 
           path="/auth" 
           element={isLoggedIn ? <Navigate to="/" replace /> : <Auth />} 
         />
         
-        {/* Email confirmation route - should be accessible without authentication */}
+        {/* Email confirmation route */}
         <Route 
           path="/email-confirmation" 
           element={<EmailConfirmation />} 
+        />
+        
+        {/* Complete profile route - deve ser acessível para usuários logados */}
+        <Route 
+          path="/complete-profile" 
+          element={<CompleteProfile />} 
         />
         
         {/* Protected routes */}
