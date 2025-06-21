@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import HelpIcon from '@/components/help/HelpIcon';
 import { useToast } from "@/components/ui/use-toast";
 import { Menu } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
+      
+      {/* Help Icon */}
+      <HelpIcon />
     </div>
   );
 };

@@ -48,8 +48,8 @@ const WhatsApp = () => {
 
   const {
     hasExistingInstance,
-    checkingInstance,
-    instanceData,
+    checkingExistingInstance,
+    existingInstanceData,
     recheckInstance
   } = useExistingInstanceCheck(userEmail);
   
@@ -83,7 +83,7 @@ const WhatsApp = () => {
     }
   };
 
-  if (checkingInstance || isLoading) {
+  if (checkingExistingInstance || isLoading) {
     return (
       <Layout>
         <LoadingState message="Verificando suas instâncias..." />
@@ -97,12 +97,12 @@ const WhatsApp = () => {
         <WhatsAppHeader 
           userEmail={userEmail}
           onRefresh={recheckInstance}
-          isRefreshing={checkingInstance}
+          isRefreshing={checkingExistingInstance}
         />
         
         <WhatsAppManager
           hasExistingInstance={hasExistingInstance}
-          existingInstanceData={instanceData}
+          existingInstanceData={existingInstanceData}
           instances={instances}
           isRefreshing={isRefreshing}
           activeInstance={activeInstance}

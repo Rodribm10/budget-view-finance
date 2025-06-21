@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/sonner";
@@ -18,6 +19,7 @@ const GruposWhatsApp = lazy(() => import('./pages/GruposWhatsApp'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const CartoesCredito = lazy(() => import('./pages/CartoesCredito'));
 const Configuracoes = lazy(() => import('./pages/Configuracoes'));
+const AdminFAQ = lazy(() => import('./pages/AdminFAQ'));
 
 function App() {
   const isLoggedIn = authStore((state) => state.isLoggedIn);
@@ -68,6 +70,7 @@ function App() {
         <Route path="/calendario" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Calendario /></Suspense></ProtectedRoute>} />
         <Route path="/whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><WhatsApp /></Suspense></ProtectedRoute>} />
         <Route path="/grupos-whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><GruposWhatsApp /></Suspense></ProtectedRoute>} />
+        <Route path="/admin-faq" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><AdminFAQ /></Suspense></ProtectedRoute>} />
         <Route path="/configuracoes" element={
           <ProtectedRoute>
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
