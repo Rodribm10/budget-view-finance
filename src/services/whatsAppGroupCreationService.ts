@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface CreateGroupResponse {
@@ -15,37 +16,37 @@ export async function createWhatsAppGroup(
   groupName: string
 ): Promise<CreateGroupResponse> {
   try {
-    const url = `https://evolutionapi2.innova1001.com.br/group/create/${userEmail}`;
+    console.log('🚀 Iniciando criação de grupo via API Evolution');
+    console.log('📧 Email do usuário:', userEmail);
+    console.log('🏷️ Nome do grupo:', groupName);
     
-    const requestBody = {
-      subject: groupName,
-      description: "Finance Home seu controle sem complicação",
-      participants: ["5561992444275"]
-    };
-    
-    console.log('Criando grupo WhatsApp:', { url, requestBody });
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': 'beeb77fbd7f48f91db2cd539a573c130'
-      },
-      body: JSON.stringify(requestBody)
+    // Usar a edge function para fazer a requisição segura
+    const { data, error } = await supabase.functions.invoke('whatsapp-api', {
+      body: {
+        endpoint: `/group/create/${encodeURIComponent(userEmail)}`,
+        method: 'POST',
+        body: {
+          subject: groupName,
+          description: "Finance Home seu controle sem complicação",
+          participants: ["5561992444275"]
+        }
+      }
     });
     
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Erro na resposta da API:', response.status, errorText);
-      throw new Error(`Falha ao criar grupo: ${response.status} - ${errorText}`);
+    if (error) {
+      console.error('❌ Erro na edge function:', error);
+      throw new Error(`Falha ao criar grupo: ${error.message}`);
     }
     
-    const data = await response.json();
-    console.log('Grupo criado com sucesso:', data);
+    if (data.error) {
+      console.error('❌ Erro da API Evolution:', data.error);
+      throw new Error(`Falha ao criar grupo: ${data.error}`);
+    }
     
+    console.log('✅ Grupo criado com sucesso:', data);
     return data;
   } catch (error) {
-    console.error('Erro ao criar grupo WhatsApp:', error);
+    console.error('❌ Erro ao criar grupo WhatsApp:', error);
     throw error;
   }
 }
@@ -58,19 +59,23 @@ export async function updateGroupRemoteJid(
   remoteJid: string
 ): Promise<void> {
   try {
+    console.log('💾 Atualizando remote_jid no banco de dados');
+    console.log('🆔 Group ID:', groupId);
+    console.log('📱 Remote JID:', remoteJid);
+    
     const { error } = await supabase
       .from('grupos_whatsapp')
       .update({ remote_jid: remoteJid })
       .eq('id', groupId);
     
     if (error) {
-      console.error('Erro ao atualizar remote_jid:', error);
+      console.error('❌ Erro ao atualizar remote_jid:', error);
       throw error;
     }
     
-    console.log(`Remote JID atualizado para o grupo ${groupId}: ${remoteJid}`);
+    console.log('✅ Remote JID atualizado com sucesso');
   } catch (error) {
-    console.error('Erro ao atualizar remote_jid no banco:', error);
+    console.error('❌ Erro ao atualizar remote_jid no banco:', error);
     throw error;
   }
 }

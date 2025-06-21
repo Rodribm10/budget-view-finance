@@ -59,28 +59,28 @@ export const useInstanceCreation = (
     setLoading(true);
 
     try {
-      console.log(`🚀 Iniciando criação de instância com nome ${instanceName} e número ${fullPhoneNumber}`);
+      console.log(`🚀 [INSTÂNCIA] Iniciando criação de instância com nome ${instanceName} e número ${fullPhoneNumber}`);
       
       // 1. Criar instância na API
-      console.log('📡 Passo 1: Criando instância na API...');
+      console.log('📡 [INSTÂNCIA] Passo 1: Criando instância na API...');
       const data = await createWhatsAppInstance(instanceName, fullPhoneNumber);
-      console.log('✅ Resposta da API de criação de instância:', data);
+      console.log('✅ [INSTÂNCIA] Resposta da API de criação de instância:', data);
 
       // 2. Atualizar o banco de dados com status "conectado"
-      console.log('💾 Passo 2: Atualizando banco de dados...');
+      console.log('💾 [INSTÂNCIA] Passo 2: Atualizando banco de dados...');
       await updateUserWhatsAppInstance(userEmail, {
         instanceName,
         status: 'conectado'
       });
-      console.log('✅ Instância registrada no banco de dados com status "conectado"');
+      console.log('✅ [INSTÂNCIA] Instância registrada no banco de dados com status "conectado"');
 
       // 3. Ativar o workflow do usuário no n8n
-      console.log('🔄 Passo 3: Ativando workflow do usuário no n8n...');
+      console.log('🔄 [INSTÂNCIA] Passo 3: Ativando workflow do usuário no n8n...');
       try {
         await activateUserWorkflow(userEmail);
-        console.log('✅ Workflow ativado com sucesso no n8n');
+        console.log('✅ [INSTÂNCIA] Workflow ativado com sucesso no n8n');
       } catch (workflowError) {
-        console.error('⚠️ Erro ao ativar workflow, mas instância foi criada:', workflowError);
+        console.error('⚠️ [INSTÂNCIA] Erro ao ativar workflow, mas instância foi criada:', workflowError);
         toast({
           title: "Aviso",
           description: "Instância criada, mas houve um problema ao ativar a automação. Entre em contato com o suporte.",
@@ -99,7 +99,7 @@ export const useInstanceCreation = (
         connectionState: 'closed'
       };
       
-      console.log('✅ Nova instância criada:', newInstance);
+      console.log('✅ [INSTÂNCIA] Nova instância criada:', newInstance);
       
       // 5. Atualizar estado para evitar nova criação
       setHasExistingInstance(true);
@@ -111,15 +111,20 @@ export const useInstanceCreation = (
       // 6. Notificar componente pai
       onInstanceCreated(newInstance);
       
+      // 7. Forçar um pequeno delay para garantir que o banco foi atualizado
+      console.log('⏳ [INSTÂNCIA] Aguardando propagação das mudanças no banco...');
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       toast({
         title: "Sucesso!",
-        description: "Instância do WhatsApp criada e ativada com sucesso!"
+        description: "Instância do WhatsApp criada e ativada com sucesso! Agora você pode criar grupos.",
+        duration: 5000
       });
       
       return true;
       
     } catch (error) {
-      console.error("💥 Erro ao criar instância WhatsApp:", error);
+      console.error("💥 [INSTÂNCIA] Erro ao criar instância WhatsApp:", error);
       
       // Se houve erro na API, tentar reverter no banco de dados
       try {
@@ -127,9 +132,9 @@ export const useInstanceCreation = (
           instanceName: '',
           status: 'desconectado'
         });
-        console.log('🔄 Instância removida do banco devido ao erro na API');
+        console.log('🔄 [INSTÂNCIA] Instância removida do banco devido ao erro na API');
       } catch (dbError) {
-        console.error('❌ Erro ao reverter instância no banco:', dbError);
+        console.error('❌ [INSTÂNCIA] Erro ao reverter instância no banco:', dbError);
       }
       
       toast({
