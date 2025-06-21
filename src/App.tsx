@@ -1,7 +1,9 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import Auth from './pages/Auth';
+import EmailConfirmation from './pages/EmailConfirmation';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import { authStore } from './stores/authStore';
 
@@ -29,6 +31,12 @@ function App() {
         <Route 
           path="/auth" 
           element={isLoggedIn ? <Navigate to="/" replace /> : <Auth />} 
+        />
+        
+        {/* Email confirmation route - should be accessible without authentication */}
+        <Route 
+          path="/email-confirmation" 
+          element={<EmailConfirmation />} 
         />
         
         {/* Protected routes */}

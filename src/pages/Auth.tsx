@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
+import AuthSecurityFeatures from '@/components/auth/AuthSecurityFeatures';
 import { toast } from "sonner";
 
 const Auth = () => {
@@ -12,10 +14,10 @@ const Auth = () => {
   const [activeTab, setActiveTab] = useState("login");
   const location = useLocation();
 
-  // Show success message when redirected from registration
+  // Show success message when redirected from registration or email confirmation
   useEffect(() => {
     if (location.state?.showSuccessMessage && location.state?.message) {
-      toast.success("Cadastro realizado!", {
+      toast.success("Sucesso!", {
         description: location.state.message,
         duration: 8000,
       });
@@ -40,12 +42,15 @@ const Auth = () => {
               <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
             </TabsList>
             
-            <TabsContent value="login">
+            <TabsContent value="login" className="space-y-4">
               <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <SocialLoginButtons />
             </TabsContent>
             
-            <TabsContent value="cadastro">
+            <TabsContent value="cadastro" className="space-y-4">
               <RegisterForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <SocialLoginButtons />
+              <AuthSecurityFeatures />
             </TabsContent>
           </Tabs>
         </CardContent>

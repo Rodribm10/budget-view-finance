@@ -49,7 +49,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         email,
         password: senha,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/email-confirmation`,
           data: {
             nome,
             empresa: empresa || null,
@@ -69,7 +69,7 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
         if (data.user.identities && data.user.identities.length === 0) {
           console.log('👤 Usuário já existe, reenviando confirmação');
           toast.info("E-mail já cadastrado. Verifique sua caixa de entrada!", {
-            description: "Enviamos um novo link para você definir sua senha e acessar sua conta. Não se esqueça de checar a pasta de spam.",
+            description: "Enviamos um novo link de confirmação para você ativar sua conta. Não se esqueça de checar a pasta de spam.",
             duration: 10000,
           });
         } else {
@@ -94,11 +94,17 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
               console.error('❌ Erro crítico no webhook para n8n:', error);
             });
           
+          // Show success message and redirect to login
+          toast.success("Cadastro realizado com sucesso!", {
+            description: "📧 Enviamos um link de confirmação para seu email. Clique no link para ativar sua conta e fazer login.",
+            duration: 10000,
+          });
+          
           // Redirect to login page with success message
           navigate('/auth', { 
             state: { 
               showSuccessMessage: true,
-              message: "✅ Cadastro realizado com sucesso! Agora, faça o login com o e-mail e a senha que você acabou de criar." 
+              message: "✅ Cadastro realizado! Verifique seu email e clique no link de confirmação para ativar sua conta." 
             } 
           });
         }
