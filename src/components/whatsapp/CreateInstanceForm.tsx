@@ -26,12 +26,11 @@ const CreateInstanceForm = ({
   const [hasExistingInstance, setHasExistingInstance] = useState(false);
   const [checkingExistingInstance, setCheckingExistingInstance] = useState(true);
   const currentUserId = localStorage.getItem('userId') || '';
-  const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase(); // Padronização obrigatória
+  const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
   
-  // Nome da instância será sempre o email do usuário (já padronizado)
   const instanceName = userEmail;
 
-  // Verificar se o usuário já tem uma instância
+  // Verificar se o usuário já tem uma instância - verificação mais rigorosa
   useEffect(() => {
     const checkExistingInstance = async () => {
       if (!userEmail) {
@@ -40,18 +39,23 @@ const CreateInstanceForm = ({
       }
 
       try {
-        console.log('Verificando se usuário já tem instância:', userEmail);
+        console.log('🔍 Verificando se usuário já tem instância:', userEmail);
         const existingInstance = await getUserWhatsAppInstance(userEmail);
         
-        if (existingInstance && existingInstance.instancia_zap) {
-          console.log('Usuário já possui instância:', existingInstance.instancia_zap);
-          setHasExistingInstance(true);
-        } else {
-          console.log('Usuário não possui instância');
-          setHasExistingInstance(false);
-        }
+        console.log('📋 Dados da instância encontrados:', existingInstance);
+        
+        // Verificação mais rigorosa - deve ter instancia_zap E não pode estar vazio
+        const hasValidInstance = !!(
+          existingInstance && 
+          existingInstance.instancia_zap && 
+          existingInstance.instancia_zap.trim() !== ''
+        );
+        
+        console.log('✅ Usuário possui instância válida:', hasValidInstance);
+        setHasExistingInstance(hasValidInstance);
+        
       } catch (error) {
-        console.error('Erro ao verificar instância existente:', error);
+        console.error('❌ Erro ao verificar instância existente:', error);
         setHasExistingInstance(false);
       } finally {
         setCheckingExistingInstance(false);
@@ -140,7 +144,6 @@ const CreateInstanceForm = ({
         console.log('✅ Workflow ativado com sucesso no n8n');
       } catch (workflowError) {
         console.error('⚠️ Erro ao ativar workflow, mas instância foi criada:', workflowError);
-        // Não bloquear o fluxo se o workflow falhar, apenas loggar
         toast({
           title: "Aviso",
           description: "Instância criada, mas houve um problema ao ativar a automação. Entre em contato com o suporte.",
@@ -239,7 +242,7 @@ const CreateInstanceForm = ({
               <strong>✓ Instância ativa:</strong> {instanceName}
             </p>
             <p className="text-green-700 text-sm mt-1">
-              Para gerenciar sua instância, utilize os botões na lista de instâncias acima.
+              Para gerenciar sua instância, utilize os botões na lista de instâncias abaixo.
             </p>
           </div>
         </CardContent>

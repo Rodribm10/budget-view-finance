@@ -28,23 +28,24 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
     whatsapp: string | null;
   } | null>(null);
 
-  // Verificar se o usuário tem instância WhatsApp CONECTADA
+  // Verificar se o usuário tem instância WhatsApp CONECTADA - verificação mais rigorosa
   useEffect(() => {
     const checkUserInstance = async () => {
       if (!userEmail) {
-        console.log('Email do usuário não fornecido');
+        console.log('❌ Email do usuário não fornecido');
         setCheckingInstance(false);
         return;
       }
       
       setCheckingInstance(true);
       try {
-        console.log('Verificando instância para:', userEmail);
+        console.log('🔍 Verificando instância para criação de grupo:', userEmail);
         
         const instanceData = await getUserWhatsAppInstance(userEmail);
-        console.log('Dados da instância:', instanceData);
+        console.log('📋 Dados da instância encontrados:', instanceData);
         
         if (instanceData) {
+          // Verificação mais rigorosa: deve ter instancia_zap E status conectado
           const hasValidInstance = !!(
             instanceData && 
             instanceData.instancia_zap && 
@@ -52,7 +53,11 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             instanceData.status_instancia === 'conectado'
           );
           
-          console.log('Instância válida:', hasValidInstance);
+          console.log('✅ Instância válida para criar grupos:', hasValidInstance, {
+            instancia_zap: instanceData.instancia_zap,
+            status_instancia: instanceData.status_instancia,
+            hasValidInstance
+          });
           
           if (hasValidInstance) {
             setHasWhatsAppInstance(true);
@@ -62,11 +67,12 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             setUserInstance(instanceData);
           }
         } else {
+          console.log('❌ Nenhuma instância encontrada');
           setHasWhatsAppInstance(false);
           setUserInstance(null);
         }
       } catch (error) {
-        console.error('Erro ao verificar instância do usuário:', error);
+        console.error('❌ Erro ao verificar instância do usuário:', error);
         setHasWhatsAppInstance(false);
         setUserInstance(null);
       } finally {
@@ -196,8 +202,21 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Para criar um grupo é necessário ter sua instância do WhatsApp conectada. 
-              Acesse o menu "Conectar WhatsApp" e realize a conexão primeiro.
+              {userInstance && userInstance.instancia_zap && userInstance.status_instancia !== 'conectado' ? (
+                <>
+                  Sua instância WhatsApp está <strong>desconectada</strong>. 
+                  Acesse o menu "Conectar WhatsApp" e escaneie o QR Code para conectar sua instância.
+                  <br />
+                  <span className="text-sm text-gray-600 mt-2 block">
+                    Status atual: {userInstance.status_instancia}
+                  </span>
+                </>
+              ) : (
+                <>
+                  Para criar um grupo é necessário ter sua instância do WhatsApp conectada. 
+                  Acesse o menu "Conectar WhatsApp" e realize a conexão primeiro.
+                </>
+              )}
             </AlertDescription>
           </Alert>
         </CardContent>
