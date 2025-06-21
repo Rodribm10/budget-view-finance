@@ -27,9 +27,22 @@ export const useProfileCompletion = (userEmail: string) => {
           console.error('❌ Erro ao verificar perfil:', error);
           setProfileComplete(false);
         } else if (usuario) {
-          // Verificar se tem nome e whatsapp preenchidos
-          const isComplete = !!(usuario.nome?.trim() && usuario.whatsapp?.trim());
-          console.log('📋 Perfil completo:', isComplete, { nome: usuario.nome, whatsapp: usuario.whatsapp });
+          // Verificar se tem nome REAL (não placeholder) e whatsapp válido
+          const hasRealName = usuario.nome && 
+                             usuario.nome.trim() !== '' && 
+                             usuario.nome !== 'Nome não informado';
+          const hasValidWhatsApp = usuario.whatsapp && 
+                                  usuario.whatsapp.trim() !== '' && 
+                                  usuario.whatsapp !== '00000000000' &&
+                                  usuario.whatsapp.length >= 10;
+          
+          const isComplete = hasRealName && hasValidWhatsApp;
+          console.log('📋 Perfil completo:', isComplete, { 
+            nome: usuario.nome, 
+            whatsapp: usuario.whatsapp,
+            hasRealName,
+            hasValidWhatsApp 
+          });
           setProfileComplete(isComplete);
         } else {
           console.log('👤 Usuário não encontrado na tabela usuarios');

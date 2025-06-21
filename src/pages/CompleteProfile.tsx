@@ -29,9 +29,13 @@ const CompleteProfile = () => {
         setUserEmail(user.email || '');
         setUserId(user.id);
         
+        console.log('👤 Dados do usuário Google:', user.user_metadata);
+        
         // Pre-fill nome if available from Google
-        const displayName = user.user_metadata?.full_name || user.user_metadata?.name || '';
-        if (displayName) {
+        const displayName = user.user_metadata?.full_name || 
+                           user.user_metadata?.name || 
+                           user.user_metadata?.display_name || '';
+        if (displayName && displayName !== 'Nome não informado') {
           setNome(displayName);
         }
       } else {
@@ -65,6 +69,7 @@ const CompleteProfile = () => {
 
     try {
       console.log('📝 Salvando dados complementares do perfil...');
+      const whatsappOnly = whatsapp.replace(/\D/g, '');
       
       // Atualizar dados do usuário no Supabase
       const { error: updateError } = await supabase
@@ -72,7 +77,7 @@ const CompleteProfile = () => {
         .update({
           nome: nome.trim(),
           empresa: empresa.trim() || null,
-          whatsapp: whatsapp.replace(/\D/g, '')
+          whatsapp: whatsappOnly
         })
         .eq('email', userEmail.toLowerCase().trim());
 
@@ -88,21 +93,23 @@ const CompleteProfile = () => {
       const webhookSuccess = await sendNewUserWebhook(
         userEmail, 
         userId, 
-        whatsapp.replace(/\D/g, '')
+        whatsappOnly
       );
 
       if (webhookSuccess) {
         console.log('✅ Webhook N8N enviado com sucesso');
+        toast.success("Perfil completado!", {
+          description: "Seus dados foram salvos e seu workspace está sendo configurado.",
+        });
       } else {
         console.warn('⚠️ Falha no webhook N8N, mas perfil foi salvo');
+        toast.success("Perfil completado!", {
+          description: "Seus dados foram salvos. A configuração do workspace pode demorar alguns minutos.",
+        });
       }
 
       // Marcar perfil como completo
       setProfileComplete(true);
-
-      toast.success("Perfil completado!", {
-        description: "Seus dados foram salvos e sua conta está ativa.",
-      });
 
       // Redirecionar para dashboard
       navigate('/');

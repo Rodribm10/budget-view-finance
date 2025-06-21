@@ -24,8 +24,26 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isChecking } = useProfileCompletion(session?.user?.email || '');
   
   useEffect(() => {
+    // Verificar sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('🔐 Sessão inicial:', session?.user?.email);
+      setSession(session);
+      setLoggedIn(!!session);
+      setUser(session?.user ? { id: session.user.id } : null);
+
+      if (session?.user?.email) {
+        localStorage.setItem('userEmail', session.user.email);
+      } else {
+        localStorage.removeItem('userEmail');
+      }
+      
+      setIsLoading(false);
+    });
+
+    // Listener para mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        console.log('🔄 Mudança de auth:', _event, session?.user?.email);
         setSession(session);
         setLoggedIn(!!session);
         setUser(session?.user ? { id: session.user.id } : null);
@@ -61,6 +79,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   
   // Se tem sessão mas perfil não está completo, redirecionar para completar perfil
   if (session && !isProfileComplete) {
+    console.log('🚨 Redirecionando para complete-profile - perfil incompleto');
     return <Navigate to="/complete-profile" replace />;
   }
   
