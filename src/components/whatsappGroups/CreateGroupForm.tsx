@@ -28,7 +28,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
     whatsapp: string | null;
   } | null>(null);
 
-  // Verificar se o usuário tem instância WhatsApp CONECTADA - verificação mais rigorosa
+  // Verificar se o usuário tem instância WhatsApp CONECTADA
   useEffect(() => {
     const checkUserInstance = async () => {
       if (!userEmail) {
@@ -45,11 +45,13 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
         console.log('📋 Dados da instância encontrados:', instanceData);
         
         if (instanceData) {
-          // Verificação mais rigorosa: deve ter instancia_zap E status conectado
+          // Verificação rigorosa: deve ter instancia_zap válida E status conectado
           const hasValidInstance = !!(
             instanceData && 
             instanceData.instancia_zap && 
             instanceData.instancia_zap.trim() !== '' &&
+            instanceData.instancia_zap !== 'null' &&
+            instanceData.instancia_zap !== null &&
             instanceData.status_instancia === 'conectado'
           );
           
@@ -59,13 +61,8 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             hasValidInstance
           });
           
-          if (hasValidInstance) {
-            setHasWhatsAppInstance(true);
-            setUserInstance(instanceData);
-          } else {
-            setHasWhatsAppInstance(false);
-            setUserInstance(instanceData);
-          }
+          setHasWhatsAppInstance(hasValidInstance);
+          setUserInstance(instanceData);
         } else {
           console.log('❌ Nenhuma instância encontrada');
           setHasWhatsAppInstance(false);
@@ -204,7 +201,7 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
             <AlertDescription>
               {userInstance && userInstance.instancia_zap && userInstance.status_instancia !== 'conectado' ? (
                 <>
-                  Sua instância WhatsApp está <strong>desconectada</strong>. 
+                  Sua instância WhatsApp <strong>{userInstance.instancia_zap}</strong> está <strong>desconectada</strong>. 
                   Acesse o menu "Conectar WhatsApp" e escaneie o QR Code para conectar sua instância.
                   <br />
                   <span className="text-sm text-gray-600 mt-2 block">

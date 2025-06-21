@@ -10,9 +10,10 @@ import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
 import { useWhatsAppInstance, WHATSAPP_INSTANCE_KEY } from '@/hooks/whatsApp/useWhatsAppInstance';
 import { usePeriodicStatusCheck } from '@/hooks/whatsApp/usePeriodicStatusCheck';
+import { getUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const WhatsApp = () => {
   const { 
@@ -49,8 +50,54 @@ const WhatsApp = () => {
     clearInstanceName
   } = useWhatsAppInstance(currentUserId, addInstance);
   
-  // Toggle for showing the creation form
-  const [showCreateForm, setShowCreateForm] = useState(!instanceFound && instances.length === 0);
+  // State para controlar se deve mostrar o formulário de criação
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [hasValidInstance, setHasValidInstance] = useState(false);
+  const [checkingUserInstance, setCheckingUserInstance] = useState(true);
+  
+  const userEmail = localStorage.getItem('userEmail') || '';
+
+  // Verificar se o usuário tem instância válida no banco de dados
+  useEffect(() => {
+    const checkUserInstanceFromDB = async () => {
+      if (!userEmail) {
+        setCheckingUserInstance(false);
+        setShowCreateForm(true);
+        return;
+      }
+
+      try {
+        console.log('🔍 Verificando instância do usuário no banco:', userEmail);
+        const instanceData = await getUserWhatsAppInstance(userEmail);
+        
+        const hasInstance = !!(
+          instanceData && 
+          instanceData.instancia_zap && 
+          instanceData.instancia_zap.trim() !== '' &&
+          instanceData.instancia_zap !== 'null' &&
+          instanceData.instancia_zap !== null
+        );
+        
+        console.log('📋 Usuário tem instância válida:', hasInstance, instanceData);
+        
+        setHasValidInstance(hasInstance);
+        setShowCreateForm(!hasInstance);
+        
+        if (hasInstance) {
+          setInstanceFound(true);
+        }
+        
+      } catch (error) {
+        console.error('❌ Erro ao verificar instância do usuário:', error);
+        setHasValidInstance(false);
+        setShowCreateForm(true);
+      } finally {
+        setCheckingUserInstance(false);
+      }
+    };
+
+    checkUserInstanceFromDB();
+  }, [userEmail, setInstanceFound]);
   
   // Set up periodic status checking only after instances are loaded
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
@@ -60,6 +107,7 @@ const WhatsApp = () => {
     console.log('🎉 Nova instância criada:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
+    setHasValidInstance(true);
     setShowCreateForm(false);
     
     // Salvar o nome da instância no localStorage para uso futuro
@@ -87,19 +135,27 @@ const WhatsApp = () => {
     if (instanceToDelete) {
       handleDeleteInstance(instanceId, instanceToDelete.instanceName);
       
-      // Se a instância excluída for a atual, limpar o nome salvo
+      // Se a instância excluída for a atual, limpar o nome salvo e permitir criação de nova
       if (instanceToDelete.instanceName === instanceName) {
         clearInstanceName();
+        setHasValidInstance(false);
         setShowCreateForm(true);
       }
     } else {
-      console.error(`❌ Instância com ID ${instanceId} não encontrada para exclusão`);
+      console.error(`❌ Inst ncia com ID ${instanceId} não encontrada para exclusão`);
     }
   };
 
   // Check if we have any instances to show
   const hasInstances = Array.isArray(instances) && instances.length > 0;
-  const userEmail = localStorage.getItem('userEmail') || '';
+
+  if (checkingUserInstance || isLoading) {
+    return (
+      <Layout>
+        <LoadingState message="Verificando suas instâncias..." />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -126,45 +182,39 @@ const WhatsApp = () => {
           </Button>
         </div>
         
-        {isLoading ? (
-          <LoadingState />
-        ) : (
-          <>
-            {/* Always show create form if showCreateForm is true */}
-            {showCreateForm && (
-              <CreateInstanceForm 
-                onInstanceCreated={handleInstanceCreated} 
-                initialInstanceName={instanceName}
-              />
-            )}
-            
-            {/* Toggle Create Form Button - only show if form is hidden */}
-            {!showCreateForm && (
-              <Button 
-                onClick={() => setShowCreateForm(true)}
-                className="mb-4"
-              >
-                Conectar Novo WhatsApp
-              </Button>
-            )}
-            
-            {/* Only show stats if instances are available */}
-            {hasInstances && <InstanceStats instances={instances} />}
-            
-            {/* List of created instances */}
-            <InstanceList 
-              instances={instances} 
-              onViewQrCode={handleViewQrCode} 
-              onDelete={handleDeleteInstanceWrapper}
-              onRestart={handleRestartInstance}
-              onLogout={handleLogoutInstance}
-              onDisconnect={handleDisconnectInstance}
-              onSetPresence={handleSetPresence}
-              onRefreshInstances={refreshInstances}
-              isRefreshing={isRefreshing}
-            />
-          </>
+        {/* Show create form if user doesn't have a valid instance */}
+        {showCreateForm && (
+          <CreateInstanceForm 
+            onInstanceCreated={handleInstanceCreated} 
+            initialInstanceName={instanceName}
+          />
         )}
+        
+        {/* Toggle Create Form Button - only show if form is hidden and user has instance */}
+        {!showCreateForm && hasValidInstance && (
+          <Button 
+            onClick={() => setShowCreateForm(true)}
+            className="mb-4"
+          >
+            Conectar Novo WhatsApp
+          </Button>
+        )}
+        
+        {/* Only show stats if instances are available */}
+        {hasInstances && <InstanceStats instances={instances} />}
+        
+        {/* List of created instances */}
+        <InstanceList 
+          instances={instances} 
+          onViewQrCode={handleViewQrCode} 
+          onDelete={handleDeleteInstanceWrapper}
+          onRestart={handleRestartInstance}
+          onLogout={handleLogoutInstance}
+          onDisconnect={handleDisconnectInstance}
+          onSetPresence={handleSetPresence}
+          onRefreshInstances={refreshInstances}
+          isRefreshing={isRefreshing}
+        />
         
         {/* QR Code Dialog */}
         <QrCodeDialog 

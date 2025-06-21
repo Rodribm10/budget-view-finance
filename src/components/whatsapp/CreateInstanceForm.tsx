@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,15 +26,17 @@ const CreateInstanceForm = ({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [hasExistingInstance, setHasExistingInstance] = useState(false);
   const [checkingExistingInstance, setCheckingExistingInstance] = useState(true);
+  const [existingInstanceData, setExistingInstanceData] = useState<any>(null);
   const currentUserId = localStorage.getItem('userId') || '';
   const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
   
   const instanceName = userEmail;
 
-  // Verificar se o usuário já tem uma instância - verificação mais rigorosa
+  // Verificar se o usuário já tem uma instância
   useEffect(() => {
     const checkExistingInstance = async () => {
       if (!userEmail) {
+        console.log('❌ Email do usuário não encontrado');
         setCheckingExistingInstance(false);
         return;
       }
@@ -44,19 +47,27 @@ const CreateInstanceForm = ({
         
         console.log('📋 Dados da instância encontrados:', existingInstance);
         
-        // Verificação mais rigorosa - deve ter instancia_zap E não pode estar vazio
+        // Verificação rigorosa - deve ter instancia_zap válida
         const hasValidInstance = !!(
           existingInstance && 
           existingInstance.instancia_zap && 
-          existingInstance.instancia_zap.trim() !== ''
+          existingInstance.instancia_zap.trim() !== '' &&
+          existingInstance.instancia_zap !== 'null' &&
+          existingInstance.instancia_zap !== null
         );
         
-        console.log('✅ Usuário possui instância válida:', hasValidInstance);
+        console.log('✅ Usuário possui instância válida:', hasValidInstance, {
+          instancia_zap: existingInstance?.instancia_zap,
+          status_instancia: existingInstance?.status_instancia
+        });
+        
         setHasExistingInstance(hasValidInstance);
+        setExistingInstanceData(existingInstance);
         
       } catch (error) {
         console.error('❌ Erro ao verificar instância existente:', error);
         setHasExistingInstance(false);
+        setExistingInstanceData(null);
       } finally {
         setCheckingExistingInstance(false);
       }
@@ -166,6 +177,10 @@ const CreateInstanceForm = ({
       
       // 5. Atualizar estado para evitar nova criação
       setHasExistingInstance(true);
+      setExistingInstanceData({
+        instancia_zap: instanceName,
+        status_instancia: 'conectado'
+      });
       
       // 6. Notificar componente pai
       onInstanceCreated(newInstance);
@@ -216,7 +231,7 @@ const CreateInstanceForm = ({
     );
   }
 
-  if (hasExistingInstance) {
+  if (hasExistingInstance && existingInstanceData) {
     return (
       <Card>
         <CardHeader>
@@ -233,13 +248,16 @@ const CreateInstanceForm = ({
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               Apenas uma instância WhatsApp por usuário é permitida. 
-              Sua instância atual: <strong>{instanceName}</strong>
+              Sua instância atual: <strong>{existingInstanceData.instancia_zap}</strong>
             </AlertDescription>
           </Alert>
           
           <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded">
             <p className="text-green-800 text-sm">
-              <strong>✓ Instância ativa:</strong> {instanceName}
+              <strong>✓ Instância ativa:</strong> {existingInstanceData.instancia_zap}
+            </p>
+            <p className="text-green-700 text-sm mt-1">
+              <strong>Status:</strong> {existingInstanceData.status_instancia || 'conectado'}
             </p>
             <p className="text-green-700 text-sm mt-1">
               Para gerenciar sua instância, utilize os botões na lista de instâncias abaixo.
