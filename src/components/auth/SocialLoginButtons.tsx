@@ -12,8 +12,9 @@ const SocialLoginButtons = () => {
     
     try {
       console.log('🔐 Iniciando login com Google...');
+      console.log('🌐 URL atual:', window.location.origin);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/`,
@@ -24,17 +25,20 @@ const SocialLoginButtons = () => {
         }
       });
 
+      console.log('📊 Resposta do Supabase:', { data, error });
+
       if (error) {
         console.error('❌ Erro no login com Google:', error);
         toast.error("Erro no login com Google", {
-          description: error.message || "Não foi possível conectar com o Google. Tente novamente.",
+          description: error.message || "Não foi possível conectar com o Google. Verifique as configurações.",
         });
+      } else {
+        console.log('✅ Redirecionamento iniciado...');
       }
-      // Note: Se não houver erro, o usuário será redirecionado automaticamente
     } catch (error) {
       console.error('❌ Erro geral no login com Google:', error);
       toast.error("Erro no login", {
-        description: "Ocorreu um erro inesperado. Tente novamente.",
+        description: "Ocorreu um erro inesperado. Verifique as configurações do Google.",
       });
     } finally {
       setLoadingGoogle(false);
