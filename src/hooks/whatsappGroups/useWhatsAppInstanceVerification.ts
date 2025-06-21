@@ -29,19 +29,23 @@ export const useWhatsAppInstanceVerification = (userEmail: string) => {
         console.log('📋 Dados da instância encontrados:', instanceData);
         
         if (instanceData) {
-          // Verificação rigorosa: deve ter instancia_zap válida E status conectado
+          // Verificação correta: deve ter instancia_zap igual ao email E status conectado
           const hasValidInstance = !!(
             instanceData && 
             instanceData.instancia_zap && 
             instanceData.instancia_zap.trim() !== '' &&
             instanceData.instancia_zap !== 'null' &&
             instanceData.instancia_zap !== null &&
+            instanceData.instancia_zap.toLowerCase() === userEmail.toLowerCase() &&
             instanceData.status_instancia === 'conectado'
           );
           
           console.log('✅ Instância válida para criar grupos:', hasValidInstance, {
             instancia_zap: instanceData.instancia_zap,
             status_instancia: instanceData.status_instancia,
+            userEmail: userEmail,
+            instanceMatchesEmail: instanceData.instancia_zap?.toLowerCase() === userEmail.toLowerCase(),
+            isConnected: instanceData.status_instancia === 'conectado',
             hasValidInstance
           });
           

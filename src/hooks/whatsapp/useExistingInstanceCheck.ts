@@ -21,21 +21,26 @@ export const useExistingInstanceCheck = (userEmail: string) => {
         
         console.log('📋 Dados da instância encontrados:', existingInstance);
         
-        // Verificação rigorosa - deve ter instancia_zap válida
-        const hasValidInstance = !!(
+        // Verificação correta: deve ter instancia_zap igual ao email E status_instancia = 'conectado'
+        const hasValidConnectedInstance = !!(
           existingInstance && 
           existingInstance.instancia_zap && 
           existingInstance.instancia_zap.trim() !== '' &&
           existingInstance.instancia_zap !== 'null' &&
-          existingInstance.instancia_zap !== null
+          existingInstance.instancia_zap !== null &&
+          existingInstance.instancia_zap.toLowerCase() === userEmail.toLowerCase() &&
+          existingInstance.status_instancia === 'conectado'
         );
         
-        console.log('✅ Usuário possui instância válida:', hasValidInstance, {
+        console.log('✅ Usuário possui instância conectada:', hasValidConnectedInstance, {
           instancia_zap: existingInstance?.instancia_zap,
-          status_instancia: existingInstance?.status_instancia
+          status_instancia: existingInstance?.status_instancia,
+          userEmail: userEmail,
+          instanceMatchesEmail: existingInstance?.instancia_zap?.toLowerCase() === userEmail.toLowerCase(),
+          isConnected: existingInstance?.status_instancia === 'conectado'
         });
         
-        setHasExistingInstance(hasValidInstance);
+        setHasExistingInstance(hasValidConnectedInstance);
         setExistingInstanceData(existingInstance);
         
       } catch (error) {

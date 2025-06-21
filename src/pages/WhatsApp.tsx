@@ -57,7 +57,7 @@ const WhatsApp = () => {
   
   const userEmail = localStorage.getItem('userEmail') || '';
 
-  // Verificar se o usuário tem instância válida no banco de dados
+  // Verificar se o usuário tem instância válida conectada no banco de dados
   useEffect(() => {
     const checkUserInstanceFromDB = async () => {
       if (!userEmail) {
@@ -70,20 +70,29 @@ const WhatsApp = () => {
         console.log('🔍 Verificando instância do usuário no banco:', userEmail);
         const instanceData = await getUserWhatsAppInstance(userEmail);
         
-        const hasInstance = !!(
+        // Lógica corrigida: instancia_zap deve ser igual ao email E status deve ser 'conectado'
+        const hasConnectedInstance = !!(
           instanceData && 
           instanceData.instancia_zap && 
           instanceData.instancia_zap.trim() !== '' &&
           instanceData.instancia_zap !== 'null' &&
-          instanceData.instancia_zap !== null
+          instanceData.instancia_zap !== null &&
+          instanceData.instancia_zap.toLowerCase() === userEmail.toLowerCase() &&
+          instanceData.status_instancia === 'conectado'
         );
         
-        console.log('📋 Usuário tem instância válida:', hasInstance, instanceData);
+        console.log('📋 Verificação da instância:', {
+          instanceData,
+          userEmail,
+          instanceMatchesEmail: instanceData?.instancia_zap?.toLowerCase() === userEmail.toLowerCase(),
+          isConnected: instanceData?.status_instancia === 'conectado',
+          hasConnectedInstance
+        });
         
-        setHasValidInstance(hasInstance);
-        setShowCreateForm(!hasInstance);
+        setHasValidInstance(hasConnectedInstance);
+        setShowCreateForm(!hasConnectedInstance); // Mostra formulário apenas se NÃO tiver instância conectada
         
-        if (hasInstance) {
+        if (hasConnectedInstance) {
           setInstanceFound(true);
         }
         
@@ -182,7 +191,7 @@ const WhatsApp = () => {
           </Button>
         </div>
         
-        {/* Show create form if user doesn't have a valid instance */}
+        {/* Show create form if user doesn't have a connected instance */}
         {showCreateForm && (
           <CreateInstanceForm 
             onInstanceCreated={handleInstanceCreated} 
@@ -190,7 +199,7 @@ const WhatsApp = () => {
           />
         )}
         
-        {/* Toggle Create Form Button - only show if form is hidden and user has instance */}
+        {/* Toggle Create Form Button - only show if form is hidden and user has connected instance */}
         {!showCreateForm && hasValidInstance && (
           <Button 
             onClick={() => setShowCreateForm(true)}
