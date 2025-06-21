@@ -127,7 +127,10 @@ const CreateInstanceForm = ({
 
       // 2. Atualizar o banco de dados com status "conectado"
       console.log('💾 Passo 2: Atualizando banco de dados...');
-      await updateUserWhatsAppInstance(userEmail, instanceName, 'conectado');
+      await updateUserWhatsAppInstance(userEmail, {
+        instanceName,
+        status: 'conectado'
+      });
       console.log('✅ Instância registrada no banco de dados com status "conectado"');
 
       // 3. Ativar o workflow do usuário no n8n
@@ -178,7 +181,10 @@ const CreateInstanceForm = ({
       
       // Se houve erro na API, tentar reverter no banco de dados
       try {
-        await updateUserWhatsAppInstance(userEmail, '', 'desconectado');
+        await updateUserWhatsAppInstance(userEmail, {
+          instanceName: '',
+          status: 'desconectado'
+        });
         console.log('🔄 Instância removida do banco devido ao erro na API');
       } catch (dbError) {
         console.error('❌ Erro ao reverter instância no banco:', dbError);

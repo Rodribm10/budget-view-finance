@@ -10,7 +10,38 @@ export const WHATSAPP_STORAGE_KEYS = {
 } as const;
 
 /**
- * Saves WhatsApp instances to localStorage
+ * Saves WhatsApp instances to localStorage for a specific user
+ */
+export const saveInstancesToLocalStorage = (instances: any[], userId: string): void => {
+  try {
+    const key = `${WHATSAPP_STORAGE_KEYS.INSTANCES}_${userId}`;
+    localStorage.setItem(key, JSON.stringify(instances));
+    console.log('Instances saved to localStorage:', instances.length, 'for user:', userId);
+  } catch (error) {
+    console.error('Error saving instances to localStorage:', error);
+  }
+};
+
+/**
+ * Loads WhatsApp instances from localStorage for a specific user
+ */
+export const loadInstancesFromLocalStorage = (userId: string): any[] => {
+  try {
+    const key = `${WHATSAPP_STORAGE_KEYS.INSTANCES}_${userId}`;
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const instances = JSON.parse(stored);
+      console.log('Instances loaded from localStorage:', instances.length, 'for user:', userId);
+      return instances;
+    }
+  } catch (error) {
+    console.error('Error loading instances from localStorage:', error);
+  }
+  return [];
+};
+
+/**
+ * Saves WhatsApp instances to localStorage (legacy function)
  */
 export const saveInstancesToStorage = (instances: any[]): void => {
   try {
@@ -22,7 +53,7 @@ export const saveInstancesToStorage = (instances: any[]): void => {
 };
 
 /**
- * Loads WhatsApp instances from localStorage
+ * Loads WhatsApp instances from localStorage (legacy function)
  */
 export const loadInstancesFromStorage = (): any[] => {
   try {
