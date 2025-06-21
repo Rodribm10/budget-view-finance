@@ -75,7 +75,7 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
 
       // Salvar contato no banco
       const { error } = await supabase
-        .from('contatos')
+        .from('contatos' as any)
         .insert({
           assunto: formData.assunto,
           motivo: formData.motivo,

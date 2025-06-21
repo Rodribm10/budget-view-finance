@@ -29,13 +29,13 @@ const FAQList = () => {
   const loadFAQs = async () => {
     try {
       const { data, error } = await supabase
-        .from('faqs')
+        .from('faqs' as any)
         .select('*')
         .eq('ativo', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFaqs(data || []);
+      setFaqs((data as FAQ[]) || []);
     } catch (error) {
       console.error('Erro ao carregar FAQs:', error);
       toast({
@@ -61,7 +61,7 @@ const FAQList = () => {
   const handleFeedback = async (faqId: string, helpful: boolean) => {
     try {
       const { error } = await supabase
-        .from('faq_feedback')
+        .from('faq_feedback' as any)
         .insert({
           faq_id: faqId,
           helpful: helpful,

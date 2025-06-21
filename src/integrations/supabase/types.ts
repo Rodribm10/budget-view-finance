@@ -159,6 +159,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contatos: {
+        Row: {
+          anexo_url: string | null
+          assunto: string
+          created_at: string
+          id: string
+          mensagem: string
+          motivo: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          anexo_url?: string | null
+          assunto: string
+          created_at?: string
+          id?: string
+          mensagem: string
+          motivo: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          anexo_url?: string | null
+          assunto?: string
+          created_at?: string
+          id?: string
+          mensagem?: string
+          motivo?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       conversas_zap: {
         Row: {
           created_at: string
@@ -263,6 +296,65 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      faq_feedback: {
+        Row: {
+          created_at: string
+          faq_id: string
+          helpful: boolean
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          faq_id: string
+          helpful: boolean
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          faq_id?: string
+          helpful?: boolean
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faq_feedback_faq_id_fkey"
+            columns: ["faq_id"]
+            isOneToOne: false
+            referencedRelation: "faqs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faqs: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          imagem_url: string | null
+          pergunta: string
+          resposta: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          imagem_url?: string | null
+          pergunta: string
+          resposta: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          imagem_url?: string | null
+          pergunta?: string
+          resposta?: string
+        }
+        Relationships: []
       }
       faturas_cartao: {
         Row: {

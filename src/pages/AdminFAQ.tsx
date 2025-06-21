@@ -57,12 +57,12 @@ const AdminFAQ = () => {
   const loadFAQs = async () => {
     try {
       const { data, error } = await supabase
-        .from('faqs')
+        .from('faqs' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFaqs(data || []);
+      setFaqs((data as FAQ[]) || []);
     } catch (error) {
       console.error('Erro ao carregar FAQs:', error);
       toast({
@@ -78,7 +78,7 @@ const AdminFAQ = () => {
   const loadStats = async () => {
     try {
       const { data, error } = await supabase
-        .from('faq_feedback')
+        .from('faq_feedback' as any)
         .select(`
           faq_id,
           helpful,
@@ -128,7 +128,7 @@ const AdminFAQ = () => {
     try {
       if (editingFaq) {
         const { error } = await supabase
-          .from('faqs')
+          .from('faqs' as any)
           .update(formData)
           .eq('id', editingFaq.id);
 
@@ -136,7 +136,7 @@ const AdminFAQ = () => {
         toast({ title: "FAQ atualizado com sucesso!" });
       } else {
         const { error } = await supabase
-          .from('faqs')
+          .from('faqs' as any)
           .insert(formData);
 
         if (error) throw error;
@@ -171,7 +171,7 @@ const AdminFAQ = () => {
 
     try {
       const { error } = await supabase
-        .from('faqs')
+        .from('faqs' as any)
         .delete()
         .eq('id', id);
 
@@ -191,7 +191,7 @@ const AdminFAQ = () => {
   const handleToggleActive = async (id: string, ativo: boolean) => {
     try {
       const { error } = await supabase
-        .from('faqs')
+        .from('faqs' as any)
         .update({ ativo: !ativo })
         .eq('id', id);
 
@@ -251,7 +251,7 @@ const AdminFAQ = () => {
                     <div className="truncate">{faq.pergunta}</div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={faq.ativo ? "success" : "secondary"}>
+                    <Badge variant={faq.ativo ? "default" : "secondary"}>
                       {faq.ativo ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </TableCell>
