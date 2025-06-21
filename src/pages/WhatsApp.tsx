@@ -13,7 +13,6 @@ import { usePeriodicStatusCheck } from '@/hooks/whatsApp/usePeriodicStatusCheck'
 import { useExistingInstanceCheck } from '@/hooks/whatsapp/useExistingInstanceCheck';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useState } from 'react';
 
 const WhatsApp = () => {
   const { 
@@ -51,13 +50,14 @@ const WhatsApp = () => {
   
   const userEmail = (localStorage.getItem('userEmail') || '').toLowerCase();
 
-  // Usar o hook centralizado para verificação de instância existente
+  // USAR APENAS O HOOK CENTRALIZADO para verificação de instância existente
   const {
     hasExistingInstance,
     checkingExistingInstance,
     existingInstanceData,
     setHasExistingInstance,
-    setExistingInstanceData
+    setExistingInstanceData,
+    recheckInstance
   } = useExistingInstanceCheck(userEmail);
   
   usePeriodicStatusCheck(instances.length, checkAllInstancesStatus);
@@ -66,8 +66,13 @@ const WhatsApp = () => {
     console.log('🎉 [WHATSAPP] Nova instância criada:', newInstance);
     addInstance(newInstance);
     setInstanceFound(true);
+    
+    // Atualizar o estado do hook centralizado
     setHasExistingInstance(true);
-    setExistingInstanceData(newInstance);
+    setExistingInstanceData({
+      instancia_zap: newInstance.instanceName,
+      status_instancia: 'conectado'
+    });
     
     saveInstanceName(newInstance.instanceName);
     
@@ -78,6 +83,8 @@ const WhatsApp = () => {
     setTimeout(async () => {
       try {
         await checkAllInstancesStatus();
+        // Forçar re-verificação após status check
+        recheckInstance();
       } catch (error) {
         console.error("Error checking status after instance creation:", error);
       }
@@ -111,11 +118,12 @@ const WhatsApp = () => {
     );
   }
 
-  console.log('🔍 [WHATSAPP] Estado atual da verificação:', {
+  console.log('🔍 [WHATSAPP] Estado atual da verificação FINAL:', {
     userEmail,
     hasExistingInstance,
     existingInstanceData,
-    checkingExistingInstance
+    checkingExistingInstance,
+    'Deve mostrar formulário?': !hasExistingInstance
   });
 
   return (
@@ -131,15 +139,34 @@ const WhatsApp = () => {
             )}
           </div>
           
-          <Button 
-            variant="outline" 
-            onClick={refreshInstances}
-            disabled={isRefreshing}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={recheckInstance}
+              disabled={checkingExistingInstance}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${checkingExistingInstance ? 'animate-spin' : ''}`} />
+              Verificar Instância
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              onClick={refreshInstances}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Atualizando...' : 'Atualizar Lista'}
+            </Button>
+          </div>
+        </div>
+        
+        {/* DEBUG: Mostrar estado atual */}
+        <div className="bg-gray-100 p-2 rounded text-xs">
+          <strong>DEBUG:</strong> hasExistingInstance = {hasExistingInstance.toString()}, 
+          status = {existingInstanceData?.status_instancia || 'N/A'}, 
+          instancia = {existingInstanceData?.instancia_zap || 'N/A'}
         </div>
         
         {/* Mostra formulário APENAS se NÃO tiver instância conectada */}
@@ -161,11 +188,12 @@ const WhatsApp = () => {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-green-800">
-                  WhatsApp Conectado
+                  WhatsApp Conectado ✅
                 </h3>
                 <div className="mt-2 text-sm text-green-700">
                   <p>Você já possui uma instância do WhatsApp conectada: <strong>{existingInstanceData.instancia_zap}</strong></p>
                   <p>Status: <strong>{existingInstanceData.status_instancia}</strong></p>
+                  <p>Agora você pode criar grupos WhatsApp!</p>
                 </div>
               </div>
             </div>
