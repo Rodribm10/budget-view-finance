@@ -1,7 +1,9 @@
 
-// WhatsApp API configuration
-export const SERVER_URL = "evolutionapi2.innova1001.com.br";
-export const API_KEY = "beeb77fbd7f48f91db2cd539a573c130";
+// WhatsApp API configuration - NOW SECURE
+// All sensitive values are handled by Edge Functions using Supabase Secrets
 
-// Local storage key
+// Only non-sensitive configuration remains
 export const STORAGE_KEY = 'whatsappInstances';
+
+// Server URL and API key are now securely handled by Edge Functions
+// No sensitive data exposed in frontend

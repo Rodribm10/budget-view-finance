@@ -1,5 +1,4 @@
 
-// Service dedicated to creating n8n workflows for new users
 import { supabase } from "@/integrations/supabase/client";
 
 interface N8nWorkflowPayload {
@@ -18,7 +17,7 @@ interface N8nWorkflowResponse {
 }
 
 /**
- * Creates a workflow in n8n for a new user
+ * Creates a workflow in n8n for a new user - NOW SECURE
  * @param userEmail The email of the user who just registered
  * @param workflowTemplate The JSON template for the workflow
  * @returns The created workflow data
@@ -54,30 +53,29 @@ export async function createN8nWorkflowForUser(
     
     console.log('📝 Template modificado para usuário:', finalTemplate.name);
     console.log('🔧 Webhook path configurado como:', username);
-    console.log('📋 JSON final a ser enviado:', JSON.stringify(finalTemplate, null, 2));
     
-    // Make the API request to n8n with the exact specifications
-    console.log('📡 Fazendo requisição para:', 'https://n8n.innova1001.com.br/api/v1/workflows');
+    // Make secure API request through Edge Function
+    console.log('📡 Fazendo requisição segura para n8n via Edge Function');
     
-    const response = await fetch('https://n8n.innova1001.com.br/api/v1/workflows', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-N8N-API-KEY': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YmM4MjQxOS0zZTk1LTRiYmMtODMwMy0xODAzZjk4YmQ4YjciLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwMTA5ODU3fQ.cvqDVnD6ide9WCbtCx7bVDEvkPzJyO4EhGSDhY0xIjE'
-      },
-      body: JSON.stringify(finalTemplate)
+    const { data, error } = await supabase.functions.invoke('n8n-api', {
+      body: {
+        endpoint: '/workflows',
+        method: 'POST',
+        body: finalTemplate
+      }
     });
     
-    console.log(`📡 Status da requisição n8n: ${response.status}`);
-    console.log('📋 Headers da resposta:', Object.fromEntries(response.headers.entries()));
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`❌ Erro ao criar workflow n8n: ${response.status} - ${errorText}`);
-      throw new Error(`Failed to create workflow: ${response.status} - ${errorText}`);
+    if (error) {
+      console.error('❌ Erro na Edge Function:', error);
+      throw new Error(error.message || 'Edge Function request failed');
     }
     
-    const workflowData: N8nWorkflowResponse = await response.json();
+    if (data.error) {
+      console.error('❌ Erro da API n8n:', data.error);
+      throw new Error(data.error);
+    }
+    
+    const workflowData: N8nWorkflowResponse = data;
     console.log('✅ Workflow criado com sucesso:', workflowData);
     
     // Extract workflow ID and webhook URL

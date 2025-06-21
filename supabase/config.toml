@@ -2,47 +2,38 @@
 project_id = "tnurlgbvfsxwqgwxamni"
 
 [api]
+enabled = true
 port = 54321
-schemas = ["public", "storage", "graphql_public"]
+schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
-[db]
-port = 54322
-major_version = 15
-
-[studio]
-port = 54323
-
-[inbucket]
-port = 54324
-smtp_port = 54325
-pop3_port = 54326
-
-[storage]
-file_size_limit = "50MiB"
-
 [auth]
+enabled = true
+port = 54324
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["https://localhost:3000"]
 jwt_expiry = 3600
 enable_signup = true
 enable_confirmations = false
 
-[auth.email]
-enable_signup = true
-double_confirm_changes = true
-enable_confirmations = false
+[functions.whatsapp-api]
+verify_jwt = false
 
-[auth.external.apple]
-enabled = false
-client_id = ""
-secret = ""
-redirect_uri = ""
-url = ""
+[functions.n8n-api]
+verify_jwt = false
 
-[functions]
-[functions.update-register-function]
-verify_jwt = true
+[functions.create-n8n-workflow]
+verify_jwt = false
+
+[functions.mercado-pago-subscribe]
+verify_jwt = false
+
 [functions.mercado-pago-webhook]
+verify_jwt = false
+
+[functions.update-register-function]
+verify_jwt = false
+
+[functions.update-register-function-sql]
 verify_jwt = false
