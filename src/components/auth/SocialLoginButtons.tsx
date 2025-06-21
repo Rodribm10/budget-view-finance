@@ -14,10 +14,20 @@ const SocialLoginButtons = () => {
       console.log('🔐 Iniciando login com Google...');
       console.log('🌐 URL atual:', window.location.origin);
       
-      // Determinar a URL de redirecionamento correta
-      const redirectUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/' 
-        : `${window.location.origin}/`;
+      // Determinar a URL de redirecionamento correta baseada no hostname
+      let redirectUrl;
+      const hostname = window.location.hostname;
+      
+      if (hostname === 'localhost') {
+        redirectUrl = 'http://localhost:3000/';
+      } else if (hostname.includes('financehome.innova1001.com.br')) {
+        redirectUrl = 'https://financehome.innova1001.com.br/';
+      } else if (hostname.includes('lovableproject.com')) {
+        redirectUrl = `${window.location.origin}/`;
+      } else {
+        // Fallback para qualquer outro domínio
+        redirectUrl = `${window.location.origin}/`;
+      }
       
       console.log('🔗 URL de redirecionamento:', redirectUrl);
       
