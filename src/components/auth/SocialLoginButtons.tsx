@@ -14,10 +14,17 @@ const SocialLoginButtons = () => {
       console.log('🔐 Iniciando login com Google...');
       console.log('🌐 URL atual:', window.location.origin);
       
+      // Determinar a URL de redirecionamento correta
+      const redirectUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/' 
+        : `${window.location.origin}/`;
+      
+      console.log('🔗 URL de redirecionamento:', redirectUrl);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
