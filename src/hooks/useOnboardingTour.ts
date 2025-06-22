@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { listWhatsAppGroups } from '@/services/whatsAppGroupsService';
 
 const TOUR_SESSION_KEY = 'onboarding_tour_shown';
@@ -12,17 +11,22 @@ export const useOnboardingTour = () => {
   const [shouldShowTour, setShouldShowTour] = useState(false);
   const [tourShownThisSession, setTourShownThisSession] = useState(false);
   const location = useLocation();
-  const { instances } = useWhatsAppInstances();
 
   // Verificar se o tour deve ser exibido
   const checkTourConditions = async () => {
     try {
+      // Só mostrar o tour na página inicial (dashboard)
+      if (location.pathname !== '/') {
+        console.log('❌ Tour só aparece no dashboard');
+        setShouldShowTour(false);
+        return;
+      }
+
       // Verificar se já foi mostrado nesta sessão
       const shownThisSession = sessionStorage.getItem(TOUR_SESSION_KEY) === 'true';
       
       console.log('🔍 Verificando condições do tour:', {
         shownThisSession,
-        instances: instances.length,
         location: location.pathname
       });
 
@@ -32,21 +36,6 @@ export const useOnboardingTour = () => {
         setTourShownThisSession(true);
         return;
       }
-
-      // Verificar se há instâncias conectadas
-      const hasConnectedInstance = instances.some(instance => 
-        instance.status === 'connected' || instance.connectionState === 'open'
-      );
-
-      console.log('📱 Status das instâncias:', {
-        totalInstances: instances.length,
-        hasConnectedInstance,
-        instancesDetails: instances.map(i => ({ 
-          name: i.instanceName, 
-          status: i.status, 
-          connectionState: i.connectionState 
-        }))
-      });
 
       // Verificar se há grupos cadastrados
       let hasGroups = false;
@@ -59,11 +48,10 @@ export const useOnboardingTour = () => {
         hasGroups = false;
       }
 
-      // Tour deve aparecer se NÃO tiver instância conectada OU NÃO tiver grupos
-      const shouldShow = !hasConnectedInstance || !hasGroups;
+      // Tour deve aparecer se NÃO tiver grupos
+      const shouldShow = !hasGroups;
       
       console.log('🎯 Resultado da verificação:', {
-        hasConnectedInstance,
         hasGroups,
         shouldShow,
         currentPath: location.pathname
@@ -89,11 +77,11 @@ export const useOnboardingTour = () => {
     }
   };
 
-  // Verificar condições quando instâncias mudarem ou na inicialização
+  // Verificar condições quando a localização mudar ou na inicialização
   useEffect(() => {
     console.log('🔄 Efeito disparado - verificando condições do tour');
     checkTourConditions();
-  }, [instances, location.pathname]);
+  }, [location.pathname]);
 
   // Limpar tour ao mudar de sessão
   useEffect(() => {
