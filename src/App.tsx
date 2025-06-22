@@ -14,6 +14,7 @@ const Transacoes = lazy(() => import('./pages/Transacoes'));
 const Categorias = lazy(() => import('./pages/Categorias'));
 const Metas = lazy(() => import('./pages/Metas'));
 const Calendario = lazy(() => import('./pages/Calendario'));
+const Assinatura = lazy(() => import('./pages/Assinatura'));
 const WhatsApp = lazy(() => import('./pages/WhatsApp'));
 const GruposWhatsApp = lazy(() => import('./pages/GruposWhatsApp'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -68,6 +69,7 @@ function App() {
         <Route path="/categorias" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Categorias /></Suspense></ProtectedRoute>} />
         <Route path="/metas" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Metas /></Suspense></ProtectedRoute>} />
         <Route path="/calendario" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Calendario /></Suspense></ProtectedRoute>} />
+        <Route path="/assinatura" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Assinatura /></Suspense></ProtectedRoute>} />
         <Route path="/whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><WhatsApp /></Suspense></ProtectedRoute>} />
         <Route path="/grupos-whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><GruposWhatsApp /></Suspense></ProtectedRoute>} />
         <Route path="/admin-faq" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><AdminFAQ /></Suspense></ProtectedRoute>} />

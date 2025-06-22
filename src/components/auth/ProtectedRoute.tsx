@@ -26,13 +26,19 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     // Verificar sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('🔐 Sessão inicial:', session?.user?.email);
+      console.log('🔐 [PROTECTED_ROUTE] Sessão inicial:', session?.user?.email);
       setSession(session);
       setLoggedIn(!!session);
       setUser(session?.user ? { id: session.user.id } : null);
 
       if (session?.user?.email) {
         localStorage.setItem('userEmail', session.user.email);
+        console.log('👤 [PROTECTED_ROUTE] Email salvo no localStorage:', session.user.email);
+        
+        // Disparar evento customizado para notificar outros componentes sobre o login
+        window.dispatchEvent(new CustomEvent('userLoggedIn', { 
+          detail: { email: session.user.email } 
+        }));
       } else {
         localStorage.removeItem('userEmail');
       }
@@ -43,13 +49,22 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // Listener para mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        console.log('🔄 Mudança de auth:', _event, session?.user?.email);
+        console.log('🔄 [PROTECTED_ROUTE] Mudança de auth:', _event, session?.user?.email);
         setSession(session);
         setLoggedIn(!!session);
         setUser(session?.user ? { id: session.user.id } : null);
 
         if (session?.user?.email) {
           localStorage.setItem('userEmail', session.user.email);
+          console.log('👤 [PROTECTED_ROUTE] Email atualizado no localStorage:', session.user.email);
+          
+          // Disparar evento customizado para notificar sobre o login
+          if (_event === 'SIGNED_IN') {
+            console.log('🎉 [PROTECTED_ROUTE] Login detectado, disparando evento');
+            window.dispatchEvent(new CustomEvent('userLoggedIn', { 
+              detail: { email: session.user.email } 
+            }));
+          }
         } else {
           localStorage.removeItem('userEmail');
         }
@@ -79,7 +94,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   
   // Se tem sessão mas perfil não está completo, redirecionar para completar perfil
   if (session && !isProfileComplete) {
-    console.log('🚨 Redirecionando para complete-profile - perfil incompleto');
+    console.log('🚨 [PROTECTED_ROUTE] Redirecionando para complete-profile - perfil incompleto');
     return <Navigate to="/complete-profile" replace />;
   }
   
