@@ -9,6 +9,7 @@ import { useWhatsAppActions } from '@/hooks/useWhatsAppActions';
 import { useWhatsAppInstance, WHATSAPP_INSTANCE_KEY } from '@/hooks/whatsApp/useWhatsAppInstance';
 import { usePeriodicStatusCheck } from '@/hooks/whatsApp/usePeriodicStatusCheck';
 import { useExistingInstanceCheck } from '@/hooks/whatsapp/useExistingInstanceCheck';
+import { Button } from '@/components/ui/button';
 
 const WhatsApp = () => {
   const { 
@@ -83,6 +84,12 @@ const WhatsApp = () => {
     }
   };
 
+  // Função para resetar o tour (apenas para debug)
+  const resetTour = () => {
+    sessionStorage.removeItem('onboarding_tour_shown');
+    window.location.reload();
+  };
+
   if (checkingExistingInstance || isLoading) {
     return (
       <Layout>
@@ -99,6 +106,24 @@ const WhatsApp = () => {
           onRefresh={recheckInstance}
           isRefreshing={checkingExistingInstance}
         />
+        
+        {/* Botão temporário para debug do tour */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-700 mb-2">Debug do Tour:</p>
+            <Button 
+              onClick={resetTour} 
+              variant="outline" 
+              size="sm"
+              className="mr-2"
+            >
+              Resetar Tour
+            </Button>
+            <span className="text-xs text-gray-500">
+              (Este botão só aparece em desenvolvimento)
+            </span>
+          </div>
+        )}
         
         <WhatsAppManager
           hasExistingInstance={hasExistingInstance}
