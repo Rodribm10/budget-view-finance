@@ -62,14 +62,6 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <span>Dashboard</span>
             </NavLink>
             <NavLink 
-              to="/assinatura" 
-              className={({ isActive }) => getNavLinkClass(isActive)}
-              onClick={isMobile ? onClose : undefined}
-            >
-              <Crown className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
-              <span>Assinatura</span>
-            </NavLink>
-            <NavLink 
               to="/transacoes" 
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
@@ -108,6 +100,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             >
               <Calendar className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Calendário</span>
+            </NavLink>
+            <NavLink 
+              to="/assinatura" 
+              className={({ isActive }) => getNavLinkClass(isActive)}
+              onClick={isMobile ? onClose : undefined}
+            >
+              <Crown className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+              <span>Assinatura</span>
             </NavLink>
           </div>
         </div>

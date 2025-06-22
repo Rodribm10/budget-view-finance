@@ -17,7 +17,7 @@ export const useOnboardingTour = () => {
     try {
       // Só mostrar o tour na página inicial (dashboard)
       if (location.pathname !== '/') {
-        console.log('❌ Tour só aparece no dashboard');
+        console.log('❌ Tour só aparece no dashboard, página atual:', location.pathname);
         setShouldShowTour(false);
         return;
       }
@@ -39,10 +39,24 @@ export const useOnboardingTour = () => {
 
       // Verificar se há grupos cadastrados
       let hasGroups = false;
+      const userEmail = localStorage.getItem('userEmail');
+      
+      console.log('📧 Email do usuário para verificação:', userEmail);
+      
+      if (!userEmail) {
+        console.log('❌ Email não encontrado no localStorage');
+        setShouldShowTour(false);
+        return;
+      }
+
       try {
+        console.log('🔍 Buscando grupos para o usuário...');
         const groups = await listWhatsAppGroups();
         hasGroups = groups.length > 0;
-        console.log('👥 Grupos encontrados:', groups.length);
+        console.log('👥 Grupos encontrados:', {
+          quantidade: groups.length,
+          grupos: groups.map(g => ({ id: g.id, nome: g.nome_grupo, status: g.status }))
+        });
       } catch (error) {
         console.log('⚠️ Erro ao verificar grupos, assumindo que não há grupos:', error);
         hasGroups = false;
@@ -51,24 +65,26 @@ export const useOnboardingTour = () => {
       // Tour deve aparecer se NÃO tiver grupos
       const shouldShow = !hasGroups;
       
-      console.log('🎯 Resultado da verificação:', {
+      console.log('🎯 Resultado final da verificação:', {
         hasGroups,
         shouldShow,
-        currentPath: location.pathname
+        currentPath: location.pathname,
+        userEmail: userEmail
       });
 
       setShouldShowTour(shouldShow);
       
       // Se deve mostrar o tour e não foi mostrado ainda, abrir automaticamente
       if (shouldShow && !shownThisSession && !isOpen) {
-        console.log('🚀 Abrindo tour automaticamente');
-        setIsOpen(true);
-        setCurrentStep(0);
-        setTourShownThisSession(true);
-        sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
+        console.log('🚀 Abrindo tour automaticamente - usuário sem grupos');
+        setTimeout(() => {
+          setIsOpen(true);
+          setCurrentStep(0);
+          setTourShownThisSession(true);
+          sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
+        }, 1000); // Delay para garantir que a página carregou completamente
       } else if (!shouldShow) {
-        // Se as condições foram atendidas, fechar o tour
-        console.log('✅ Condições atendidas, fechando tour se estiver aberto');
+        console.log('✅ Usuário já tem grupos, não mostrar tour');
         setIsOpen(false);
       }
     } catch (error) {
@@ -79,9 +95,23 @@ export const useOnboardingTour = () => {
 
   // Verificar condições quando a localização mudar ou na inicialização
   useEffect(() => {
-    console.log('🔄 Efeito disparado - verificando condições do tour');
-    checkTourConditions();
+    console.log('🔄 useEffect disparado - verificando condições do tour');
+    // Aguardar um pouco para garantir que os dados do usuário estão disponíveis
+    const timer = setTimeout(() => {
+      checkTourConditions();
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [location.pathname]);
+
+  // Verificar também quando o email do usuário estiver disponível
+  useEffect(() => {
+    const userEmail = localStorage.getItem('userEmail');
+    if (userEmail && location.pathname === '/') {
+      console.log('📧 Email detectado, re-verificando condições do tour');
+      checkTourConditions();
+    }
+  }, []);
 
   // Limpar tour ao mudar de sessão
   useEffect(() => {
