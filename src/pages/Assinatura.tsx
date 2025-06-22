@@ -44,6 +44,7 @@ const Assinatura = () => {
       });
 
       if (error) {
+        console.error("Erro completo:", error);
         throw new Error(`Erro de comunicação: ${error.message}`);
       }
       
@@ -52,6 +53,7 @@ const Assinatura = () => {
       }
       
       if (data.init_point) {
+        console.log("Redirecionando para:", data.init_point);
         window.location.href = data.init_point;
       } else {
          throw new Error("Não foi possível obter a URL de checkout. Tente novamente.");
@@ -59,7 +61,13 @@ const Assinatura = () => {
 
     } catch (error: any) {
       console.error("Erro ao criar a assinatura:", error);
-      toast.error(error.message || "Ocorreu um erro inesperado. Por favor, tente mais tarde.");
+      
+      // Mensagem mais amigável para erro de região
+      if (error.message?.includes('temporariamente indisponível')) {
+        toast.error("Serviço temporariamente indisponível para sua região. Tente novamente em alguns minutos.");
+      } else {
+        toast.error(error.message || "Ocorreu um erro inesperado. Por favor, tente mais tarde.");
+      }
     } finally {
         setIsSubscribing(false);
     }

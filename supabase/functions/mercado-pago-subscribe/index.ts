@@ -46,7 +46,6 @@ serve(async (req) => {
       });
     }
 
-
     const MERCADO_PAGO_ACCESS_TOKEN = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
     if (!MERCADO_PAGO_ACCESS_TOKEN) {
       return new Response(JSON.stringify({ error: 'Chave de acesso do Mercado Pago não configurada no servidor.' }), {
@@ -67,6 +66,8 @@ serve(async (req) => {
       payer_email: email
     };
 
+    console.log('Enviando requisição para MercadoPago:', JSON.stringify(body));
+
     const mpResponse = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
       headers: {
@@ -77,9 +78,21 @@ serve(async (req) => {
     });
 
     const mpData = await mpResponse.json();
+    console.log('Resposta do MercadoPago:', mpData);
 
     if (!mpResponse.ok) {
       console.error('Erro da API do Mercado Pago:', mpData);
+      
+      // Tratar erro específico de países diferentes
+      if (mpData.message === "Cannot operate between different countries") {
+        return new Response(JSON.stringify({ 
+          error: 'Serviço temporariamente indisponível para sua região. Tente novamente mais tarde.' 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 503,
+        });
+      }
+      
       throw new Error(mpData.message || "Erro ao criar a assinatura no Mercado Pago.");
     }
     
@@ -93,6 +106,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
+    console.error('Erro geral:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

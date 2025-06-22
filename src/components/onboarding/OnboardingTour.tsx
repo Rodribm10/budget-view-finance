@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { X } from 'lucide-react';
@@ -19,7 +19,30 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   onSkip,
   onClose
 }) => {
-  if (!isOpen) return null;
+  const cleanupRef = useRef<() => void>();
+
+  // Função para remover estilos de highlight
+  const removeHighlightStyle = () => {
+    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
+    elements.forEach(element => {
+      element.style.backgroundColor = '';
+      element.style.color = '';
+      element.style.fontWeight = '';
+      element.style.boxShadow = '';
+      element.style.border = '';
+      element.style.borderRadius = '';
+      element.style.position = '';
+      element.style.zIndex = '';
+    });
+  };
+
+  if (!isOpen) {
+    // Limpar estilos quando o tour não estiver aberto
+    useEffect(() => {
+      removeHighlightStyle();
+    }, []);
+    return null;
+  }
 
   const steps = [
     {
@@ -74,110 +97,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
 
   const currentStepData = steps[currentStep];
 
-  const getSpotlightStyle = () => {
-    if (!currentStepData.spotlight) return {};
-
-    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`);
-    if (!element) return {};
-
-    const rect = element.getBoundingClientRect();
-    return {
-      position: 'absolute' as const,
-      left: rect.left - 10,
-      top: rect.top - 10,
-      width: rect.width + 20,
-      height: rect.height + 20,
-      borderRadius: '8px',
-      boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 1), inset 0 0 0 3px rgba(59, 130, 246, 0.8)',
-      pointerEvents: 'none' as const,
-      zIndex: 9998,
-      border: '2px solid rgba(59, 130, 246, 0.9)'
-    };
-  };
-
-  const getArrowStyle = () => {
-    if (!currentStepData.spotlight) return { display: 'none' };
-
-    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`);
-    const card = document.querySelector('.onboarding-card');
-    
-    if (!element || !card) return { display: 'none' };
-
-    const elementRect = element.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
-
-    // Calcular posição da seta
-    const elementCenterX = elementRect.left + elementRect.width / 2;
-    const elementCenterY = elementRect.top + elementRect.height / 2;
-    const cardCenterX = cardRect.left + cardRect.width / 2;
-    const cardCenterY = cardRect.top + cardRect.height / 2;
-
-    // Calcular ângulo e distância
-    const deltaX = elementCenterX - cardCenterX;
-    const deltaY = elementCenterY - cardCenterY;
-    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-    // Posicionar a seta no meio do caminho
-    const arrowX = cardCenterX + (deltaX * 0.6);
-    const arrowY = cardCenterY + (deltaY * 0.6);
-
-    return {
-      position: 'fixed' as const,
-      left: arrowX,
-      top: arrowY,
-      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-      zIndex: 9999,
-      pointerEvents: 'none' as const,
-      width: '60px',
-      height: '3px',
-      background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0.4) 100%)',
-      borderRadius: '2px',
-      filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))',
-    };
-  };
-
-  const getArrowHeadStyle = () => {
-    if (!currentStepData.spotlight) return { display: 'none' };
-
-    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`);
-    const card = document.querySelector('.onboarding-card');
-    
-    if (!element || !card) return { display: 'none' };
-
-    const elementRect = element.getBoundingClientRect();
-    const cardRect = card.getBoundingClientRect();
-
-    const elementCenterX = elementRect.left + elementRect.width / 2;
-    const elementCenterY = elementRect.top + elementRect.height / 2;
-    const cardCenterX = cardRect.left + cardRect.width / 2;
-    const cardCenterY = cardRect.top + cardRect.height / 2;
-
-    const deltaX = elementCenterX - cardCenterX;
-    const deltaY = elementCenterY - cardCenterY;
-    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-
-    // Posicionar a ponta da seta mais próxima do elemento
-    const arrowHeadX = cardCenterX + (deltaX * 0.75);
-    const arrowHeadY = cardCenterY + (deltaY * 0.75);
-
-    return {
-      position: 'fixed' as const,
-      left: arrowHeadX,
-      top: arrowHeadY,
-      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
-      zIndex: 9999,
-      pointerEvents: 'none' as const,
-      width: '0',
-      height: '0',
-      borderLeft: '8px solid rgba(59, 130, 246, 0.8)',
-      borderTop: '6px solid transparent',
-      borderBottom: '6px solid transparent',
-      filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))',
-    };
-  };
-
-  // Estilo para destacar o elemento com fundo branco e texto preto
+  // Aplicar highlight no elemento
   const highlightElementStyle = () => {
     if (!currentStepData.spotlight) return;
 
@@ -195,37 +115,37 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     element.style.zIndex = '9999';
   };
 
-  // Remover estilos quando não há spotlight
-  const removeHighlightStyle = () => {
-    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
-    elements.forEach(element => {
-      element.style.backgroundColor = '';
-      element.style.color = '';
-      element.style.fontWeight = '';
-      element.style.boxShadow = '';
-      element.style.border = '';
-      element.style.borderRadius = '';
-      element.style.position = '';
-      element.style.zIndex = '';
-    });
-  };
-
   // Aplicar ou remover highlight baseado no step atual
-  React.useEffect(() => {
+  useEffect(() => {
+    // Limpar estilos anteriores
+    removeHighlightStyle();
+
     if (currentStepData.spotlight) {
       // Pequeno delay para garantir que o DOM foi renderizado
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         highlightElementStyle();
       }, 100);
-    } else {
-      removeHighlightStyle();
+
+      cleanupRef.current = () => {
+        clearTimeout(timer);
+        removeHighlightStyle();
+      };
     }
 
-    // Cleanup quando o componente for desmontado
+    // Cleanup quando o componente for desmontado ou step mudar
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current();
+      }
+    };
+  }, [currentStep, currentStepData.spotlight]);
+
+  // Cleanup quando o componente for desmontado
+  useEffect(() => {
     return () => {
       removeHighlightStyle();
     };
-  }, [currentStep, currentStepData.spotlight]);
+  }, []);
 
   return (
     <>
@@ -234,19 +154,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
         className="fixed inset-0 bg-black bg-opacity-80 z-[9997]"
         style={{ zIndex: 9997 }}
       />
-      
-      {/* Spotlight transparente */}
-      {currentStepData.spotlight && (
-        <div style={getSpotlightStyle()} />
-      )}
-
-      {/* Seta moderna conectando o card ao elemento */}
-      {currentStepData.spotlight && (
-        <>
-          <div style={getArrowStyle()} />
-          <div style={getArrowHeadStyle()} />
-        </>
-      )}
       
       {/* Card do tour */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
