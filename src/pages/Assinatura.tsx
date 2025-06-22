@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check } from "lucide-react";
@@ -29,37 +30,46 @@ const Assinatura = () => {
       console.log('🔄 [ASSINATURA] Iniciando processo de assinatura...');
       
       // Verificar sessão do usuário
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (userError) {
-        console.error('❌ [ASSINATURA] Erro de autenticação:', userError);
+      if (sessionError) {
+        console.error('❌ [ASSINATURA] Erro ao obter sessão:', sessionError);
         toast.error("Erro de autenticação. Faça login novamente.");
         return;
       }
 
-      if (!user || !user.id || !user.email) {
-        console.error('❌ [ASSINATURA] Usuário não autenticado');
+      if (!session || !session.user || !session.user.id || !session.user.email) {
+        console.error('❌ [ASSINATURA] Usuário não autenticado ou dados incompletos');
         toast.error("Sessão inválida. Por favor, faça login novamente.");
         return;
       }
 
+      const { user } = session;
       console.log('✅ [ASSINATURA] Usuário autenticado:', { id: user.id, email: user.email });
+
+      // Preparar dados para envio
+      const requestData = {
+        email: user.email,
+        userId: user.id
+      };
+
+      console.log('📦 [ASSINATURA] Dados a serem enviados:', requestData);
 
       // Chamar a função do MercadoPago
       console.log('📞 [ASSINATURA] Chamando função mercado-pago-subscribe...');
       const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe', {
-        body: { 
-          email: user.email, 
-          userId: user.id 
-        },
+        body: requestData,
+        method: 'POST'
       });
+
+      console.log('📨 [ASSINATURA] Resposta da função:', { data, error });
 
       if (error) {
         console.error('❌ [ASSINATURA] Erro na função:', error);
         
         // Tratar diferentes tipos de erro
         if (error.message?.includes('FunctionsHttpError')) {
-          toast.error("Erro de comunicação. Verifique sua conexão e tente novamente.");
+          toast.error("Erro de comunicação com o servidor. Tente novamente.");
         } else if (error.message?.includes('FunctionsRelayError')) {
           toast.error("Serviço temporariamente indisponível. Tente novamente em alguns instantes.");
         } else if (error.message?.includes('fetch')) {

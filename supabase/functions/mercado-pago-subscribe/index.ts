@@ -15,32 +15,48 @@ serve(async (req) => {
 
   try {
     console.log('🚀 Iniciando processamento da assinatura MercadoPago');
+    console.log('📋 Método da requisição:', req.method);
+    console.log('📋 Headers da requisição:', Object.fromEntries(req.headers.entries()));
     
     // Verificar se há dados no corpo da requisição
     let requestBody;
     try {
       const text = await req.text();
-      requestBody = text ? JSON.parse(text) : {};
-      console.log('📦 Corpo da requisição:', requestBody);
+      console.log('📦 Texto bruto recebido:', text);
+      
+      if (!text || text.trim() === '') {
+        console.error('❌ Corpo da requisição está vazio');
+        return new Response(JSON.stringify({ error: 'Dados da requisição não fornecidos.' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        });
+      }
+      
+      requestBody = JSON.parse(text);
+      console.log('📦 Corpo da requisição parseado:', requestBody);
     } catch (parseError) {
       console.error('❌ Erro ao fazer parse do JSON:', parseError);
-      return new Response(JSON.stringify({ error: 'Dados da requisição inválidos.' }), {
+      return new Response(JSON.stringify({ error: 'Formato de dados inválido.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
 
+    // Extrair email e userId do corpo da requisição
     const { email, userId } = requestBody;
+    
+    console.log('📧 Dados extraídos:', { email, userId });
     
     if (!email || !userId) {
       console.error('❌ Email ou ID do usuário não fornecido');
+      console.error('❌ Dados recebidos:', { email, userId });
       return new Response(JSON.stringify({ error: 'E-mail ou ID do usuário não fornecido.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       });
     }
 
-    console.log('📧 Dados recebidos:', { email, userId });
+    console.log('📧 Dados validados com sucesso:', { email, userId });
 
     // Cria um cliente Supabase com a service_role_key para verificar o usuário
     const supabaseAdmin = createClient(
@@ -59,7 +75,7 @@ serve(async (req) => {
 
     if (userError) {
       console.error('❌ Erro ao buscar usuário:', userError);
-      return new Response(JSON.stringify({ error: 'Usuário não encontrado.' }), {
+      return new Response(JSON.stringify({ error: 'Usuário não encontrado no sistema.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
       });
@@ -67,7 +83,7 @@ serve(async (req) => {
 
     if (!userData) {
       console.error('❌ Usuário não encontrado no banco');
-      return new Response(JSON.stringify({ error: 'Usuário não encontrado.' }), {
+      return new Response(JSON.stringify({ error: 'Usuário não encontrado no sistema.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 404,
       });
