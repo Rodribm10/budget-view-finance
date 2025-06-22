@@ -24,15 +24,22 @@ export async function getTransactionSummary(monthFilter?: string) {
     // Build the query with month filter if provided
     let query = supabase
       .from('transacoes')
-      .select('tipo, valor')
-      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+      .select('tipo, valor');
+
+    // Apply filters properly
+    if (groupIds.length > 0) {
+      const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
+      query = query.or(orFilter);
+    } else {
+      query = query.eq('login', normalizedEmail);
+    }
 
     // Apply month filter if provided
     if (monthFilter) {
       const startDate = `${monthFilter}-01`;
       const year = parseInt(monthFilter.split('-')[0]);
       const month = parseInt(monthFilter.split('-')[1]);
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of the month
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
       
       query = query
         .gte('quando', startDate)
@@ -92,15 +99,22 @@ export async function getCategorySummary(tipoFiltro: string = 'despesa', monthFi
     // Build the query with month filter if provided
     let query = supabase
       .from('transacoes')
-      .select('categoria, valor, tipo')
-      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+      .select('categoria, valor, tipo');
+
+    // Apply filters properly
+    if (groupIds.length > 0) {
+      const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
+      query = query.or(orFilter);
+    } else {
+      query = query.eq('login', normalizedEmail);
+    }
 
     // Apply month filter if provided
     if (monthFilter) {
       const startDate = `${monthFilter}-01`;
       const year = parseInt(monthFilter.split('-')[0]);
       const month = parseInt(monthFilter.split('-')[1]);
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // Last day of the month
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
       
       query = query
         .gte('quando', startDate)
@@ -177,11 +191,20 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
     // Get user groups by email
     const groupIds = await getUserGroups(normalizedEmail);
     
-    // Fetch monthly data with enhanced filter based on email (login) or group_id
-    const { data, error } = await supabase
+    // Build the query properly
+    let query = supabase
       .from('transacoes')
-      .select('quando, valor, tipo')
-      .or(`login.eq.${normalizedEmail},${groupIds.length > 0 ? `grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})` : ''}`);
+      .select('quando, valor, tipo');
+
+    // Apply filters properly
+    if (groupIds.length > 0) {
+      const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
+      query = query.or(orFilter);
+    } else {
+      query = query.eq('login', normalizedEmail);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar dados mensais:', error);
