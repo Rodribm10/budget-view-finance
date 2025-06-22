@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check } from "lucide-react";
@@ -59,7 +58,11 @@ const Assinatura = () => {
         console.error('❌ [ASSINATURA] Erro na função:', error);
         
         // Tratar diferentes tipos de erro
-        if (error.message?.includes('fetch')) {
+        if (error.message?.includes('FunctionsHttpError')) {
+          toast.error("Erro de comunicação. Verifique sua conexão e tente novamente.");
+        } else if (error.message?.includes('FunctionsRelayError')) {
+          toast.error("Serviço temporariamente indisponível. Tente novamente em alguns instantes.");
+        } else if (error.message?.includes('fetch')) {
           toast.error("Erro de conexão. Verifique sua internet e tente novamente.");
         } else if (error.message?.includes('401')) {
           toast.error("Sessão expirada. Faça login novamente.");
@@ -75,7 +78,7 @@ const Assinatura = () => {
         // Tratar erros específicos do MercadoPago
         if (data.error.includes('temporariamente indisponível')) {
           toast.error("Serviço temporariamente indisponível para sua região. Entre em contato conosco.");
-        } else if (data.error.includes('Token')) {
+        } else if (data.error.includes('Token') || data.error.includes('configuração')) {
           toast.error("Erro de configuração. Entre em contato com o suporte.");
         } else {
           toast.error(data.error);
@@ -92,7 +95,7 @@ const Assinatura = () => {
           window.location.href = data.init_point;
         }, 1000);
       } else {
-        console.error('❌ [ASSINATURA] URL de checkout não encontrada');
+        console.error('❌ [ASSINATURA] URL de checkout não encontrada nos dados:', data);
         toast.error("Não foi possível gerar o link de pagamento. Tente novamente.");
       }
 

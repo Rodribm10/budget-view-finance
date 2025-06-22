@@ -16,7 +16,21 @@ serve(async (req) => {
   try {
     console.log('🚀 Iniciando processamento da assinatura MercadoPago');
     
-    const { email, userId } = await req.json();
+    // Verificar se há dados no corpo da requisição
+    let requestBody;
+    try {
+      const text = await req.text();
+      requestBody = text ? JSON.parse(text) : {};
+      console.log('📦 Corpo da requisição:', requestBody);
+    } catch (parseError) {
+      console.error('❌ Erro ao fazer parse do JSON:', parseError);
+      return new Response(JSON.stringify({ error: 'Dados da requisição inválidos.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      });
+    }
+
+    const { email, userId } = requestBody;
     
     if (!email || !userId) {
       console.error('❌ Email ou ID do usuário não fornecido');
@@ -39,20 +53,27 @@ serve(async (req) => {
     console.log('🔍 Verificando usuário no banco de dados...');
     const { data: userData, error: userError } = await supabaseAdmin
       .from('usuarios')
-      .select('id')
+      .select('id, email')
       .eq('id', userId)
-      .eq('email', email)
       .single();
 
-    if (userError || !userData) {
-      console.error('❌ Falha na verificação do usuário:', userError);
-      return new Response(JSON.stringify({ error: 'Usuário não autorizado.' }), {
+    if (userError) {
+      console.error('❌ Erro ao buscar usuário:', userError);
+      return new Response(JSON.stringify({ error: 'Usuário não encontrado.' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 401,
+        status: 404,
       });
     }
 
-    console.log('✅ Usuário verificado com sucesso');
+    if (!userData) {
+      console.error('❌ Usuário não encontrado no banco');
+      return new Response(JSON.stringify({ error: 'Usuário não encontrado.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 404,
+      });
+    }
+
+    console.log('✅ Usuário verificado com sucesso:', userData);
 
     const MERCADO_PAGO_ACCESS_TOKEN = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN')
     if (!MERCADO_PAGO_ACCESS_TOKEN) {
@@ -63,6 +84,10 @@ serve(async (req) => {
       })
     }
 
+    // Pegar a URL de origem para o back_url
+    const origin = req.headers.get('origin') || req.headers.get('referer') || 'https://lovableproject.com';
+    console.log('🌐 Origin detectado:', origin);
+
     const body = {
       reason: "Plano Mensal Finance Home",
       auto_recurring: {
@@ -71,7 +96,7 @@ serve(async (req) => {
         transaction_amount: 14.99,
         currency_id: "BRL"
       },
-      back_url: req.headers.get("origin") || "http://localhost:5173/configuracoes",
+      back_url: `${origin}/configuracoes`,
       payer_email: email
     };
 
@@ -107,7 +132,7 @@ serve(async (req) => {
       const errorMessage = mpData.message || `Erro no MercadoPago (${mpResponse.status})`;
       return new Response(JSON.stringify({ error: errorMessage }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: mpResponse.status,
+        status: 422,
       });
     }
     
