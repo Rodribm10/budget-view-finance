@@ -112,6 +112,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               to="/whatsapp"
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
+              data-tour="whatsapp-menu"
             >
               <MessageSquareText className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Conectar WhatsApp</span>
@@ -120,6 +121,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               to="/grupos-whatsapp"
               className={({ isActive }) => getNavLinkClass(isActive)}
               onClick={isMobile ? onClose : undefined}
+              data-tour="grupos-menu"
             >
               <Users className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
               <span>Grupos</span>

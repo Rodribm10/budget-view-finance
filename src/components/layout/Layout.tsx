@@ -1,69 +1,75 @@
 
-import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/layout/Sidebar';
-import Header from '@/components/layout/Header';
-import HelpIcon from '@/components/help/HelpIcon';
-import { useToast } from "@/components/ui/use-toast";
-import { Menu } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import Header from './Header';
+import Sidebar from './Sidebar';
+import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { toast } = useToast();
-  const [isMobile, setIsMobile] = useState(false);
+export default function Layout({ children }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const isMobile = useIsMobile();
   
-  useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    
-    return () => {
-      window.removeEventListener('resize', checkIfMobile);
-    };
-  }, []);
+  const {
+    isOpen: tourOpen,
+    currentStep,
+    nextStep,
+    skipTour,
+    closeTour
+  } = useOnboardingTour();
 
-  const handleCloseSidebar = () => {
+  const handleSidebarClose = () => {
     setSidebarOpen(false);
   };
-  
+
+  const handleMenuToggle = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <div className="flex h-screen overflow-hidden">
-      {isMobile ? (
-        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden fixed top-4 left-4 z-20">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-[250px]">
-            <Sidebar isOpen={true} onClose={handleCloseSidebar} />
-          </SheetContent>
-        </Sheet>
-      ) : (
-        <div className="hidden md:block w-64 flex-shrink-0">
-          <Sidebar isOpen={true} onClose={() => {}} />
-        </div>
+    <div className="min-h-screen bg-background flex">
+      {/* Mobile sidebar overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black bg-opacity-50" 
+          onClick={handleSidebarClose}
+        />
       )}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-auto p-4 pt-16 md:pt-4 md:p-6">
-          {children}
+      
+      {/* Sidebar */}
+      <div className={`
+        ${isMobile 
+          ? `fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ${
+              sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            }`
+          : 'relative'
+        }
+      `}>
+        <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header onMenuToggle={handleMenuToggle} />
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto px-4 py-6">
+            {children}
+          </div>
         </main>
       </div>
-      
-      {/* Help Icon */}
-      <HelpIcon />
+
+      {/* Tour de Onboarding */}
+      <OnboardingTour
+        isOpen={tourOpen}
+        currentStep={currentStep}
+        onNext={nextStep}
+        onSkip={skipTour}
+        onClose={closeTour}
+      />
     </div>
   );
-};
-
-export default Layout;
+}
