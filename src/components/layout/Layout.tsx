@@ -4,6 +4,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
+import HelpIcon from '@/components/help/HelpIcon';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 interface LayoutProps {
@@ -61,6 +62,9 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Help Icon */}
+      <HelpIcon />
 
       {/* Tour de Onboarding */}
       <OnboardingTour

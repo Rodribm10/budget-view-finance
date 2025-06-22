@@ -12,26 +12,6 @@ interface CategoryChartProps {
 const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = false }) => {
   const validCategories = categories.filter(cat => cat.valor > 0);
 
-  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
-    if (percent < 0.05) return null;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.7;
-    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
-    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
-
-    return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="#fff" 
-        textAnchor={x > cx ? 'start' : 'end'}
-        dominantBaseline="central"
-        className="text-xs font-bold drop-shadow-lg"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -49,7 +29,9 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
               className="w-3 h-3 mr-2 rounded-full shadow"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="truncate font-semibold text-zinc-700 dark:text-white">{entry.value}</span>
+            <span className="truncate font-semibold text-zinc-700 dark:text-white">
+              {entry.value} ({(entry.payload.percentage * 100).toFixed(0)}%)
+            </span>
           </div>
         ))}
       </div>
@@ -94,8 +76,6 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
                   data={validCategories}
                   cx="50%"
                   cy="45%"
-                  labelLine={false}
-                  label={renderCustomizedLabel}
                   outerRadius={90}
                   innerRadius={40}
                   fill="#8884d8"
