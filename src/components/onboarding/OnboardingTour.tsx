@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { X } from 'lucide-react';
@@ -19,32 +19,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   onSkip,
   onClose
 }) => {
-  // Definir a função ANTES de usá-la
-  const removeHighlightStyle = () => {
-    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
-    elements.forEach(element => {
-      element.style.backgroundColor = '';
-      element.style.color = '';
-      element.style.fontWeight = '';
-      element.style.boxShadow = '';
-      element.style.border = '';
-      element.style.borderRadius = '';
-      element.style.position = '';
-      element.style.zIndex = '';
-    });
-  };
-
-  // Cleanup de estilos quando o componente for desmontado ou tour fechado
-  useEffect(() => {
-    if (!isOpen) {
-      removeHighlightStyle();
-    }
-    
-    return () => {
-      removeHighlightStyle();
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   const steps = [
@@ -100,38 +74,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
 
   const currentStepData = steps[currentStep];
 
-  // Estilo para destacar o elemento com fundo branco e texto preto
-  const highlightElementStyle = () => {
-    if (!currentStepData.spotlight) return;
-
-    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`) as HTMLElement;
-    if (!element) return;
-
-    // Aplicar estilos diretamente no elemento
-    element.style.backgroundColor = '#ffffff';
-    element.style.color = '#000000';
-    element.style.fontWeight = '600';
-    element.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.6)';
-    element.style.border = '2px solid rgba(59, 130, 246, 0.8)';
-    element.style.borderRadius = '8px';
-    element.style.position = 'relative';
-    element.style.zIndex = '9999';
-  };
-
-  // Aplicar ou remover highlight baseado no step atual
-  useEffect(() => {
-    if (currentStepData.spotlight) {
-      // Primeiro remover qualquer highlight anterior
-      removeHighlightStyle();
-      // Pequeno delay para garantir que o DOM foi renderizado
-      setTimeout(() => {
-        highlightElementStyle();
-      }, 100);
-    } else {
-      removeHighlightStyle();
-    }
-  }, [currentStep, currentStepData.spotlight]);
-
   const getSpotlightStyle = () => {
     if (!currentStepData.spotlight) return {};
 
@@ -174,6 +116,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     const deltaX = elementCenterX - cardCenterX;
     const deltaY = elementCenterY - cardCenterY;
     const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
     // Posicionar a seta no meio do caminho
     const arrowX = cardCenterX + (deltaX * 0.6);
@@ -233,6 +176,56 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))',
     };
   };
+
+  // Estilo para destacar o elemento com fundo branco e texto preto
+  const highlightElementStyle = () => {
+    if (!currentStepData.spotlight) return;
+
+    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`) as HTMLElement;
+    if (!element) return;
+
+    // Aplicar estilos diretamente no elemento
+    element.style.backgroundColor = '#ffffff';
+    element.style.color = '#000000';
+    element.style.fontWeight = '600';
+    element.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.6)';
+    element.style.border = '2px solid rgba(59, 130, 246, 0.8)';
+    element.style.borderRadius = '8px';
+    element.style.position = 'relative';
+    element.style.zIndex = '9999';
+  };
+
+  // Remover estilos quando não há spotlight
+  const removeHighlightStyle = () => {
+    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
+    elements.forEach(element => {
+      element.style.backgroundColor = '';
+      element.style.color = '';
+      element.style.fontWeight = '';
+      element.style.boxShadow = '';
+      element.style.border = '';
+      element.style.borderRadius = '';
+      element.style.position = '';
+      element.style.zIndex = '';
+    });
+  };
+
+  // Aplicar ou remover highlight baseado no step atual
+  React.useEffect(() => {
+    if (currentStepData.spotlight) {
+      // Pequeno delay para garantir que o DOM foi renderizado
+      setTimeout(() => {
+        highlightElementStyle();
+      }, 100);
+    } else {
+      removeHighlightStyle();
+    }
+
+    // Cleanup quando o componente for desmontado
+    return () => {
+      removeHighlightStyle();
+    };
+  }, [currentStep, currentStepData.spotlight]);
 
   return (
     <>
