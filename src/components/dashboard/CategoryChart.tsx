@@ -11,7 +11,6 @@ interface CategoryChartProps {
 
 const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = false }) => {
   const validCategories = categories.filter(cat => cat.valor > 0);
-  const totalValue = validCategories.reduce((sum, cat) => sum + cat.valor, 0);
 
   const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index }: any) => {
     if (percent < 0.05) return null;
@@ -60,10 +59,10 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
   const renderCustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 p-2 rounded-xl shadow-lg transition-all duration-300">
-          <p className="font-semibold text-sm text-zinc-800 dark:text-white">{payload[0].name}</p>
-          <p className="font-bold">{formatCurrency(payload[0].value)}</p>
-          <p className="text-xs">{`${(payload[0].payload.percentage * 100).toFixed(1)}%`}</p>
+        <div className="bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-700 p-3 rounded-xl shadow-lg transition-all duration-300">
+          <p className="font-semibold text-sm text-zinc-800 dark:text-white mb-1">{payload[0].name}</p>
+          <p className="font-bold text-base">{formatCurrency(payload[0].value)}</p>
+          <p className="text-xs text-gray-600 dark:text-gray-400">{`${(payload[0].payload.percentage * 100).toFixed(1)}%`}</p>
         </div>
       );
     }
@@ -88,17 +87,17 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
             <span className="text-xs mt-2">Verifique se existem transações do tipo 'despesa' cadastradas</span>
           </div>
         ) : (
-          <div className="h-[320px] relative">
+          <div className="h-[300px] relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={validCategories}
                   cx="50%"
-                  cy="46%"
+                  cy="45%"
                   labelLine={false}
                   label={renderCustomizedLabel}
-                  outerRadius={105}
-                  innerRadius={65}
+                  outerRadius={90}
+                  innerRadius={40}
                   fill="#8884d8"
                   dataKey="valor"
                   nameKey="categoria"
@@ -120,13 +119,6 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
                 <Legend content={renderCustomLegend} layout="horizontal" verticalAlign="bottom" />
               </PieChart>
             </ResponsiveContainer>
-            {/* Valor total no centro */}
-            <div 
-              className="absolute top-[46%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none"
-              style={{ width: '120px' }}
-            >
-              <div className="font-bold text-lg text-zinc-800 dark:text-white">{formatCurrency(totalValue)}</div>
-            </div>
           </div>
         )}
       </CardContent>
