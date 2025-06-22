@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import SummaryCard from '@/components/dashboard/SummaryCard';
@@ -5,6 +6,7 @@ import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
 import { MonthFilter } from '@/components/filters/MonthFilter';
+import { OnboardingTour, useOnboardingTour } from '@/components/onboarding';
 import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
 import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
@@ -23,6 +25,15 @@ const Dashboard = () => {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0, cartoes: 0 });
   const { toast } = useToast();
+
+  // Hook do tour de onboarding
+  const {
+    isOpen: tourIsOpen,
+    currentStep: tourCurrentStep,
+    nextStep: tourNextStep,
+    skipTour,
+    closeTour
+  } = useOnboardingTour();
 
   // Função para obter o mês atual no formato YYYY-MM
   const getCurrentMonth = () => {
@@ -196,6 +207,15 @@ const Dashboard = () => {
           <TransactionsTable transactions={transactions} isLoading={isLoading} />
         </div>
       </div>
+
+      {/* Tour de Onboarding */}
+      <OnboardingTour
+        isOpen={tourIsOpen}
+        currentStep={tourCurrentStep}
+        onNext={tourNextStep}
+        onSkip={skipTour}
+        onClose={closeTour}
+      />
     </Layout>
   );
 };

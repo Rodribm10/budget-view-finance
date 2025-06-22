@@ -24,26 +24,8 @@ export const useOnboardingTour = () => {
         return;
       }
 
-      // Verificar se já foi mostrado nesta sessão
-      const shownThisSession = sessionStorage.getItem(TOUR_SESSION_KEY) === 'true';
-      
-      console.log('🔍 [TOUR] Verificando condições:', {
-        shownThisSession,
-        location: location.pathname,
-        sessionStorage: sessionStorage.getItem(TOUR_SESSION_KEY)
-      });
-
-      if (shownThisSession) {
-        console.log('❌ [TOUR] Tour já foi exibido nesta sessão');
-        setShouldShowTour(false);
-        setTourShownThisSession(true);
-        return;
-      }
-
-      // Verificar se há grupos cadastrados
-      let hasGroups = false;
+      // Verificar se existe email no localStorage
       const userEmail = localStorage.getItem('userEmail');
-      
       console.log('📧 [TOUR] Email do usuário para verificação:', userEmail);
       
       if (!userEmail) {
@@ -52,6 +34,9 @@ export const useOnboardingTour = () => {
         return;
       }
 
+      // SEMPRE verificar se há grupos cadastrados (ignorar sessionStorage inicialmente)
+      let hasGroups = false;
+      
       try {
         console.log('🔍 [TOUR] Buscando grupos para o usuário...');
         const groups = await listWhatsAppGroups();
@@ -60,49 +45,63 @@ export const useOnboardingTour = () => {
           quantidade: groups.length,
           grupos: groups.map(g => ({ id: g.id, nome: g.nome_grupo, status: g.status, login: g.login }))
         });
-        console.log('📊 [TOUR] Query resultado completo:', groups);
       } catch (error) {
         console.log('⚠️ [TOUR] Erro ao verificar grupos, assumindo que não há grupos:', error);
         hasGroups = false;
       }
 
-      // Tour deve aparecer se NÃO tiver grupos
-      const shouldShow = !hasGroups;
-      
-      console.log('🎯 [TOUR] Resultado final da verificação:', {
-        hasGroups,
-        shouldShow,
-        currentPath: location.pathname,
-        userEmail: userEmail,
-        shownThisSession
-      });
-
-      setShouldShowTour(shouldShow);
-      
-      // Se deve mostrar o tour e não foi mostrado ainda, abrir automaticamente
-      if (shouldShow && !shownThisSession && !isOpen) {
-        console.log('🚀 [TOUR] Abrindo tour automaticamente - usuário sem grupos');
-        setTimeout(() => {
-          console.log('🎬 [TOUR] Executando abertura do tour...');
-          setIsOpen(true);
-          setCurrentStep(0);
-          setTourShownThisSession(true);
-          sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
-        }, 2000); // Delay para garantir que tudo carregue
-      } else if (!shouldShow) {
+      // Se tem grupos, não mostrar tour
+      if (hasGroups) {
         console.log('✅ [TOUR] Usuário já tem grupos, não mostrar tour');
+        setShouldShowTour(false);
         setIsOpen(false);
+        return;
       }
+
+      // Se não tem grupos, verificar se já foi mostrado nesta sessão
+      const shownThisSession = sessionStorage.getItem(TOUR_SESSION_KEY) === 'true';
+      console.log('🔍 [TOUR] Usuário SEM grupos. Verificando se tour já foi exibido nesta sessão:', shownThisSession);
+
+      if (shownThisSession) {
+        console.log('❌ [TOUR] Tour já foi exibido nesta sessão para este usuário sem grupos');
+        setShouldShowTour(false);
+        setTourShownThisSession(true);
+        return;
+      }
+
+      // Tour deve aparecer: usuário sem grupos e tour não foi exibido ainda
+      console.log('🎯 [TOUR] CONDIÇÕES ATENDIDAS - Usuário sem grupos e tour não exibido ainda');
+      setShouldShowTour(true);
+      
+      // Abrir tour automaticamente após um pequeno delay
+      console.log('🚀 [TOUR] Abrindo tour automaticamente - usuário sem grupos');
+      setTimeout(() => {
+        console.log('🎬 [TOUR] Executando abertura do tour...');
+        setIsOpen(true);
+        setCurrentStep(0);
+        // SÓ marcar como exibido quando realmente abrir
+        sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
+        setTourShownThisSession(true);
+      }, 2000);
+
     } catch (error) {
       console.error('❌ [TOUR] Erro ao verificar condições do tour:', error);
       setShouldShowTour(false);
     }
   };
 
+  // Função para limpar o tour (para quando o usuário cria um grupo)
+  const resetTourForNewGroups = () => {
+    console.log('🔄 [TOUR] Resetando tour - usuário criou grupos');
+    setIsOpen(false);
+    setShouldShowTour(false);
+    sessionStorage.removeItem(TOUR_SESSION_KEY);
+    setTourShownThisSession(false);
+  };
+
   // Verificar condições quando a localização mudar ou na inicialização
   useEffect(() => {
     console.log('🔄 [TOUR] useEffect disparado - verificando condições do tour');
-    // Aguardar um pouco para garantir que os dados do usuário estão disponíveis
     const timer = setTimeout(() => {
       checkTourConditions();
     }, 1000);
@@ -115,7 +114,10 @@ export const useOnboardingTour = () => {
     const handleUserLoggedIn = (event: CustomEvent) => {
       console.log('🎉 [TOUR] Evento de login recebido:', event.detail);
       if (location.pathname === '/') {
-        console.log('📧 [TOUR] Login detectado no dashboard, verificando condições do tour');
+        console.log('📧 [TOUR] Login detectado no dashboard, re-verificando condições do tour');
+        // Limpar sessionStorage para nova verificação após login
+        sessionStorage.removeItem(TOUR_SESSION_KEY);
+        setTourShownThisSession(false);
         setTimeout(() => {
           checkTourConditions();
         }, 2500);
@@ -134,7 +136,9 @@ export const useOnboardingTour = () => {
     console.log('📧 [TOUR] Segundo useEffect - email disponível:', userEmail);
     if (userEmail && location.pathname === '/') {
       console.log('📧 [TOUR] Email detectado, re-verificando condições do tour');
-      // Delay maior para garantir que o usuário já está logado completamente
+      // Limpar sessionStorage para nova verificação
+      sessionStorage.removeItem(TOUR_SESSION_KEY);
+      setTourShownThisSession(false);
       setTimeout(() => {
         checkTourConditions();
       }, 1500);
@@ -147,6 +151,9 @@ export const useOnboardingTour = () => {
       if (e.key === 'userEmail' && e.newValue) {
         console.log('👤 [TOUR] Login detectado via storage event:', e.newValue);
         if (location.pathname === '/') {
+          // Limpar sessionStorage para nova verificação após mudança de usuário
+          sessionStorage.removeItem(TOUR_SESSION_KEY);
+          setTourShownThisSession(false);
           setTimeout(() => {
             checkTourConditions();
           }, 2000);
@@ -157,17 +164,6 @@ export const useOnboardingTour = () => {
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [location.pathname]);
-
-  // Limpar tour ao mudar de sessão
-  useEffect(() => {
-    const handleSessionStorageChange = () => {
-      const shownThisSession = sessionStorage.getItem(TOUR_SESSION_KEY) === 'true';
-      setTourShownThisSession(shownThisSession);
-    };
-
-    window.addEventListener('storage', handleSessionStorageChange);
-    return () => window.removeEventListener('storage', handleSessionStorageChange);
-  }, []);
 
   const nextStep = () => {
     console.log('➡️ [TOUR] Próximo step do tour:', currentStep + 1);
@@ -187,7 +183,7 @@ export const useOnboardingTour = () => {
     console.log('❌ [TOUR] Fechando tour');
     setIsOpen(false);
     setCurrentStep(0);
-    // Marcar como exibido nesta sessão
+    // Marcar como exibido nesta sessão apenas quando fechar
     sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
     setTourShownThisSession(true);
   };
@@ -209,6 +205,7 @@ export const useOnboardingTour = () => {
     skipTour,
     closeTour,
     reopenTour,
+    resetTourForNewGroups,
     setCurrentStep
   };
 };
