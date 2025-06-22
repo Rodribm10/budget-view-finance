@@ -19,6 +19,21 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   onSkip,
   onClose
 }) => {
+  // Definir a função ANTES de usá-la
+  const removeHighlightStyle = () => {
+    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
+    elements.forEach(element => {
+      element.style.backgroundColor = '';
+      element.style.color = '';
+      element.style.fontWeight = '';
+      element.style.boxShadow = '';
+      element.style.border = '';
+      element.style.borderRadius = '';
+      element.style.position = '';
+      element.style.zIndex = '';
+    });
+  };
+
   // Cleanup de estilos quando o componente for desmontado ou tour fechado
   useEffect(() => {
     if (!isOpen) {
@@ -84,21 +99,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
   ];
 
   const currentStepData = steps[currentStep];
-
-  // Remover estilos quando não há spotlight
-  const removeHighlightStyle = () => {
-    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
-    elements.forEach(element => {
-      element.style.backgroundColor = '';
-      element.style.color = '';
-      element.style.fontWeight = '';
-      element.style.boxShadow = '';
-      element.style.border = '';
-      element.style.borderRadius = '';
-      element.style.position = '';
-      element.style.zIndex = '';
-    });
-  };
 
   // Estilo para destacar o elemento com fundo branco e texto preto
   const highlightElementStyle = () => {
