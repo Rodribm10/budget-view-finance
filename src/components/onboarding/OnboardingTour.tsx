@@ -88,9 +88,10 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       width: rect.width + 20,
       height: rect.height + 20,
       borderRadius: '8px',
-      boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.8)',
+      boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 1), inset 0 0 0 3px rgba(59, 130, 246, 0.8)',
       pointerEvents: 'none' as const,
-      zIndex: 9998
+      zIndex: 9998,
+      border: '2px solid rgba(59, 130, 246, 0.9)'
     };
   };
 
@@ -98,7 +99,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     <>
       {/* Overlay escuro */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-70 z-[9997]"
+        className="fixed inset-0 bg-black bg-opacity-80 z-[9997]"
         style={{ zIndex: 9997 }}
       />
       
@@ -109,7 +110,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       
       {/* Card do tour */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-        <Card className="w-full max-w-md bg-white shadow-2xl">
+        <Card className="w-full max-w-md bg-white shadow-2xl border-2 border-blue-200">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-bold text-gray-800">
@@ -142,10 +143,17 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
               </div>
               
               <div className="flex space-x-2">
-                <Button variant="outline" onClick={onSkip}>
+                <Button 
+                  variant="outline" 
+                  onClick={onSkip}
+                  className="hover:bg-gray-100 transition-colors"
+                >
                   Pular Tour
                 </Button>
-                <Button onClick={onNext}>
+                <Button 
+                  onClick={onNext}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 transition-colors shadow-lg"
+                >
                   {currentStep === steps.length - 1 ? 'Finalizar' : 'Próximo'}
                 </Button>
               </div>

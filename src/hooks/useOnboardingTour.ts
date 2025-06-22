@@ -4,16 +4,29 @@ import { useLocation } from 'react-router-dom';
 import { useWhatsAppInstances } from '@/hooks/useWhatsAppInstances';
 import { listWhatsAppGroups } from '@/services/whatsAppGroupsService';
 
+const TOUR_SESSION_KEY = 'onboarding_tour_shown';
+
 export const useOnboardingTour = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [shouldShowTour, setShouldShowTour] = useState(false);
+  const [tourShownThisSession, setTourShownThisSession] = useState(false);
   const location = useLocation();
   const { instances } = useWhatsAppInstances();
 
   // Verificar se o tour deve ser exibido
   const checkTourConditions = async () => {
     try {
+      // Verificar se já foi mostrado nesta sessão
+      const shownThisSession = sessionStorage.getItem(TOUR_SESSION_KEY) === 'true';
+      
+      if (shownThisSession) {
+        console.log('Tour já foi exibido nesta sessão');
+        setShouldShowTour(false);
+        setTourShownThisSession(true);
+        return;
+      }
+
       // Verificar se há instâncias conectadas
       const hasConnectedInstance = instances.some(instance => 
         instance.status === 'connected' || instance.connectionState === 'open'
@@ -30,16 +43,19 @@ export const useOnboardingTour = () => {
         hasConnectedInstance,
         hasGroups,
         shouldShow,
-        instances: instances.length
+        instances: instances.length,
+        shownThisSession
       });
 
       setShouldShowTour(shouldShow);
       
-      // Se deve mostrar o tour e não está aberto, abrir automaticamente
-      if (shouldShow && !isOpen) {
+      // Se deve mostrar o tour e não foi mostrado ainda, abrir automaticamente
+      if (shouldShow && !shownThisSession && !isOpen) {
         setIsOpen(true);
         setCurrentStep(0);
-      } else if (!shouldShow && isOpen) {
+        setTourShownThisSession(true);
+        sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
+      } else if (!shouldShow) {
         // Se as condições foram atendidas, fechar o tour
         setIsOpen(false);
       }
@@ -56,11 +72,10 @@ export const useOnboardingTour = () => {
     }
   }, [instances]);
 
-  // Verificar condições periodicamente
+  // Verificar condições na inicialização
   useEffect(() => {
-    const interval = setInterval(checkTourConditions, 5000); // A cada 5 segundos
-    return () => clearInterval(interval);
-  }, [instances]);
+    checkTourConditions();
+  }, []);
 
   const nextStep = () => {
     if (currentStep < 2) {
@@ -77,6 +92,9 @@ export const useOnboardingTour = () => {
   const closeTour = () => {
     setIsOpen(false);
     setCurrentStep(0);
+    // Marcar como exibido nesta sessão
+    sessionStorage.setItem(TOUR_SESSION_KEY, 'true');
+    setTourShownThisSession(true);
   };
 
   return {
