@@ -30,7 +30,6 @@ export const useOnboardingTour = () => {
       if (location.pathname !== '/') {
         console.log('❌ [TOUR] Tour só aparece no dashboard, página atual:', location.pathname);
         setShouldShowTour(false);
-        isCheckingRef.current = false;
         return;
       }
 
@@ -41,7 +40,6 @@ export const useOnboardingTour = () => {
       if (!userEmail) {
         console.log('❌ [TOUR] Email não encontrado no localStorage');
         setShouldShowTour(false);
-        isCheckingRef.current = false;
         return;
       }
 
@@ -50,7 +48,6 @@ export const useOnboardingTour = () => {
       if (shownThisSession) {
         console.log('❌ [TOUR] Tour já foi exibido nesta sessão');
         setShouldShowTour(false);
-        isCheckingRef.current = false;
         return;
       }
 
@@ -74,7 +71,6 @@ export const useOnboardingTour = () => {
       if (hasGroups) {
         console.log('✅ [TOUR] Usuário já tem grupos, não mostrar tour');
         setShouldShowTour(false);
-        isCheckingRef.current = false;
         return;
       }
 

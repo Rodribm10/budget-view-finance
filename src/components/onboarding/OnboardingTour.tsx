@@ -21,29 +21,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
 }) => {
   const cleanupRef = useRef<() => void>();
 
-  // Função para remover estilos de highlight
-  const removeHighlightStyle = () => {
-    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
-    elements.forEach(element => {
-      element.style.backgroundColor = '';
-      element.style.color = '';
-      element.style.fontWeight = '';
-      element.style.boxShadow = '';
-      element.style.border = '';
-      element.style.borderRadius = '';
-      element.style.position = '';
-      element.style.zIndex = '';
-    });
-  };
-
-  if (!isOpen) {
-    // Limpar estilos quando o tour não estiver aberto
-    useEffect(() => {
-      removeHighlightStyle();
-    }, []);
-    return null;
-  }
-
   const steps = [
     {
       title: "Passo 1 - Conecte seu WhatsApp",
@@ -95,16 +72,29 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     }
   ];
 
-  const currentStepData = steps[currentStep];
+  // Função para remover estilos de highlight
+  const removeHighlightStyle = () => {
+    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
+    elements.forEach(element => {
+      element.style.backgroundColor = '';
+      element.style.color = '';
+      element.style.fontWeight = '';
+      element.style.boxShadow = '';
+      element.style.border = '';
+      element.style.borderRadius = '';
+      element.style.position = '';
+      element.style.zIndex = '';
+    });
+  };
 
   // Aplicar highlight no elemento
   const highlightElementStyle = () => {
-    if (!currentStepData.spotlight) return;
+    const currentStepData = steps[currentStep];
+    if (!currentStepData?.spotlight) return;
 
     const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`) as HTMLElement;
     if (!element) return;
 
-    // Aplicar estilos diretamente no elemento
     element.style.backgroundColor = '#ffffff';
     element.style.color = '#000000';
     element.style.fontWeight = '600';
@@ -115,13 +105,18 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     element.style.zIndex = '9999';
   };
 
-  // Aplicar ou remover highlight baseado no step atual
+  // Effect para aplicar/remover highlight
   useEffect(() => {
+    if (!isOpen) {
+      removeHighlightStyle();
+      return;
+    }
+
     // Limpar estilos anteriores
     removeHighlightStyle();
 
-    if (currentStepData.spotlight) {
-      // Pequeno delay para garantir que o DOM foi renderizado
+    const currentStepData = steps[currentStep];
+    if (currentStepData?.spotlight) {
       const timer = setTimeout(() => {
         highlightElementStyle();
       }, 100);
@@ -132,13 +127,12 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       };
     }
 
-    // Cleanup quando o componente for desmontado ou step mudar
     return () => {
       if (cleanupRef.current) {
         cleanupRef.current();
       }
     };
-  }, [currentStep, currentStepData.spotlight]);
+  }, [isOpen, currentStep]);
 
   // Cleanup quando o componente for desmontado
   useEffect(() => {
@@ -146,6 +140,12 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       removeHighlightStyle();
     };
   }, []);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const currentStepData = steps[currentStep];
 
   return (
     <>

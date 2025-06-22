@@ -27,49 +27,88 @@ const Assinatura = () => {
   const handleSubscribe = async () => {
     setIsSubscribing(true);
     try {
-      // Puxa os dados mais atuais do usuário logado NO MOMENTO do click!
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user || !user.id || !user.email) {
-        toast.error("Sessão inválida. Por favor, faça login novamente.");
-        setIsSubscribing(false);
+      console.log('🔄 [ASSINATURA] Iniciando processo de assinatura...');
+      
+      // Verificar sessão do usuário
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('❌ [ASSINATURA] Erro de autenticação:', userError);
+        toast.error("Erro de autenticação. Faça login novamente.");
         return;
       }
 
-      // log para debug - remova depois de testar!
-      console.log("Assinatura MercadoPago - email enviado:", user.email, "id:", user.id);
+      if (!user || !user.id || !user.email) {
+        console.error('❌ [ASSINATURA] Usuário não autenticado');
+        toast.error("Sessão inválida. Por favor, faça login novamente.");
+        return;
+      }
 
+      console.log('✅ [ASSINATURA] Usuário autenticado:', { id: user.id, email: user.email });
+
+      // Chamar a função do MercadoPago
+      console.log('📞 [ASSINATURA] Chamando função mercado-pago-subscribe...');
       const { data, error } = await supabase.functions.invoke('mercado-pago-subscribe', {
-        body: { email: user.email, userId: user.id },
+        body: { 
+          email: user.email, 
+          userId: user.id 
+        },
       });
 
       if (error) {
-        console.error("Erro completo:", error);
-        throw new Error(`Erro de comunicação: ${error.message}`);
+        console.error('❌ [ASSINATURA] Erro na função:', error);
+        
+        // Tratar diferentes tipos de erro
+        if (error.message?.includes('fetch')) {
+          toast.error("Erro de conexão. Verifique sua internet e tente novamente.");
+        } else if (error.message?.includes('401')) {
+          toast.error("Sessão expirada. Faça login novamente.");
+        } else {
+          toast.error(`Erro: ${error.message || 'Erro desconhecido'}`);
+        }
+        return;
       }
       
-      if (data.error) {
-        throw new Error(data.error);
+      if (data?.error) {
+        console.error('❌ [ASSINATURA] Erro nos dados:', data.error);
+        
+        // Tratar erros específicos do MercadoPago
+        if (data.error.includes('temporariamente indisponível')) {
+          toast.error("Serviço temporariamente indisponível para sua região. Entre em contato conosco.");
+        } else if (data.error.includes('Token')) {
+          toast.error("Erro de configuração. Entre em contato com o suporte.");
+        } else {
+          toast.error(data.error);
+        }
+        return;
       }
       
-      if (data.init_point) {
-        console.log("Redirecionando para:", data.init_point);
-        window.location.href = data.init_point;
+      if (data?.init_point) {
+        console.log('✅ [ASSINATURA] URL de checkout recebida:', data.init_point);
+        toast.success("Redirecionando para o pagamento...");
+        
+        // Redirecionar para o MercadoPago
+        setTimeout(() => {
+          window.location.href = data.init_point;
+        }, 1000);
       } else {
-         throw new Error("Não foi possível obter a URL de checkout. Tente novamente.");
+        console.error('❌ [ASSINATURA] URL de checkout não encontrada');
+        toast.error("Não foi possível gerar o link de pagamento. Tente novamente.");
       }
 
     } catch (error: any) {
-      console.error("Erro ao criar a assinatura:", error);
+      console.error('💥 [ASSINATURA] Erro geral:', error);
       
-      // Mensagem mais amigável para erro de região
-      if (error.message?.includes('temporariamente indisponível')) {
-        toast.error("Serviço temporariamente indisponível para sua região. Tente novamente em alguns minutos.");
+      // Mensagens de erro mais específicas
+      if (error.name === 'NetworkError' || error.message?.includes('fetch')) {
+        toast.error("Erro de conexão. Verifique sua internet e tente novamente.");
+      } else if (error.message?.includes('JSON')) {
+        toast.error("Erro de comunicação. Tente novamente.");
       } else {
-        toast.error(error.message || "Ocorreu um erro inesperado. Por favor, tente mais tarde.");
+        toast.error("Erro inesperado. Tente novamente mais tarde.");
       }
     } finally {
-        setIsSubscribing(false);
+      setIsSubscribing(false);
     }
   };
 
