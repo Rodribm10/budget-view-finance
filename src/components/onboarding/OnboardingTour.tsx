@@ -95,6 +95,138 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     };
   };
 
+  const getArrowStyle = () => {
+    if (!currentStepData.spotlight) return { display: 'none' };
+
+    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`);
+    const card = document.querySelector('.onboarding-card');
+    
+    if (!element || !card) return { display: 'none' };
+
+    const elementRect = element.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+
+    // Calcular posição da seta
+    const elementCenterX = elementRect.left + elementRect.width / 2;
+    const elementCenterY = elementRect.top + elementRect.height / 2;
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
+
+    // Calcular ângulo e distância
+    const deltaX = elementCenterX - cardCenterX;
+    const deltaY = elementCenterY - cardCenterY;
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+    // Posicionar a seta no meio do caminho
+    const arrowX = cardCenterX + (deltaX * 0.6);
+    const arrowY = cardCenterY + (deltaY * 0.6);
+
+    return {
+      position: 'fixed' as const,
+      left: arrowX,
+      top: arrowY,
+      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+      zIndex: 9999,
+      pointerEvents: 'none' as const,
+      width: '60px',
+      height: '3px',
+      background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.8) 0%, rgba(59, 130, 246, 0.4) 100%)',
+      borderRadius: '2px',
+      filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))',
+    };
+  };
+
+  const getArrowHeadStyle = () => {
+    if (!currentStepData.spotlight) return { display: 'none' };
+
+    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`);
+    const card = document.querySelector('.onboarding-card');
+    
+    if (!element || !card) return { display: 'none' };
+
+    const elementRect = element.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+
+    const elementCenterX = elementRect.left + elementRect.width / 2;
+    const elementCenterY = elementRect.top + elementRect.height / 2;
+    const cardCenterX = cardRect.left + cardRect.width / 2;
+    const cardCenterY = cardRect.top + cardRect.height / 2;
+
+    const deltaX = elementCenterX - cardCenterX;
+    const deltaY = elementCenterY - cardCenterY;
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+
+    // Posicionar a ponta da seta mais próxima do elemento
+    const arrowHeadX = cardCenterX + (deltaX * 0.75);
+    const arrowHeadY = cardCenterY + (deltaY * 0.75);
+
+    return {
+      position: 'fixed' as const,
+      left: arrowHeadX,
+      top: arrowHeadY,
+      transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+      zIndex: 9999,
+      pointerEvents: 'none' as const,
+      width: '0',
+      height: '0',
+      borderLeft: '8px solid rgba(59, 130, 246, 0.8)',
+      borderTop: '6px solid transparent',
+      borderBottom: '6px solid transparent',
+      filter: 'drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3))',
+    };
+  };
+
+  // Estilo para destacar o elemento com fundo branco e texto preto
+  const highlightElementStyle = () => {
+    if (!currentStepData.spotlight) return;
+
+    const element = document.querySelector(`[data-tour="${currentStepData.spotlight}"]`) as HTMLElement;
+    if (!element) return;
+
+    // Aplicar estilos diretamente no elemento
+    element.style.backgroundColor = '#ffffff';
+    element.style.color = '#000000';
+    element.style.fontWeight = '600';
+    element.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.6)';
+    element.style.border = '2px solid rgba(59, 130, 246, 0.8)';
+    element.style.borderRadius = '8px';
+    element.style.position = 'relative';
+    element.style.zIndex = '9999';
+  };
+
+  // Remover estilos quando não há spotlight
+  const removeHighlightStyle = () => {
+    const elements = document.querySelectorAll('[data-tour]') as NodeListOf<HTMLElement>;
+    elements.forEach(element => {
+      element.style.backgroundColor = '';
+      element.style.color = '';
+      element.style.fontWeight = '';
+      element.style.boxShadow = '';
+      element.style.border = '';
+      element.style.borderRadius = '';
+      element.style.position = '';
+      element.style.zIndex = '';
+    });
+  };
+
+  // Aplicar ou remover highlight baseado no step atual
+  React.useEffect(() => {
+    if (currentStepData.spotlight) {
+      // Pequeno delay para garantir que o DOM foi renderizado
+      setTimeout(() => {
+        highlightElementStyle();
+      }, 100);
+    } else {
+      removeHighlightStyle();
+    }
+
+    // Cleanup quando o componente for desmontado
+    return () => {
+      removeHighlightStyle();
+    };
+  }, [currentStep, currentStepData.spotlight]);
+
   return (
     <>
       {/* Overlay escuro */}
@@ -103,14 +235,22 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
         style={{ zIndex: 9997 }}
       />
       
-      {/* Spotlight */}
+      {/* Spotlight transparente */}
       {currentStepData.spotlight && (
         <div style={getSpotlightStyle()} />
+      )}
+
+      {/* Seta moderna conectando o card ao elemento */}
+      {currentStepData.spotlight && (
+        <>
+          <div style={getArrowStyle()} />
+          <div style={getArrowHeadStyle()} />
+        </>
       )}
       
       {/* Card do tour */}
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-4">
-        <Card className="w-full max-w-md bg-white shadow-2xl border-2 border-blue-200">
+        <Card className="onboarding-card w-full max-w-md bg-white shadow-2xl border-2 border-blue-200">
           <CardContent className="p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="text-xl font-bold text-gray-800">
@@ -146,7 +286,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
                 <Button 
                   variant="outline" 
                   onClick={onSkip}
-                  className="hover:bg-gray-100 transition-colors"
+                  className="hover:bg-gray-100 transition-colors font-semibold"
                 >
                   Pular Tour
                 </Button>
