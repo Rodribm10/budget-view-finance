@@ -47,7 +47,7 @@ export const VerticalLimelightNav = ({
 }: VerticalLimelightNavProps) => {
   const [activeIndex, setActiveIndex] = useState(defaultActiveIndex);
   const [isReady, setIsReady] = useState(false);
-  const navItemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const navItemRefs = useRef<(HTMLElement | null)[]>([]);
   const limelightRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
@@ -99,7 +99,7 @@ export const VerticalLimelightNav = ({
           </>
         );
 
-        const baseClasses = `relative z-20 flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:text-blue-700 ${iconContainerClassName}`;
+        const baseClasses = `relative z-20 flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all duration-200 ${iconContainerClassName}`;
 
         if (href) {
           return (
