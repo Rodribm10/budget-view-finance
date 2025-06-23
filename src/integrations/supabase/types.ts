@@ -69,6 +69,47 @@ export type Database = {
         }
         Relationships: []
       }
+      avisos_enviados: {
+        Row: {
+          conta_id: string
+          created_at: string
+          dados_webhook: Json | null
+          data_aviso: string
+          hora_aviso: string
+          id: string
+          status_envio: string
+          tentativas: number
+        }
+        Insert: {
+          conta_id: string
+          created_at?: string
+          dados_webhook?: Json | null
+          data_aviso: string
+          hora_aviso: string
+          id?: string
+          status_envio?: string
+          tentativas?: number
+        }
+        Update: {
+          conta_id?: string
+          created_at?: string
+          dados_webhook?: Json | null
+          data_aviso?: string
+          hora_aviso?: string
+          id?: string
+          status_envio?: string
+          tentativas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avisos_enviados_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_recorrentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Bloqueio_Rosana_Seven_zap: {
         Row: {
           acao: string | null
@@ -156,6 +197,48 @@ export type Database = {
           embedding?: string | null
           id?: number
           metadata?: Json | null
+        }
+        Relationships: []
+      }
+      contas_recorrentes: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          dia_vencimento: number
+          dias_antecedencia: number
+          hora_aviso: string
+          id: string
+          nome_conta: string
+          updated_at: string
+          user_id: string
+          valor: number | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          dia_vencimento: number
+          dias_antecedencia?: number
+          hora_aviso?: string
+          id?: string
+          nome_conta: string
+          updated_at?: string
+          user_id: string
+          valor?: number | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          dia_vencimento?: number
+          dias_antecedencia?: number
+          hora_aviso?: string
+          id?: string
+          nome_conta?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number | null
         }
         Relationships: []
       }

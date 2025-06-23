@@ -1,101 +1,92 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/sonner";
-import Auth from './pages/Auth';
-import Landing from './pages/Landing';
-import EmailConfirmation from './pages/EmailConfirmation';
-import CompleteProfile from './pages/CompleteProfile';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import { authStore } from './stores/authStore';
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/stores/authStore";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import Layout from "@/components/layout/Layout";
 
-// Lazy-loaded components
-const Dashboard = lazy(() => import('./pages/Index'));
-const Transacoes = lazy(() => import('./pages/Transacoes'));
-const Categorias = lazy(() => import('./pages/Categorias'));
-const Metas = lazy(() => import('./pages/Metas'));
-const Calendario = lazy(() => import('./pages/Calendario'));
-const Assinatura = lazy(() => import('./pages/Assinatura'));
-const WhatsApp = lazy(() => import('./pages/WhatsApp'));
-const GruposWhatsApp = lazy(() => import('./pages/GruposWhatsApp'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const CartoesCredito = lazy(() => import('./pages/CartoesCredito'));
-const Configuracoes = lazy(() => import('./pages/Configuracoes'));
-const AdminFAQ = lazy(() => import('./pages/AdminFAQ'));
+// Pages
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Landing from "./pages/Landing";
+import Transacoes from "./pages/Transacoes";
+import CartoesCredito from "./pages/CartoesCredito";
+import Configuracoes from "./pages/Configuracoes";
+import Metas from "./pages/Metas";
+import Calendario from "./pages/Calendario";
+import WhatsApp from "./pages/WhatsApp";
+import GruposWhatsApp from "./pages/GruposWhatsApp";
+import EmailConfirmation from "./pages/EmailConfirmation";
+import CompleteProfile from "./pages/CompleteProfile";
+import NotFound from "./pages/NotFound";
+import Categorias from "./pages/Categorias";
+import AdminFAQ from "./pages/AdminFAQ";
+import Assinatura from "./pages/Assinatura";
+import AvisosContas from "./pages/AvisosContas";
+
+const queryClient = new QueryClient();
 
 function App() {
-  const isLoggedIn = authStore((state) => state.isLoggedIn);
-  
+  const { setUser, setSession } = useAuthStore();
+
+  useEffect(() => {
+    // Verificar sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    // Escutar mudanças de autenticação
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [setUser, setSession]);
+
   return (
-    <Router>
-      <Toaster />
-      
-      <Routes>
-        {/* Landing page - só mostra se não estiver logado */}
-        <Route 
-          path="/" 
-          element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Landing />} 
-        />
-        
-        {/* Auth route - redireciona para dashboard se já estiver logado */}
-        <Route 
-          path="/auth" 
-          element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Auth />} 
-        />
-        
-        {/* Email confirmation route */}
-        <Route 
-          path="/email-confirmation" 
-          element={<EmailConfirmation />} 
-        />
-        
-        {/* Complete profile route - deve ser acessível para usuários logados */}
-        <Route 
-          path="/complete-profile" 
-          element={<CompleteProfile />} 
-        />
-        
-        {/* Protected routes */}
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
-              <Dashboard />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/transacoes" element={
-          <ProtectedRoute>
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
-              <Transacoes />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        
-        <Route path="/cartoes" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><CartoesCredito /></Suspense></ProtectedRoute>} />
-        <Route path="/categorias" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Categorias /></Suspense></ProtectedRoute>} />
-        <Route path="/metas" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Metas /></Suspense></ProtectedRoute>} />
-        <Route path="/calendario" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Calendario /></Suspense></ProtectedRoute>} />
-        <Route path="/assinatura" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><Assinatura /></Suspense></ProtectedRoute>} />
-        <Route path="/whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><WhatsApp /></Suspense></ProtectedRoute>} />
-        <Route path="/grupos-whatsapp" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><GruposWhatsApp /></Suspense></ProtectedRoute>} />
-        <Route path="/admin-faq" element={<ProtectedRoute><Suspense fallback={<div>Carregando...</div>}><AdminFAQ /></Suspense></ProtectedRoute>} />
-        <Route path="/configuracoes" element={
-          <ProtectedRoute>
-            <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
-              <Configuracoes />
-            </Suspense>
-          </ProtectedRoute>
-        } />
-        
-        {/* Not found route */}
-        <Route path="*" element={
-          <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
-            <NotFound />
-          </Suspense>
-        } />
-      </Routes>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <BrowserRouter>
+          <Routes>
+            {/* Rotas públicas */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/email-confirmation" element={<EmailConfirmation />} />
+            
+            {/* Rotas protegidas */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<Index />} />
+                <Route path="/transacoes" element={<Transacoes />} />
+                <Route path="/cartoes" element={<CartoesCredito />} />
+                <Route path="/configuracoes" element={<Configuracoes />} />
+                <Route path="/metas" element={<Metas />} />
+                <Route path="/calendario" element={<Calendario />} />
+                <Route path="/whatsapp" element={<WhatsApp />} />
+                <Route path="/grupos-whatsapp" element={<GruposWhatsApp />} />
+                <Route path="/complete-profile" element={<CompleteProfile />} />
+                <Route path="/categorias" element={<Categorias />} />
+                <Route path="/admin/faq" element={<AdminFAQ />} />
+                <Route path="/assinatura" element={<Assinatura />} />
+                <Route path="/avisos-contas" element={<AvisosContas />} />
+              </Route>
+            </Route>
+
+            {/* Rota 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
