@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardSpotlight } from '@/components/ui/card-spotlight';
 import { getCategorySummary } from '@/services/transacao';
 import { CategorySummary } from '@/types/financialTypes';
 import { useToast } from "@/components/ui/use-toast";
@@ -100,20 +100,20 @@ const CategoriasPage = () => {
         {isLoading ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader className="pb-2">
+              <CardSpotlight key={i} className="animate-pulse">
+                <div className="pb-2">
                   <div className="h-5 bg-muted rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
+                </div>
+                <div>
                   <div className="h-4 bg-muted rounded w-1/4 mb-3"></div>
                   <div className="h-2 bg-muted rounded"></div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardSpotlight>
             ))}
           </div>
         ) : categories.length === 0 ? (
-          <Card>
-            <CardContent className="py-10 text-center">
+          <CardSpotlight>
+            <div className="py-10 text-center">
               <p className="text-muted-foreground">Nenhuma categoria encontrada</p>
               <p className="mt-2 text-sm">
                 {tipoFiltro === 'despesa' 
@@ -122,23 +122,23 @@ const CategoriasPage = () => {
                     ? 'Verifique se existem transações do tipo "receita" cadastradas'
                     : 'Verifique se existem transações cadastradas'}
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </CardSpotlight>
         ) : (
           <>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {categories.map((category) => (
-                <Card key={category.categoria}>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-base flex items-center">
+                <CardSpotlight key={category.categoria} className="relative z-10">
+                  <div className="pb-2">
+                    <div className="text-base flex items-center font-semibold relative z-20">
                       <span
                         className="w-3 h-3 rounded-full mr-2"
                         style={{ backgroundColor: category.color }}
                       />
                       {category.categoria}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
+                    </div>
+                  </div>
+                  <div className="relative z-20">
                     <div className="text-2xl font-bold mb-2">
                       {formatCurrency(category.valor)}
                     </div>
@@ -155,16 +155,16 @@ const CategoriasPage = () => {
                         {(category.percentage * 100).toFixed(1)}% do total
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </CardSpotlight>
               ))}
             </div>
             
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Resumo de Categorias {tipoFiltro !== 'all' ? (tipoFiltro === 'despesa' ? '(Despesas)' : '(Receitas)') : ''}</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <CardSpotlight className="mt-6">
+              <div>
+                <h3 className="text-xl font-bold mb-4 relative z-20">Resumo de Categorias {tipoFiltro !== 'all' ? (tipoFiltro === 'despesa' ? '(Despesas)' : '(Receitas)') : ''}</h3>
+              </div>
+              <div className="relative z-20">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -194,13 +194,5 @@ const CategoriasPage = () => {
                     </TableRow>
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
-          </>
-        )}
-      </div>
-    </Layout>
-  );
-};
-
-export default CategoriasPage;
+              </div>
+            </CardSpot
