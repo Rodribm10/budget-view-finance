@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
+import UserProfileButton from '@/components/dashboard/UserProfileButton';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import {
   Tooltip,
@@ -220,6 +221,11 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
                 </Tooltip>
               </TooltipProvider>
               <span className="text-sm font-medium text-gray-600">Menu</span>
+            </div>
+            
+            {/* User Profile Button */}
+            <div className="ml-auto">
+              <UserProfileButton />
             </div>
           </header>
           <main className="flex-1 overflow-y-auto">
