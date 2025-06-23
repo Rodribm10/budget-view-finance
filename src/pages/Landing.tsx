@@ -61,19 +61,19 @@ const Landing = () => {
           icon: <MessageCircle className="h-6 w-6" />,
           title: "Texto",
           description: "Digite: 'Comprei pão R$ 5,50'",
-          image: "./whatsapp-text-message.png"
+          image: "/whatsapp-text-message.png"
         },
         {
           icon: <Mic className="h-6 w-6" />,
           title: "Áudio",
           description: "Grave um áudio contando o gasto",
-          image: "./whatsapp-audio-message.png"
+          image: "/whatsapp-audio-message.png"
         },
         {
           icon: <Receipt className="h-6 w-6" />,
           title: "Comprovante",
           description: "Tire foto do recibo ou nota fiscal",
-          image: "./whatsapp-receipt-message.png"
+          image: "/whatsapp-receipt-message.png"
         }
       ]
     },
@@ -82,14 +82,14 @@ const Landing = () => {
       title: "Visualize no Dashboard",
       description: "Acompanhe seus gastos em tempo real com gráficos e relatórios automáticos",
       icon: <BarChart3 className="h-8 w-8" />,
-      image: "./dashboard-screenshot.png"
+      image: "/dashboard-screenshot.png"
     },
     {
       step: "3",
       title: "Organize no Calendário",
       description: "Veja todas suas transações organizadas por data e periodo",
       icon: <Calendar className="h-8 w-8" />,
-      image: "./calendar-screenshot.png"
+      image: "/calendar-screenshot.png"
     }
   ];
 
