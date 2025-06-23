@@ -61,19 +61,19 @@ const Landing = () => {
           icon: <MessageCircle className="h-6 w-6" />,
           title: "Texto",
           description: "Digite: 'Comprei pão R$ 5,50'",
-          image: "/whatsapp-text-message.png"
+          image: "./whatsapp-text-message.png"
         },
         {
           icon: <Mic className="h-6 w-6" />,
           title: "Áudio",
           description: "Grave um áudio contando o gasto",
-          image: "/whatsapp-audio-message.png"
+          image: "./whatsapp-audio-message.png"
         },
         {
           icon: <Receipt className="h-6 w-6" />,
           title: "Comprovante",
           description: "Tire foto do recibo ou nota fiscal",
-          image: "/whatsapp-receipt-message.png"
+          image: "./whatsapp-receipt-message.png"
         }
       ]
     },
@@ -82,14 +82,14 @@ const Landing = () => {
       title: "Visualize no Dashboard",
       description: "Acompanhe seus gastos em tempo real com gráficos e relatórios automáticos",
       icon: <BarChart3 className="h-8 w-8" />,
-      image: "/dashboard-screenshot.png"
+      image: "./dashboard-screenshot.png"
     },
     {
       step: "3",
       title: "Organize no Calendário",
       description: "Veja todas suas transações organizadas por data e periodo",
       icon: <Calendar className="h-8 w-8" />,
-      image: "/calendar-screenshot.png"
+      image: "./calendar-screenshot.png"
     }
   ];
 
@@ -188,11 +188,15 @@ const Landing = () => {
                     </div>
                     <h4 className="text-xl font-semibold text-white mb-2">{method.title}</h4>
                     <p className="text-slate-300 mb-4">{method.description}</p>
-                    <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                    <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
                       <img 
                         src={method.image} 
                         alt={`Exemplo ${method.title}`}
                         className="max-w-full max-h-full object-contain rounded-lg"
+                        onError={(e) => {
+                          console.error(`Failed to load image: ${method.image}`);
+                          e.currentTarget.style.display = 'none';
+                        }}
                       />
                     </div>
                   </div>
@@ -210,11 +214,15 @@ const Landing = () => {
               
               <div className="max-w-4xl mx-auto">
                 <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
-                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
                     <img 
                       src={howItWorksSteps[1].image} 
                       alt="Dashboard do sistema"
                       className="max-w-full max-h-full object-contain rounded-lg"
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${howItWorksSteps[1].image}`);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                 </div>
@@ -231,11 +239,15 @@ const Landing = () => {
               
               <div className="max-w-4xl mx-auto">
                 <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
-                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
                     <img 
                       src={howItWorksSteps[2].image} 
                       alt="Calendário do sistema"
                       className="max-w-full max-h-full object-contain rounded-lg"
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${howItWorksSteps[2].image}`);
+                        e.currentTarget.style.display = 'none';
+                      }}
                     />
                   </div>
                 </div>
