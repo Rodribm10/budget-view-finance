@@ -17,11 +17,15 @@ interface ContaRecorrente {
   hora_aviso: string;
   dias_antecedencia: number;
   ativo: boolean;
+  email_usuario: string | null;
+  whatsapp_usuario: string | null;
 }
 
 interface AvisoData {
   conta_id: string;
   user_id: string;
+  email_usuario: string | null;
+  whatsapp_usuario: string | null;
   nome_conta: string;
   descricao: string | null;
   valor: number | null;
@@ -47,7 +51,7 @@ serve(async (req) => {
     
     console.log(`Executando verificação de avisos às ${horaAtual}`)
 
-    // Buscar todas as contas ativas
+    // Buscar todas as contas ativas incluindo email e whatsapp do usuário
     const { data: contas, error: contasError } = await supabase
       .from('contas_recorrentes')
       .select('*')
@@ -104,6 +108,8 @@ serve(async (req) => {
         const avisoData: AvisoData = {
           conta_id: conta.id,
           user_id: conta.user_id,
+          email_usuario: conta.email_usuario,
+          whatsapp_usuario: conta.whatsapp_usuario,
           nome_conta: conta.nome_conta,
           descricao: conta.descricao,
           valor: conta.valor,
@@ -139,7 +145,7 @@ serve(async (req) => {
 
           if (webhookResponse.ok) {
             avisosEnviados++
-            console.log(`✅ Aviso enviado com sucesso para: ${conta.nome_conta}`)
+            console.log(`✅ Aviso enviado com sucesso para: ${conta.nome_conta} (${conta.whatsapp_usuario})`)
           } else {
             console.error(`❌ Erro ao enviar webhook para: ${conta.nome_conta}`)
           }

@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/authStore';
+import { useQuery } from '@tanstack/react-query';
 
 interface ContaRecorrenteFormProps {
   onClose: () => void;
@@ -34,9 +35,32 @@ const ContaRecorrenteForm = ({ onClose, onSuccess }: ContaRecorrenteFormProps) =
     }
   });
 
+  // Buscar dados do usuário para pegar email e whatsapp
+  const { data: userData } = useQuery({
+    queryKey: ['user-data', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('email, whatsapp')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id
+  });
+
   const onSubmit = async (data: FormData) => {
     if (!user?.id) {
       toast.error('Usuário não encontrado. Faça login novamente.');
+      return;
+    }
+
+    if (!userData) {
+      toast.error('Dados do usuário não encontrados.');
       return;
     }
 
@@ -46,7 +70,9 @@ const ContaRecorrenteForm = ({ onClose, onSuccess }: ContaRecorrenteFormProps) =
         .insert([{
           ...data,
           user_id: user.id,
-          valor: data.valor || null
+          valor: data.valor || null,
+          email_usuario: userData.email,
+          whatsapp_usuario: userData.whatsapp
         }]);
 
       if (error) throw error;

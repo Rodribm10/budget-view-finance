@@ -207,12 +207,14 @@ export type Database = {
           descricao: string | null
           dia_vencimento: number
           dias_antecedencia: number
+          email_usuario: string | null
           hora_aviso: string
           id: string
           nome_conta: string
           updated_at: string
           user_id: string
           valor: number | null
+          whatsapp_usuario: string | null
         }
         Insert: {
           ativo?: boolean
@@ -220,12 +222,14 @@ export type Database = {
           descricao?: string | null
           dia_vencimento: number
           dias_antecedencia?: number
+          email_usuario?: string | null
           hora_aviso?: string
           id?: string
           nome_conta: string
           updated_at?: string
           user_id: string
           valor?: number | null
+          whatsapp_usuario?: string | null
         }
         Update: {
           ativo?: boolean
@@ -233,12 +237,14 @@ export type Database = {
           descricao?: string | null
           dia_vencimento?: number
           dias_antecedencia?: number
+          email_usuario?: string | null
           hora_aviso?: string
           id?: string
           nome_conta?: string
           updated_at?: string
           user_id?: string
           valor?: number | null
+          whatsapp_usuario?: string | null
         }
         Relationships: []
       }
