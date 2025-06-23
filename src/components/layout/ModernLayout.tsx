@@ -17,21 +17,9 @@ import {
   Crown,
   MessageSquareText,
   Users,
-  Settings,
-  LogOut,
-  User
+  Settings
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
 
 interface ModernLayoutProps {
   children: React.ReactNode;

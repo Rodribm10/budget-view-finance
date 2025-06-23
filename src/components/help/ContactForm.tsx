@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { enviarFaleConoscoParaWebhook } from '@/utils/webhookService';
+import { enviarFaleConoscoParaWebhook } from '@/services/webhookService';
 import ContactFormFields from './ContactFormFields';
 import ContactFormHeader from './ContactFormHeader';
 
@@ -100,8 +100,8 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
       }
 
       toast({
-        title: "Mensagem enviada!",
-        description: "Você vai receber a resposta no e-mail que cadastrou aqui. Obrigado!",
+        title: "Mensagem enviada com sucesso!",
+        description: "Sua mensagem foi enviada com sucesso. Você receberá uma resposta no e-mail cadastrado. Aguarde nosso retorno!",
       });
 
       // Reset form
