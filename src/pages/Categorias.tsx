@@ -195,4 +195,12 @@ const CategoriasPage = () => {
                   </TableBody>
                 </Table>
               </div>
-            </CardSpot
+            </CardSpotlight>
+          </>
+        )}
+      </div>
+    </Layout>
+  );
+};
+
+export default CategoriasPage;
