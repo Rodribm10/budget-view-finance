@@ -99,7 +99,7 @@ export const VerticalLimelightNav = ({
           </>
         );
 
-        const baseClasses = `relative z-20 flex items-center gap-3 px-3 py-3 rounded-lg cursor-pointer transition-all duration-200 ${iconContainerClassName}`;
+        const baseClasses = `relative z-20 flex items-center ${showLabels ? 'gap-3' : 'gap-0'} ${showLabels ? 'px-3' : 'px-2'} py-3 rounded-lg cursor-pointer transition-all duration-200 ${iconContainerClassName || ''}`;
 
         if (href) {
           return (

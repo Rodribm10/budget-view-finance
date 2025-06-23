@@ -81,6 +81,7 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState<string>('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   const {
     isOpen: tourOpen,
@@ -217,6 +218,7 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
                   defaultActiveIndex={getActiveIndex() < mainLinks.length ? getActiveIndex() : 0}
                   showLabels={open}
                   className="space-y-1"
+                  iconContainerClassName={!open ? "justify-center" : ""}
                 />
               </div>
 
@@ -236,6 +238,7 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
                   defaultActiveIndex={getActiveIndex() >= mainLinks.length && getActiveIndex() < mainLinks.length + whatsappLinks.length ? getActiveIndex() - mainLinks.length : -1}
                   showLabels={open}
                   className="space-y-1"
+                  iconContainerClassName={!open ? "justify-center" : ""}
                 />
               </div>
 
@@ -255,14 +258,23 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
                   defaultActiveIndex={getActiveIndex() >= mainLinks.length + whatsappLinks.length ? getActiveIndex() - mainLinks.length - whatsappLinks.length : -1}
                   showLabels={open}
                   className="space-y-1"
+                  iconContainerClassName={!open ? "justify-center" : ""}
                 />
                 
                 {/* User Profile */}
                 <div className="mt-4 px-3">
-                  <DropdownMenu>
+                  <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                     <DropdownMenuTrigger asChild>
-                      <Button className="w-full rounded-full py-0 ps-0 h-10 justify-start" variant="outline">
-                        <div className="me-2 flex aspect-square h-full p-1.5">
+                      <Button 
+                        className={`w-full rounded-full py-0 ps-0 h-10 ${open ? 'justify-start' : 'justify-center px-0'}`} 
+                        variant="outline"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDropdownOpen(!dropdownOpen);
+                        }}
+                      >
+                        <div className={`${open ? 'me-2' : ''} flex aspect-square h-full p-1.5`}>
                           <div className="h-full w-full rounded-full bg-blue-600 flex items-center justify-center">
                             <User className="h-4 w-4 text-white" />
                           </div>
@@ -274,10 +286,19 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
                         )}
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuContent 
+                      align={open ? "end" : "center"} 
+                      side={open ? "top" : "right"}
+                      className="w-56 z-50"
+                    >
                       <DropdownMenuItem 
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDropdownOpen(false);
+                          handleLogout();
+                        }}
+                        className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
                       >
                         <LogOut className="h-4 w-4" />
                         Sair
