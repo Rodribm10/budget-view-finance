@@ -45,11 +45,15 @@ const RegisterForm = ({ isLoading, setIsLoading }: RegisterFormProps) => {
     try {
       console.log(`🔐 Iniciando cadastro para: ${email}`);
       
+      // Use the correct production domain for email redirect
+      const emailRedirectTo = "https://financehome.innova1001.com.br/email-confirmation";
+      console.log(`📧 Usando emailRedirectTo: ${emailRedirectTo}`);
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password: senha,
         options: {
-          emailRedirectTo: `${window.location.origin}/email-confirmation`,
+          emailRedirectTo,
           data: {
             nome,
             empresa: empresa || null,
