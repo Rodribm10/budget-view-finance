@@ -3,15 +3,17 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import ModernLayout from './ModernLayout';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 
 interface LayoutProps {
   children: React.ReactNode;
+  useModernSidebar?: boolean;
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, useModernSidebar = true }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
   
@@ -23,6 +25,12 @@ export default function Layout({ children }: LayoutProps) {
     closeTour
   } = useOnboardingTour();
 
+  // Se useModernSidebar for true, usa o novo layout moderno
+  if (useModernSidebar) {
+    return <ModernLayout>{children}</ModernLayout>;
+  }
+
+  // Layout antigo para compatibilidade
   const handleSidebarClose = () => {
     setSidebarOpen(false);
   };
