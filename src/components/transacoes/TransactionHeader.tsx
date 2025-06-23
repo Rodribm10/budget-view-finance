@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface TransactionHeaderProps {
@@ -14,7 +15,7 @@ export function TransactionHeader({
   return (
     <div className="flex gap-2">
       <button
-        className={`bg-finance-green hover:bg-green-600 text-white text-sm px-4 py-2 rounded transition-colors ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`bg-green-600 hover:bg-green-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-md ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
         disabled={disableAdicionar}
         onClick={() => onOpenDialog('receita')}
         type="button"
@@ -22,7 +23,7 @@ export function TransactionHeader({
         Nova Receita
       </button>
       <button
-        className={`bg-finance-red hover:bg-red-600 text-white text-sm px-4 py-2 rounded transition-colors ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`bg-red-600 hover:bg-red-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-md ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
         disabled={disableAdicionar}
         onClick={() => onOpenDialog('despesa')}
         type="button"
@@ -30,7 +31,7 @@ export function TransactionHeader({
         Nova Despesa
       </button>
       <button
-        className={`bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded transition-colors ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
+        className={`bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors shadow-md ${disableAdicionar ? 'opacity-50 cursor-not-allowed' : ''}`}
         disabled={disableAdicionar}
         onClick={onOpenCartaoCreditoDialog}
         type="button"

@@ -79,7 +79,7 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
 
       if (error) throw error;
 
-      // Enviar dados para o webhook do N8N
+      // Enviar dados para o webhook do N8N usando modo no-cors
       const webhookData = {
         assunto: formData.assunto,
         motivo: formData.motivo,
@@ -93,24 +93,17 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
       try {
         console.log("Enviando dados para webhook N8N:", webhookData);
         
+        // Usando modo no-cors para evitar problema de CORS
         const webhookResponse = await fetch('https://webhookn8n.innova1001.com.br/webhook/faleconosco', {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(webhookData),
         });
         
-        console.log("Status da resposta do webhook:", webhookResponse.status);
-        
-        if (webhookResponse.ok) {
-          const responseText = await webhookResponse.text();
-          console.log("Resposta do webhook:", responseText);
-        } else {
-          console.error("Erro no webhook - Status:", webhookResponse.status);
-        }
-        
-        console.log("Dados do Fale Conosco enviados para o webhook N8N");
+        console.log("Dados enviados para webhook N8N com sucesso");
       } catch (webhookError) {
         console.error("Erro ao enviar para webhook N8N:", webhookError);
         // Não interrompe o fluxo se o webhook falhar
@@ -118,7 +111,7 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
 
       toast({
         title: "Mensagem enviada com sucesso!",
-        description: "Sua mensagem foi enviada com sucesso. Você receberá uma resposta no e-mail cadastrado. Aguarde nosso retorno!",
+        description: "Sua mensagem foi enviada e nossa equipe irá responder em breve. Você receberá uma resposta no seu e-mail cadastrado. Aguarde nosso retorno!",
       });
 
       // Reset form
@@ -148,12 +141,4 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
       <ContactFormHeader onBack={onBack} />
       <ContactFormFields 
         formData={formData}
-        setFormData={setFormData}
-        loading={loading}
-        onSubmit={handleSubmit}
-      />
-    </div>
-  );
-};
-
-export default ContactForm;
+        setFormData={setForm

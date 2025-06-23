@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import SummaryCard from '@/components/dashboard/SummaryCard';
@@ -168,34 +169,38 @@ const Dashboard = () => {
           <SummaryCard
             title="Receitas"
             value={formatCurrency(totals.receitas)}
-            icon={<ArrowUp size={20} className="text-finance-green" />}
+            icon={<ArrowUp size={24} className="text-green-600" />}
             trend={5}
-            iconClass="bg-finance-green/10"
-            valueClass="text-finance-green"
+            iconClass="bg-green-100"
+            valueClass="text-green-700"
+            className="border-green-200 shadow-lg"
           />
           <SummaryCard
             title="Despesas"
             value={formatCurrency(totalDespesasGeral)}
             secondaryValue={`Cartões: ${formatCurrency(totals.cartoes)}`}
-            icon={<ArrowDown size={20} className="text-finance-red" />}
+            icon={<ArrowDown size={24} className="text-red-600" />}
             trend={-2}
-            iconClass="bg-finance-red/10"
-            valueClass="text-finance-red"
+            iconClass="bg-red-100"
+            valueClass="text-red-700"
+            className="border-red-200 shadow-lg"
           />
           <SummaryCard
             title="Saldo"
             value={formatCurrency(totals.saldo)}
-            icon={<Wallet size={20} className="text-finance-blue" />}
-            iconClass="bg-finance-blue/10"
-            valueClass="text-finance-blue"
+            icon={<Wallet size={24} className="text-blue-600" />}
+            iconClass="bg-blue-100"
+            valueClass="text-blue-700"
+            className="border-blue-200 shadow-lg"
           />
           <SummaryCard
             title="Economia"
             value={`${totals.receitas > 0 ? ((totals.saldo / totals.receitas) * 100).toFixed(1) : 0}%`}
             secondaryValue={formatCurrency(totals.saldo)}
-            icon={<PiggyBank size={20} className="text-finance-purple" />}
-            iconClass="bg-finance-purple/10"
-            valueClass="text-finance-purple"
+            icon={<PiggyBank size={24} className="text-purple-600" />}
+            iconClass="bg-purple-100"
+            valueClass="text-purple-700"
+            className="border-purple-200 shadow-lg"
           />
         </div>
 

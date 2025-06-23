@@ -26,11 +26,18 @@ import {
   Crown,
   MessageSquareText,
   Users,
-  Settings
+  Settings,
+  Menu
 } from 'lucide-react';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface NewModernLayoutProps {
   children: React.ReactNode;
@@ -202,7 +209,16 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
 
         <SidebarInset className="flex-1">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <SidebarTrigger className="-ml-1" />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SidebarTrigger className="-ml-1 hover:bg-blue-50 rounded-lg p-2" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Abrir/Fechar Menu</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </header>
           <main className="flex-1 overflow-y-auto">
             <div className="container mx-auto px-4 py-6">
