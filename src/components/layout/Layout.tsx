@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import ModernLayout from './ModernLayout';
+import NewModernLayout from './NewModernLayout';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
@@ -27,7 +27,7 @@ export default function Layout({ children, useModernSidebar = true }: LayoutProp
 
   // Se useModernSidebar for true, usa o novo layout moderno
   if (useModernSidebar) {
-    return <ModernLayout>{children}</ModernLayout>;
+    return <NewModernLayout>{children}</NewModernLayout>;
   }
 
   // Layout antigo para compatibilidade

@@ -93,7 +93,7 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
       try {
         console.log("Enviando dados para webhook N8N:", webhookData);
         
-        const response = await fetch('https://webhookn8n.innova1001.com.br/webhook/faleconosco', {
+        const webhookResponse = await fetch('https://webhookn8n.innova1001.com.br/webhook/faleconosco', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -101,11 +101,16 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
           body: JSON.stringify(webhookData),
         });
         
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+        console.log("Status da resposta do webhook:", webhookResponse.status);
+        
+        if (webhookResponse.ok) {
+          const responseText = await webhookResponse.text();
+          console.log("Resposta do webhook:", responseText);
+        } else {
+          console.error("Erro no webhook - Status:", webhookResponse.status);
         }
         
-        console.log("Dados do Fale Conosco enviados com sucesso para o webhook N8N");
+        console.log("Dados do Fale Conosco enviados para o webhook N8N");
       } catch (webhookError) {
         console.error("Erro ao enviar para webhook N8N:", webhookError);
         // Não interrompe o fluxo se o webhook falhar
