@@ -11,15 +11,18 @@ max_rows = 1000
 [auth]
 enabled = true
 port = 54324
-site_url = "http://localhost:3000"
+site_url = "https://financehome.innova1001.com.br"
 additional_redirect_urls = [
-  "https://localhost:3000",
+  "https://financehome.innova1001.com.br/**",
+  "https://financehome.innova1001.com.br/email-confirmation",
+  "http://localhost:3000",
   "http://localhost:3000/**",
+  "https://localhost:3000",
   "https://localhost:3000/**"
 ]
 jwt_expiry = 3600
 enable_signup = true
-enable_confirmations = false
+enable_confirmations = true
 
 [functions.whatsapp-api]
 verify_jwt = false
