@@ -141,4 +141,12 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
       <ContactFormHeader onBack={onBack} />
       <ContactFormFields 
         formData={formData}
-        setFormData={setForm
+        setFormData={setFormData}
+        loading={loading}
+        onSubmit={handleSubmit}
+      />
+    </div>
+  );
+};
+
+export default ContactForm;
