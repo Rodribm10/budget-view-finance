@@ -20,13 +20,36 @@ const EmailConfirmation = () => {
         console.log('🔗 Hash:', window.location.hash);
         console.log('🔗 Search:', window.location.search);
 
-        // Verificar se há tokens no hash (formato novo do Supabase)
+        // Aguardar um momento para garantir que a URL está totalmente carregada
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // Primeiro, verificar se já existe uma sessão ativa
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        console.log('📋 Sessão existente:', existingSession ? 'presente' : 'ausente');
+
+        if (existingSession) {
+          console.log('✅ Usuário já autenticado, redirecionando...');
+          setStatus('success');
+          setMessage('Email já confirmado! Redirecionando para o dashboard...');
+          toast.success("Bem-vindo!", {
+            description: "Você já está logado. Redirecionando...",
+          });
+          
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 1500);
+          return;
+        }
+
+        // Verificar tokens no hash fragment (formato mais comum)
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const tokenType = hashParams.get('type');
+        const errorCode = hashParams.get('error');
+        const errorDescription = hashParams.get('error_description');
 
-        // Verificar se há tokens nos query params (formato antigo)
+        // Verificar tokens nos query params (formato antigo)
         const searchParams = new URLSearchParams(window.location.search);
         const tokenHash = searchParams.get('token_hash');
         const type = searchParams.get('type');
@@ -36,37 +59,60 @@ const EmailConfirmation = () => {
           refreshToken: refreshToken ? 'presente' : 'ausente',
           tokenType,
           tokenHash: tokenHash ? 'presente' : 'ausente',
-          type
+          type,
+          error: errorCode,
+          errorDescription
         });
 
-        // Processar tokens do hash (formato mais comum)
+        // Verificar se há erro na URL
+        if (errorCode) {
+          console.error('❌ Erro na URL:', errorCode, errorDescription);
+          setStatus('error');
+          setMessage('Link de confirmação expirado ou inválido. Tente fazer login novamente.');
+          toast.error("Link expirado", {
+            description: "O link de confirmação expirou. Tente fazer login para receber um novo email.",
+          });
+          return;
+        }
+
+        let confirmationSuccess = false;
+
+        // Processar tokens do hash fragment (formato mais comum do Supabase)
         if (accessToken && refreshToken) {
           console.log('✅ Processando tokens do hash fragment...');
           
-          const { data, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
+          try {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
 
-          if (error) {
-            console.error('❌ Erro ao definir sessão:', error);
-            setStatus('error');
-            setMessage('Erro ao confirmar email. Tente fazer login novamente.');
-            toast.error("Erro na confirmação", {
-              description: "Não foi possível confirmar seu email. Tente fazer login.",
-            });
-          } else {
-            console.log('✅ Sessão definida com sucesso:', data);
-            setStatus('success');
-            setMessage('Email confirmado com sucesso! Redirecionando para o dashboard...');
-            toast.success("Email confirmado!", {
-              description: "Sua conta foi ativada com sucesso. Redirecionando...",
-            });
-            
-            // Redirecionar para dashboard após 2 segundos
-            setTimeout(() => {
-              navigate('/dashboard', { replace: true });
-            }, 2000);
+            if (error) {
+              console.error('❌ Erro ao definir sessão:', error);
+              throw error;
+            } else {
+              console.log('✅ Sessão definida com sucesso:', data);
+              confirmationSuccess = true;
+            }
+          } catch (sessionError) {
+            console.error('❌ Erro na sessão:', sessionError);
+            // Tentar método alternativo se setSession falhar
+            try {
+              console.log('🔄 Tentando método alternativo...');
+              const { error: verifyError } = await supabase.auth.verifyOtp({
+                token_hash: accessToken,
+                type: 'signup',
+              });
+              
+              if (!verifyError) {
+                confirmationSuccess = true;
+              } else {
+                throw verifyError;
+              }
+            } catch (altError) {
+              console.error('❌ Método alternativo também falhou:', altError);
+              throw altError;
+            }
           }
         }
         // Processar tokens dos query params (formato antigo)
@@ -80,32 +126,55 @@ const EmailConfirmation = () => {
 
           if (error) {
             console.error('❌ Erro na verificação OTP:', error);
-            setStatus('error');
-            setMessage('Link de confirmação inválido ou expirado.');
-            toast.error("Erro na confirmação", {
-              description: "O link de confirmação pode ter expirado. Tente fazer login novamente.",
-            });
+            throw error;
           } else {
             console.log('✅ OTP verificado com sucesso:', data);
+            confirmationSuccess = true;
+          }
+        }
+
+        // Verificar resultado da confirmação
+        if (confirmationSuccess) {
+          // Aguardar um momento para a sessão ser estabelecida
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Verificar se a sessão foi realmente estabelecida
+          const { data: { session: newSession } } = await supabase.auth.getSession();
+          
+          if (newSession) {
+            console.log('✅ Confirmação bem-sucedida com sessão ativa');
             setStatus('success');
             setMessage('Email confirmado com sucesso! Redirecionando para o dashboard...');
             toast.success("Email confirmado!", {
               description: "Sua conta foi ativada com sucesso. Redirecionando...",
             });
             
-            // Redirecionar para dashboard após 2 segundos
             setTimeout(() => {
               navigate('/dashboard', { replace: true });
             }, 2000);
+          } else {
+            console.log('⚠️ Confirmação processada mas sem sessão ativa');
+            setStatus('success');
+            setMessage('Email confirmado com sucesso! Você pode fazer login agora.');
+            toast.success("Email confirmado!", {
+              description: "Sua conta foi ativada. Faça login para continuar.",
+            });
           }
-        }
-        // Nenhum token encontrado
-        else {
+        } else if (!accessToken && !refreshToken && !tokenHash) {
+          // Nenhum token encontrado
           console.warn('⚠️ Nenhum token válido encontrado na URL');
           setStatus('error');
           setMessage('Link de confirmação inválido. Verifique se você clicou no link correto do email.');
           toast.error("Link inválido", {
             description: "Este link de confirmação não é válido.",
+          });
+        } else {
+          // Tokens encontrados mas processamento falhou
+          console.error('❌ Tokens encontrados mas processamento falhou');
+          setStatus('error');
+          setMessage('Erro ao processar confirmação. O link pode ter expirado.');
+          toast.error("Erro na confirmação", {
+            description: "O link de confirmação pode ter expirado. Tente fazer login novamente.",
           });
         }
 
