@@ -75,6 +75,13 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
     closeTour
   } = useOnboardingTour();
 
+  // No mobile, o sidebar deve estar fechado por padrão
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile]);
+
   const mainLinks = [
     {
       id: "dashboard",

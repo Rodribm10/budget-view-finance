@@ -86,7 +86,6 @@ export const DesktopSidebar = ({
 }: React.ComponentProps<"div">) => {
   const { open, setOpen, animate } = useSidebar();
   
-  // Separate motion-specific props from HTML div props
   const { onAnimationStart, onAnimationComplete, ...htmlProps } = props as any;
   
   return (
@@ -97,7 +96,7 @@ export const DesktopSidebar = ({
           className
         )}
         animate={{
-          width: animate ? (open ? "300px" : "60px") : "300px",
+          width: animate ? (open ? "300px" : "80px") : "300px",
         }}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
@@ -124,6 +123,11 @@ export const MobileSidebar = ({
         {...props}
       >
         <div className="flex items-center space-x-2">
+          <img 
+            src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
+            alt="Finance Home Logo" 
+            className="h-8 w-8 shrink-0"
+          />
           <span className="text-lg font-semibold text-blue-700">Finance Home</span>
         </div>
         <div className="flex justify-end z-20">
@@ -153,7 +157,9 @@ export const MobileSidebar = ({
               >
                 <X className="h-6 w-6" />
               </div>
-              {children}
+              <div className="mt-12">
+                {children}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

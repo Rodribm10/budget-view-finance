@@ -4,7 +4,6 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { enviarFaleConoscoParaWebhook } from '@/services/webhookService';
 import ContactFormFields from './ContactFormFields';
 import ContactFormHeader from './ContactFormHeader';
 
@@ -92,8 +91,21 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
       };
 
       try {
-        await enviarFaleConoscoParaWebhook(webhookData);
-        console.log("Dados enviados para webhook N8N com sucesso");
+        console.log("Enviando dados para webhook N8N:", webhookData);
+        
+        const response = await fetch('https://webhookn8n.innova1001.com.br/webhook/faleconosco', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData),
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        console.log("Dados do Fale Conosco enviados com sucesso para o webhook N8N");
       } catch (webhookError) {
         console.error("Erro ao enviar para webhook N8N:", webhookError);
         // Não interrompe o fluxo se o webhook falhar
