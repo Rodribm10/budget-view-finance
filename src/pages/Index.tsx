@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import Layout from '@/components/layout/Layout';
 import SummaryCard from '@/components/dashboard/SummaryCard';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import CategoryChart from '@/components/dashboard/CategoryChart';
 import MonthlyChart from '@/components/dashboard/MonthlyChart';
+import UserProfileButton from '@/components/dashboard/UserProfileButton';
 import { MonthFilter } from '@/components/filters/MonthFilter';
 import { OnboardingTour, useOnboardingTour } from '@/components/onboarding';
 import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
@@ -154,10 +154,13 @@ const Dashboard = () => {
               Dados de: {formatMonthDisplay(selectedMonth)}
             </p>
           </div>
-          <MonthFilter 
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-          />
+          <div className="flex items-center gap-4">
+            <UserProfileButton />
+            <MonthFilter 
+              selectedMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
+            />
+          </div>
         </div>
 
         {/* Resumo em cards */}

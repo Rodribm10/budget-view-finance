@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { enviarFaleConoscoParaWebhook } from '@/utils/webhookService';
 import ContactFormFields from './ContactFormFields';
 import ContactFormHeader from './ContactFormHeader';
 
@@ -37,6 +38,15 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
 
     try {
       let anexoUrl = null;
+      let userId = null;
+      let userEmail = null;
+
+      // Obter dados do usuário
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        userId = user.id;
+        userEmail = user.email;
+      }
 
       // Upload do anexo se existe
       if (formData.anexo) {
@@ -64,11 +74,30 @@ const ContactForm = ({ onBack }: ContactFormProps) => {
           motivo: formData.motivo,
           mensagem: formData.mensagem,
           anexo_url: anexoUrl,
-          user_id: (await supabase.auth.getUser()).data.user?.id,
+          user_id: userId,
           status: 'pendente'
         });
 
       if (error) throw error;
+
+      // Enviar dados para o webhook do N8N
+      const webhookData = {
+        assunto: formData.assunto,
+        motivo: formData.motivo,
+        mensagem: formData.mensagem,
+        anexo_url: anexoUrl,
+        user_id: userId,
+        user_email: userEmail,
+        data_envio: new Date().toISOString()
+      };
+
+      try {
+        await enviarFaleConoscoParaWebhook(webhookData);
+        console.log("Dados enviados para webhook N8N com sucesso");
+      } catch (webhookError) {
+        console.error("Erro ao enviar para webhook N8N:", webhookError);
+        // Não interrompe o fluxo se o webhook falhar
+      }
 
       toast({
         title: "Mensagem enviada!",

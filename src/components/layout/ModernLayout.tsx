@@ -78,10 +78,6 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   
   const {
     isOpen: tourOpen,
@@ -90,42 +86,6 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
     skipTour,
     closeTour
   } = useOnboardingTour();
-
-  useEffect(() => {
-    // Buscar dados do usuário logado
-    const getUserData = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user?.email) {
-        setUserEmail(user.email);
-      }
-    };
-    
-    getUserData();
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      // Limpar localStorage
-      localStorage.removeItem('userEmail');
-      
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso"
-      });
-      
-      navigate('/auth');
-    } catch (error) {
-      console.error('Erro no logout:', error);
-      toast({
-        title: "Erro no logout",
-        description: "Ocorreu um erro ao sair da conta",
-        variant: "destructive"
-      });
-    }
-  };
 
   const mainLinks = [
     {
@@ -260,52 +220,6 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
                   className="space-y-1"
                   iconContainerClassName={!open ? "justify-center" : ""}
                 />
-                
-                {/* User Profile */}
-                <div className="mt-4 px-3">
-                  <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        className={`w-full rounded-full py-0 ps-0 h-10 ${open ? 'justify-start' : 'justify-center px-0'}`} 
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDropdownOpen(!dropdownOpen);
-                        }}
-                      >
-                        <div className={`${open ? 'me-2' : ''} flex aspect-square h-full p-1.5`}>
-                          <div className="h-full w-full rounded-full bg-blue-600 flex items-center justify-center">
-                            <User className="h-4 w-4 text-white" />
-                          </div>
-                        </div>
-                        {open && (
-                          <span className="text-sm truncate">
-                            {userEmail || 'Usuário'}
-                          </span>
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent 
-                      align={open ? "end" : "center"} 
-                      side={open ? "top" : "right"}
-                      className="w-56 z-50"
-                    >
-                      <DropdownMenuItem 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setDropdownOpen(false);
-                          handleLogout();
-                        }}
-                        className="flex items-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sair
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
               </div>
             </div>
           </div>
