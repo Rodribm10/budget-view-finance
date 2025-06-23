@@ -85,6 +85,10 @@ export const DesktopSidebar = ({
   ...props
 }: React.ComponentProps<"div">) => {
   const { open, setOpen, animate } = useSidebar();
+  
+  // Separate motion-specific props from HTML div props
+  const { onAnimationStart, onAnimationComplete, ...htmlProps } = props as any;
+  
   return (
     <>
       <motion.div
@@ -97,7 +101,7 @@ export const DesktopSidebar = ({
         }}
         onMouseEnter={() => setOpen(true)}
         onMouseLeave={() => setOpen(false)}
-        {...props}
+        {...htmlProps}
       >
         {children}
       </motion.div>
