@@ -36,7 +36,8 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
       toast.success("Login realizado com sucesso", {
         description: "Bem-vindo de volta!"
       });
-      navigate('/');
+      // Redirecionar para o dashboard após login bem-sucedido
+      navigate('/dashboard');
     }
   };
 

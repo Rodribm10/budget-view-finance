@@ -4,6 +4,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Boxes } from "@/components/ui/background-boxes";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
@@ -35,6 +37,14 @@ const Auth = () => {
       <div className="absolute inset-0 w-full h-full bg-slate-900 z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
       
       <Boxes />
+      
+      {/* Botão para voltar à landing page */}
+      <Link to="/" className="absolute top-4 left-4 z-30">
+        <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+      </Link>
       
       <Card className="w-full max-w-md relative z-20 bg-white/95 backdrop-blur-sm border-white/20">
         <CardHeader className="space-y-1 text-center">

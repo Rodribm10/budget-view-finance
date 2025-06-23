@@ -34,19 +34,13 @@ function App() {
         {/* Landing page - só mostra se não estiver logado */}
         <Route 
           path="/" 
-          element={isLoggedIn ? (
-            <ProtectedRoute>
-              <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
-                <Dashboard />
-              </Suspense>
-            </ProtectedRoute>
-          ) : <Landing />} 
+          element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Landing />} 
         />
         
-        {/* Auth route */}
+        {/* Auth route - redireciona para dashboard se já estiver logado */}
         <Route 
           path="/auth" 
-          element={isLoggedIn ? <Navigate to="/" replace /> : <Auth />} 
+          element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Auth />} 
         />
         
         {/* Email confirmation route */}
