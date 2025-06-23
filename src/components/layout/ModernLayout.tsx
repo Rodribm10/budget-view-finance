@@ -1,8 +1,9 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { ModernSidebar, SidebarBody, SidebarLink } from '@/components/ui/modern-sidebar';
+import { ModernSidebar, SidebarBody } from '@/components/ui/modern-sidebar';
+import { VerticalLimelightNav } from '@/components/ui/limelight-nav';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
@@ -63,6 +64,7 @@ const LogoIcon = () => {
 
 export default function ModernLayout({ children }: ModernLayoutProps) {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
   const isMobile = useIsMobile();
   
   const {
@@ -73,64 +75,81 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
     closeTour
   } = useOnboardingTour();
 
-  const links = [
+  const mainLinks = [
     {
+      id: "dashboard",
       label: "Dashboard",
       href: "/",
-      icon: <Home className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <Home />,
     },
     {
+      id: "transacoes",
       label: "Transações",
       href: "/transacoes",
-      icon: <Receipt className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <Receipt />,
     },
     {
+      id: "cartoes",
       label: "Cartões de Crédito",
       href: "/cartoes",
-      icon: <CreditCard className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <CreditCard />,
     },
     {
+      id: "categorias",
       label: "Categorias",
       href: "/categorias",
-      icon: <ListFilter className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <ListFilter />,
     },
     {
+      id: "metas",
       label: "Metas",
       href: "/metas",
-      icon: <Target className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <Target />,
     },
     {
+      id: "calendario",
       label: "Calendário",
       href: "/calendario",
-      icon: <Calendar className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <Calendar />,
     },
     {
+      id: "assinatura",
       label: "Assinatura",
       href: "/assinatura",
-      icon: <Crown className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <Crown />,
     }
   ];
 
   const whatsappLinks = [
     {
+      id: "whatsapp",
       label: "Conectar WhatsApp",
       href: "/whatsapp",
-      icon: <MessageSquareText className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" data-tour="whatsapp-menu" />,
+      icon: <MessageSquareText data-tour="whatsapp-menu" />,
     },
     {
+      id: "grupos",
       label: "Grupos",
       href: "/grupos-whatsapp",
-      icon: <Users className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" data-tour="grupos-menu" />,
+      icon: <Users data-tour="grupos-menu" />,
     }
   ];
 
   const configLinks = [
     {
+      id: "configuracoes",
       label: "Configurações",
       href: "/configuracoes",
-      icon: <Settings className="h-5 w-5 shrink-0 text-neutral-700 dark:text-neutral-200" />,
+      icon: <Settings />,
     }
   ];
+
+  // Determine active index based on current route
+  const getActiveIndex = () => {
+    const allLinks = [...mainLinks, ...whatsappLinks, ...configLinks];
+    const activeIndex = allLinks.findIndex(link => link.href === location.pathname);
+    return activeIndex >= 0 ? activeIndex : 0;
+  };
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -139,43 +158,53 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
           <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto h-full">
             {open ? <Logo /> : <LogoIcon />}
             
-            <div className="mt-8 flex flex-col gap-2">
-              {links.map((link, idx) => (
-                <SidebarLink key={idx} link={link} />
-              ))}
-            </div>
-
-            <div className="mt-8">
-              {open && (
-                <motion.h2 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mb-2 px-2 text-sm font-semibold tracking-tight text-gray-600"
-                >
-                  WhatsApp
-                </motion.h2>
-              )}
-              <div className="flex flex-col gap-2">
-                {whatsappLinks.map((link, idx) => (
-                  <SidebarLink key={`whatsapp-${idx}`} link={link} />
-                ))}
+            <div className="mt-8 flex flex-col gap-6 flex-1 pb-4">
+              {/* Main Navigation */}
+              <div>
+                <VerticalLimelightNav
+                  items={mainLinks}
+                  defaultActiveIndex={getActiveIndex() < mainLinks.length ? getActiveIndex() : 0}
+                  showLabels={open}
+                  className="space-y-1"
+                />
               </div>
-            </div>
 
-            <div className="mt-auto">
-              {open && (
-                <motion.h2 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="mb-2 px-2 text-sm font-semibold tracking-tight text-gray-600"
-                >
-                  Configurações
-                </motion.h2>
-              )}
-              <div className="flex flex-col gap-2 pb-4">
-                {configLinks.map((link, idx) => (
-                  <SidebarLink key={`config-${idx}`} link={link} />
-                ))}
+              {/* WhatsApp Section */}
+              <div className="flex-1">
+                {open && (
+                  <motion.h2 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mb-3 px-3 text-xs font-semibold tracking-tight text-gray-500 uppercase"
+                  >
+                    WhatsApp
+                  </motion.h2>
+                )}
+                <VerticalLimelightNav
+                  items={whatsappLinks}
+                  defaultActiveIndex={getActiveIndex() >= mainLinks.length && getActiveIndex() < mainLinks.length + whatsappLinks.length ? getActiveIndex() - mainLinks.length : -1}
+                  showLabels={open}
+                  className="space-y-1"
+                />
+              </div>
+
+              {/* Config Section */}
+              <div className="mt-auto">
+                {open && (
+                  <motion.h2 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="mb-3 px-3 text-xs font-semibold tracking-tight text-gray-500 uppercase"
+                  >
+                    Configurações
+                  </motion.h2>
+                )}
+                <VerticalLimelightNav
+                  items={configLinks}
+                  defaultActiveIndex={getActiveIndex() >= mainLinks.length + whatsappLinks.length ? getActiveIndex() - mainLinks.length - whatsappLinks.length : -1}
+                  showLabels={open}
+                  className="space-y-1"
+                />
               </div>
             </div>
           </div>
