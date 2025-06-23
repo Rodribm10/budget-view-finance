@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Boxes } from '@/components/ui/background-boxes';
 import { 
   MessageSquareText, 
   Smartphone, 
@@ -10,7 +11,10 @@ import {
   ArrowRight,
   TrendingUp,
   Shield,
-  Clock
+  Clock,
+  Mic,
+  FileText,
+  Receipt
 } from 'lucide-react';
 
 const Landing = () => {
@@ -46,10 +50,34 @@ const Landing = () => {
     "100% seguro e privado"
   ];
 
+  const howItWorks = [
+    {
+      icon: <FileText className="h-8 w-8" />,
+      title: "Mensagem de Texto",
+      description: "Digite suas despesas diretamente no chat",
+      example: "Gastei 100 em compras no Atacadão",
+      image: "/whatsapp-text-message.png"
+    },
+    {
+      icon: <Mic className="h-8 w-8" />,
+      title: "Mensagem de Áudio",
+      description: "Grave um áudio com sua transação",
+      example: "Áudio: 'Gastei 150 em compras no Atacadão'",
+      image: "/whatsapp-audio-message.png"
+    },
+    {
+      icon: <Receipt className="h-8 w-8" />,
+      title: "Comprovante PIX",
+      description: "Envie o comprovante e deixe o resto conosco",
+      example: "Comprovante automático do PIX",
+      image: "/whatsapp-receipt-message.png"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
-      <header className="container mx-auto px-4 py-6">
+      <header className="container mx-auto px-4 py-6 relative z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <img 
@@ -67,53 +95,122 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-            Controle financeiro
-            <span className="block text-green-400">via WhatsApp</span>
-          </h1>
-          
-          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            A única plataforma que permite organizar suas finanças pessoais 100% integrada com o WhatsApp. 
-            Sem apps extras, sem complicação.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <Link to="/auth">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
-                Acessar Plataforma
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
+      {/* Hero Section with Background */}
+      <section className="relative">
+        <Boxes />
+        <div className="container mx-auto px-4 py-20 text-center relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+              Controle financeiro
+              <span className="block text-green-400">via WhatsApp</span>
+            </h1>
             
-            <div className="flex items-center text-slate-300">
-              <Clock className="h-4 w-4 mr-2" />
-              <span className="text-sm">Configuração em 2 minutos</span>
+            <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
+              A única plataforma que permite organizar suas finanças pessoais 100% integrada com o WhatsApp. 
+              Sem apps extras, sem complicação.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+              <Link to="/auth">
+                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                  Acessar Plataforma
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              
+              <div className="flex items-center text-slate-300">
+                <Clock className="h-4 w-4 mr-2" />
+                <span className="text-sm">Configuração em 2 minutos</span>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-400">100%</div>
+                <div className="text-slate-400">Via WhatsApp</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-400">0</div>
+                <div className="text-slate-400">Apps extras</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-purple-400">24/7</div>
+                <div className="text-slate-400">Disponível</div>
+              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
+      {/* How It Works Section */}
+      <section className="py-20 bg-slate-800/50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Como funciona?
+            </h2>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+              Três formas simples de registrar suas transações no WhatsApp
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {howItWorks.map((method, index) => (
+              <div key={index} className="text-center">
+                <div className="bg-slate-700/50 p-8 rounded-xl border border-slate-600 hover:border-green-500 transition-all duration-300 hover:bg-slate-700/70">
+                  <div className="bg-green-500/20 p-4 rounded-lg w-fit mx-auto mb-6 text-green-400">
+                    {method.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">{method.title}</h3>
+                  <p className="text-slate-300 mb-4">{method.description}</p>
+                  <div className="bg-green-500/10 p-3 rounded-lg">
+                    <p className="text-green-300 text-sm font-medium">"{method.example}"</p>
+                  </div>
+                </div>
+                
+                <div className="mt-6">
+                  <img 
+                    src={method.image} 
+                    alt={`Exemplo de ${method.title}`}
+                    className="w-48 h-auto mx-auto rounded-lg shadow-lg"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Dashboard Preview */}
+          <div className="text-center mb-8">
+            <h3 className="text-3xl font-bold text-white mb-4">Visualize tudo no dashboard</h3>
+            <p className="text-lg text-slate-300 mb-8">
+              Acompanhe suas finanças com gráficos detalhados e relatórios completos
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-400">100%</div>
-              <div className="text-slate-400">Via WhatsApp</div>
+              <h4 className="text-xl font-semibold text-white mb-4">Dashboard Financeiro</h4>
+              <img 
+                src="/dashboard-screenshot.png" 
+                alt="Dashboard Financeiro"
+                className="w-full h-auto rounded-lg shadow-xl border border-slate-600"
+              />
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-400">0</div>
-              <div className="text-slate-400">Apps extras</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400">24/7</div>
-              <div className="text-slate-400">Disponível</div>
+              <h4 className="text-xl font-semibold text-white mb-4">Calendário de Transações</h4>
+              <img 
+                src="/calendar-screenshot.png" 
+                alt="Calendário de Transações"
+                className="w-full h-auto rounded-lg shadow-xl border border-slate-600"
+              />
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-slate-800/50">
+      <section className="py-20 bg-slate-900/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">
