@@ -10,7 +10,12 @@ import {
   ArrowRight,
   TrendingUp,
   Shield,
-  Clock
+  Clock,
+  MessageCircle,
+  Mic,
+  Receipt,
+  BarChart3,
+  Calendar
 } from 'lucide-react';
 
 const Landing = () => {
@@ -44,6 +49,48 @@ const Landing = () => {
     "Metas e alertas personalizados",
     "Sincronização em tempo real",
     "100% seguro e privado"
+  ];
+
+  const howItWorksSteps = [
+    {
+      step: "1",
+      title: "Envie pelo WhatsApp",
+      description: "Mande suas transações de forma simples",
+      methods: [
+        {
+          icon: <MessageCircle className="h-6 w-6" />,
+          title: "Texto",
+          description: "Digite: 'Comprei pão R$ 5,50'",
+          image: "/whatsapp-text-message.png"
+        },
+        {
+          icon: <Mic className="h-6 w-6" />,
+          title: "Áudio",
+          description: "Grave um áudio contando o gasto",
+          image: "/whatsapp-audio-message.png"
+        },
+        {
+          icon: <Receipt className="h-6 w-6" />,
+          title: "Comprovante",
+          description: "Tire foto do recibo ou nota fiscal",
+          image: "/whatsapp-receipt-message.png"
+        }
+      ]
+    },
+    {
+      step: "2",
+      title: "Visualize no Dashboard",
+      description: "Acompanhe seus gastos em tempo real com gráficos e relatórios automáticos",
+      icon: <BarChart3 className="h-8 w-8" />,
+      image: "/dashboard-screenshot.png"
+    },
+    {
+      step: "3",
+      title: "Organize no Calendário",
+      description: "Veja todas suas transações organizadas por data e periodo",
+      icon: <Calendar className="h-8 w-8" />,
+      image: "/calendar-screenshot.png"
+    }
   ];
 
   return (
@@ -107,6 +154,92 @@ const Landing = () => {
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-400">24/7</div>
               <div className="text-slate-400">Disponível</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it Works Section */}
+      <section className="py-20 bg-slate-800/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              Como funciona?
+            </h2>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+              Apenas 3 passos simples para ter controle total das suas finanças
+            </p>
+          </div>
+
+          <div className="max-w-6xl mx-auto space-y-20">
+            {/* Step 1 - WhatsApp Methods */}
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full text-xl font-bold mb-6">
+                {howItWorksSteps[0].step}
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">{howItWorksSteps[0].title}</h3>
+              <p className="text-lg text-slate-300 mb-12">{howItWorksSteps[0].description}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {howItWorksSteps[0].methods.map((method, index) => (
+                  <div key={index} className="bg-slate-700/50 p-6 rounded-xl border border-slate-600 hover:border-green-500 transition-all duration-300">
+                    <div className="bg-green-500/20 p-3 rounded-lg w-fit mx-auto mb-4 text-green-400">
+                      {method.icon}
+                    </div>
+                    <h4 className="text-xl font-semibold text-white mb-2">{method.title}</h4>
+                    <p className="text-slate-300 mb-4">{method.description}</p>
+                    <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                      <img 
+                        src={method.image} 
+                        alt={`Exemplo ${method.title}`}
+                        className="max-w-full max-h-full object-contain rounded-lg"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Step 2 - Dashboard */}
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full text-xl font-bold mb-6">
+                {howItWorksSteps[1].step}
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">{howItWorksSteps[1].title}</h3>
+              <p className="text-lg text-slate-300 mb-8">{howItWorksSteps[1].description}</p>
+              
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
+                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                    <img 
+                      src={howItWorksSteps[1].image} 
+                      alt="Dashboard do sistema"
+                      className="max-w-full max-h-full object-contain rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 3 - Calendar */}
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-500 text-white rounded-full text-xl font-bold mb-6">
+                {howItWorksSteps[2].step}
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">{howItWorksSteps[2].title}</h3>
+              <p className="text-lg text-slate-300 mb-8">{howItWorksSteps[2].description}</p>
+              
+              <div className="max-w-4xl mx-auto">
+                <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
+                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center">
+                    <img 
+                      src={howItWorksSteps[2].image} 
+                      alt="Calendário do sistema"
+                      className="max-w-full max-h-full object-contain rounded-lg"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
