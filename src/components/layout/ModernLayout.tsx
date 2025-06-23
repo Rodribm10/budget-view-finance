@@ -30,7 +30,11 @@ const Logo = () => {
       to="/"
       className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
     >
-      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-blue-700" />
+      <img 
+        src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
+        alt="Finance Home Logo" 
+        className="h-8 w-8 shrink-0"
+      />
       <motion.span
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -48,7 +52,11 @@ const LogoIcon = () => {
       to="/"
       className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
     >
-      <div className="h-5 w-6 shrink-0 rounded-tl-lg rounded-tr-sm rounded-br-lg rounded-bl-sm bg-blue-700" />
+      <img 
+        src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
+        alt="Finance Home Logo" 
+        className="h-8 w-8 shrink-0"
+      />
     </Link>
   );
 };
@@ -127,8 +135,8 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex w-full">
       <ModernSidebar open={open} setOpen={setOpen}>
-        <SidebarBody className="justify-between gap-10">
-          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+        <SidebarBody className="justify-start gap-4 h-full">
+          <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto h-full">
             {open ? <Logo /> : <LogoIcon />}
             
             <div className="mt-8 flex flex-col gap-2">
@@ -154,7 +162,7 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
               </div>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-auto">
               {open && (
                 <motion.h2 
                   initial={{ opacity: 0 }}
@@ -164,7 +172,7 @@ export default function ModernLayout({ children }: ModernLayoutProps) {
                   Configurações
                 </motion.h2>
               )}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 pb-4">
                 {configLinks.map((link, idx) => (
                   <SidebarLink key={`config-${idx}`} link={link} />
                 ))}

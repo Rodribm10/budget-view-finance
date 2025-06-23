@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Boxes } from "@/components/ui/background-boxes";
+import { cn } from "@/lib/utils";
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
@@ -29,10 +31,21 @@ const Auth = () => {
   }, [location.state]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen relative w-full overflow-hidden bg-slate-900 flex items-center justify-center px-4">
+      <div className="absolute inset-0 w-full h-full bg-slate-900 z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
+      
+      <Boxes />
+      
+      <Card className="w-full max-w-md relative z-20 bg-white/95 backdrop-blur-sm border-white/20">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Finanças Pessoais</CardTitle>
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <img 
+              src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
+              alt="Finance Home Logo" 
+              className="h-10 w-10"
+            />
+            <CardTitle className="text-2xl font-bold text-blue-700">Finance Home</CardTitle>
+          </div>
           <CardDescription>Gerencie suas finanças de forma simples e eficiente</CardDescription>
         </CardHeader>
         <CardContent>
