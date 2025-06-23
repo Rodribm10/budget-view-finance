@@ -67,7 +67,7 @@ export default function MeuCadastroForm() {
     participa_pesquisas: false
   });
 
-  const userId = authStore.getState().user?.id;
+  const userId = useAuthStore.getState().user?.id;
   
   useEffect(() => {
     async function fetchData() {
