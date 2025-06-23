@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/sonner";
 import Auth from './pages/Auth';
+import Landing from './pages/Landing';
 import EmailConfirmation from './pages/EmailConfirmation';
 import CompleteProfile from './pages/CompleteProfile';
 import ProtectedRoute from './components/auth/ProtectedRoute';
@@ -30,6 +31,18 @@ function App() {
       <Toaster />
       
       <Routes>
+        {/* Landing page - só mostra se não estiver logado */}
+        <Route 
+          path="/" 
+          element={isLoggedIn ? (
+            <ProtectedRoute>
+              <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
+                <Dashboard />
+              </Suspense>
+            </ProtectedRoute>
+          ) : <Landing />} 
+        />
+        
         {/* Auth route */}
         <Route 
           path="/auth" 
@@ -49,7 +62,7 @@ function App() {
         />
         
         {/* Protected routes */}
-        <Route path="/" element={
+        <Route path="/dashboard" element={
           <ProtectedRoute>
             <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Carregando...</div>}>
               <Dashboard />
