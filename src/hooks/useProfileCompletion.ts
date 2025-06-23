@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { authStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 
 export const useProfileCompletion = (userEmail: string) => {
   const [isChecking, setIsChecking] = useState(true);
-  const setProfileComplete = authStore((state) => state.setProfileComplete);
+  const setProfileComplete = useAuthStore((state) => state.setProfileComplete);
 
   useEffect(() => {
     const checkProfileCompletion = async () => {

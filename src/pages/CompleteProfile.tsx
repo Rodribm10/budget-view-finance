@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
-import { authStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { sendNewUserWebhook } from '@/services/newUserWebhookService';
 import { formatarWhatsapp } from '@/utils/whatsappFormatter';
 
@@ -20,7 +19,7 @@ const CompleteProfile = () => {
   const [userEmail, setUserEmail] = useState('');
   const [userId, setUserId] = useState('');
   
-  const setProfileComplete = authStore((state) => state.setProfileComplete);
+  const setProfileComplete = useAuthStore((state) => state.setProfileComplete);
 
   useEffect(() => {
     const getUserData = async () => {

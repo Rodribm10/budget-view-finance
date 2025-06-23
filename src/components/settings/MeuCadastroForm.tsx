@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { authStore } from "@/stores/authStore";
+import { useAuthStore } from "@/stores/authStore";
 import { supabase } from "@/integrations/supabase/client";
 
 // Campos que vêm da tabela usuarios:
