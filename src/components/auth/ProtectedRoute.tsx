@@ -2,7 +2,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import LoadingState from '../whatsapp/LoadingState';
-import { authStore } from '@/stores/authStore';
+import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
 import { useProfileCompletion } from '@/hooks/useProfileCompletion';
@@ -16,9 +16,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation();
 
-  const setLoggedIn = authStore((state) => state.setLoggedIn);
-  const setUser = authStore((state) => state.setUser);
-  const isProfileComplete = authStore((state) => state.isProfileComplete);
+  const setLoggedIn = useAuthStore((state) => state.setLoggedIn);
+  const setUser = useAuthStore((state) => state.setUser);
+  const isProfileComplete = useAuthStore((state) => state.isProfileComplete);
   
   // Hook para verificar completude do perfil
   const { isChecking } = useProfileCompletion(session?.user?.email || '');

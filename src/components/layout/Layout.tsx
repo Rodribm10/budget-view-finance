@@ -58,7 +58,7 @@ export default function Layout({ children, useModernSidebar = true }: LayoutProp
           : 'relative'
         }
       `}>
-        <Sidebar isOpen={sidebarOpen} onClose={handleSidebarClose} />
+        <Sidebar />
       </div>
 
       {/* Main content */}

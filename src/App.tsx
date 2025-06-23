@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/authStore";
@@ -63,22 +63,20 @@ function App() {
             <Route path="/email-confirmation" element={<EmailConfirmation />} />
             
             {/* Rotas protegidas */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<Layout />}>
-                <Route path="/dashboard" element={<Index />} />
-                <Route path="/transacoes" element={<Transacoes />} />
-                <Route path="/cartoes" element={<CartoesCredito />} />
-                <Route path="/configuracoes" element={<Configuracoes />} />
-                <Route path="/metas" element={<Metas />} />
-                <Route path="/calendario" element={<Calendario />} />
-                <Route path="/whatsapp" element={<WhatsApp />} />
-                <Route path="/grupos-whatsapp" element={<GruposWhatsApp />} />
-                <Route path="/complete-profile" element={<CompleteProfile />} />
-                <Route path="/categorias" element={<Categorias />} />
-                <Route path="/admin/faq" element={<AdminFAQ />} />
-                <Route path="/assinatura" element={<Assinatura />} />
-                <Route path="/avisos-contas" element={<AvisosContas />} />
-              </Route>
+            <Route path="/" element={<ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>}>
+              <Route path="/dashboard" element={<Index />} />
+              <Route path="/transacoes" element={<Transacoes />} />
+              <Route path="/cartoes" element={<CartoesCredito />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="/metas" element={<Metas />} />
+              <Route path="/calendario" element={<Calendario />} />
+              <Route path="/whatsapp" element={<WhatsApp />} />
+              <Route path="/grupos-whatsapp" element={<GruposWhatsApp />} />
+              <Route path="/complete-profile" element={<CompleteProfile />} />
+              <Route path="/categorias" element={<Categorias />} />
+              <Route path="/admin/faq" element={<AdminFAQ />} />
+              <Route path="/assinatura" element={<Assinatura />} />
+              <Route path="/avisos-contas" element={<AvisosContas />} />
             </Route>
 
             {/* Rota 404 */}
