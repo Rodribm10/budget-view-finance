@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 
 const EmailConfirmation = () => {
   const navigate = useNavigate();
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired'>('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -20,102 +20,75 @@ const EmailConfirmation = () => {
         console.log('🔗 Hash:', window.location.hash);
         console.log('🔗 Search:', window.location.search);
 
-        // Aguardar um momento para garantir que a URL está totalmente carregada
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Verificar se há erros explícitos na URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        
+        const errorFromUrl = urlParams.get('error') || hashParams.get('error');
+        const errorCode = urlParams.get('error_code') || hashParams.get('error_code');
+        const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
 
-        // Primeiro, verificar se já existe uma sessão ativa
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
-        console.log('📋 Sessão existente:', existingSession ? 'presente' : 'ausente');
+        console.log('🔍 Verificando erros na URL:', {
+          error: errorFromUrl,
+          errorCode,
+          errorDescription
+        });
 
-        if (existingSession) {
-          console.log('✅ Usuário já autenticado, redirecionando...');
-          setStatus('success');
-          setMessage('Email confirmado com sucesso! Redirecionando para o dashboard...');
-          toast.success("Bem-vindo!", {
-            description: "Você já está logado. Redirecionando...",
-          });
+        // Tratar erros específicos
+        if (errorFromUrl) {
+          console.error('❌ Erro detectado na URL:', errorFromUrl, errorDescription);
           
-          setTimeout(() => {
-            navigate('/dashboard', { replace: true });
-          }, 1500);
+          if (errorCode === 'otp_expired' || errorDescription?.includes('expired')) {
+            setStatus('expired');
+            setMessage('O link de confirmação expirou. Solicite um novo email de confirmação.');
+            toast.error("Link expirado", {
+              description: "Faça login novamente para receber um novo email de confirmação.",
+            });
+            return;
+          }
+          
+          setStatus('error');
+          setMessage('Link de confirmação inválido ou com problema. Tente fazer login novamente.');
+          toast.error("Erro na confirmação", {
+            description: errorDescription || "Link inválido",
+          });
           return;
         }
 
-        // Verificar tokens no hash fragment (formato mais comum)
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        // Verificar tokens no hash fragment (formato padrão do Supabase)
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
         const tokenType = hashParams.get('type');
-        const errorCode = hashParams.get('error');
-        const errorDescription = hashParams.get('error_description');
 
         // Verificar tokens nos query params (formato antigo)
-        const searchParams = new URLSearchParams(window.location.search);
-        const tokenHash = searchParams.get('token_hash');
-        const type = searchParams.get('type');
+        const tokenHash = urlParams.get('token_hash');
+        const type = urlParams.get('type');
 
         console.log('📋 Tokens encontrados:', {
           accessToken: accessToken ? 'presente' : 'ausente',
           refreshToken: refreshToken ? 'presente' : 'ausente',
           tokenType,
           tokenHash: tokenHash ? 'presente' : 'ausente',
-          type,
-          error: errorCode,
-          errorDescription
+          type
         });
-
-        // Verificar se há erro na URL
-        if (errorCode) {
-          console.error('❌ Erro na URL:', errorCode, errorDescription);
-          setStatus('error');
-          setMessage('Link de confirmação expirado ou inválido. Tente fazer login novamente.');
-          toast.error("Link expirado", {
-            description: "O link de confirmação expirou. Tente fazer login para receber um novo email.",
-          });
-          return;
-        }
 
         let confirmationSuccess = false;
 
-        // Processar tokens do hash fragment (formato mais comum do Supabase)
-        if (accessToken && refreshToken) {
+        // Processar tokens do hash fragment (formato mais comum)
+        if (accessToken && refreshToken && tokenType) {
           console.log('✅ Processando tokens do hash fragment...');
           
-          try {
-            const { data, error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
 
-            if (error) {
-              console.error('❌ Erro ao definir sessão:', error);
-              // Mesmo com erro no setSession, vamos verificar se a confirmação foi bem-sucedida
-              // aguardando um momento e verificando a sessão novamente
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              const { data: { session: newSession } } = await supabase.auth.getSession();
-              
-              if (newSession) {
-                console.log('✅ Sessão estabelecida mesmo com erro inicial');
-                confirmationSuccess = true;
-              } else {
-                throw error;
-              }
-            } else {
-              console.log('✅ Sessão definida com sucesso:', data);
-              confirmationSuccess = true;
-            }
-          } catch (sessionError) {
-            console.error('❌ Erro na sessão:', sessionError);
-            // Aguardar e verificar se a sessão foi estabelecida mesmo com erro
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const { data: { session: fallbackSession } } = await supabase.auth.getSession();
-            
-            if (fallbackSession) {
-              console.log('✅ Sessão estabelecida via fallback');
-              confirmationSuccess = true;
-            } else {
-              throw sessionError;
-            }
+          if (error) {
+            console.error('❌ Erro ao definir sessão:', error);
+            throw error;
+          } else {
+            console.log('✅ Sessão definida com sucesso:', data);
+            confirmationSuccess = true;
           }
         }
         // Processar tokens dos query params (formato antigo)
@@ -129,30 +102,21 @@ const EmailConfirmation = () => {
 
           if (error) {
             console.error('❌ Erro na verificação OTP:', error);
-            // Mesmo com erro, verificar se a sessão foi estabelecida
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const { data: { session: fallbackSession } } = await supabase.auth.getSession();
-            
-            if (fallbackSession) {
-              console.log('✅ Sessão estabelecida mesmo com erro OTP');
-              confirmationSuccess = true;
-            } else {
-              throw error;
-            }
+            throw error;
           } else {
             console.log('✅ OTP verificado com sucesso:', data);
             confirmationSuccess = true;
           }
         }
 
-        // Aguardar um momento para a sessão ser estabelecida e verificar novamente
         if (confirmationSuccess) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aguardar um momento para a sessão ser estabelecida
+          await new Promise(resolve => setTimeout(resolve, 1000));
           
-          // Verificar se a sessão foi realmente estabelecida
-          const { data: { session: finalSession } } = await supabase.auth.getSession();
+          // Verificar se a sessão foi estabelecida
+          const { data: { session } } = await supabase.auth.getSession();
           
-          if (finalSession) {
+          if (session) {
             console.log('✅ Confirmação bem-sucedida com sessão ativa');
             setStatus('success');
             setMessage('Email confirmado com sucesso! Redirecionando para o dashboard...');
@@ -164,72 +128,30 @@ const EmailConfirmation = () => {
               navigate('/dashboard', { replace: true });
             }, 2000);
           } else {
-            console.log('⚠️ Confirmação processada mas sem sessão ativa - ainda assim considerando sucesso');
+            console.log('⚠️ Confirmação processada mas sem sessão ativa');
             setStatus('success');
             setMessage('Email confirmado com sucesso! Você pode fazer login agora.');
             toast.success("Email confirmado!", {
               description: "Sua conta foi ativada. Faça login para continuar.",
             });
           }
-        } else if (!accessToken && !refreshToken && !tokenHash) {
-          // Nenhum token encontrado
+        } else {
+          // Nenhum token válido encontrado
           console.warn('⚠️ Nenhum token válido encontrado na URL');
           setStatus('error');
           setMessage('Link de confirmação inválido. Verifique se você clicou no link correto do email.');
           toast.error("Link inválido", {
             description: "Este link de confirmação não é válido.",
           });
-        } else {
-          // Tokens encontrados mas processamento pode ter falhado - verificar se usuário pode fazer login
-          console.log('⚠️ Processamento incerto - verificando status final...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const { data: { session: finalCheck } } = await supabase.auth.getSession();
-          
-          if (finalCheck) {
-            console.log('✅ Usuário acabou sendo autenticado');
-            setStatus('success');
-            setMessage('Email confirmado com sucesso! Redirecionando...');
-            setTimeout(() => {
-              navigate('/dashboard', { replace: true });
-            }, 1500);
-          } else {
-            console.error('❌ Tokens encontrados mas processamento falhou');
-            setStatus('success'); // Mudança: assumir sucesso mesmo com erro, já que o usuário consegue fazer login
-            setMessage('Email confirmado! Você pode fazer login agora.');
-            toast.success("Email confirmado!", {
-              description: "Sua conta foi ativada. Faça login para continuar.",
-            });
-          }
         }
 
       } catch (error) {
         console.error('💥 Erro geral na confirmação:', error);
-        // Mesmo com erro, verificar se o usuário pode fazer login
-        try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          const { data: { session: errorFallbackSession } } = await supabase.auth.getSession();
-          
-          if (errorFallbackSession) {
-            console.log('✅ Usuário autenticado mesmo com erro geral');
-            setStatus('success');
-            setMessage('Email confirmado com sucesso! Redirecionando...');
-            setTimeout(() => {
-              navigate('/dashboard', { replace: true });
-            }, 1500);
-          } else {
-            setStatus('success'); // Assumir sucesso já que o usuário relatou que consegue fazer login
-            setMessage('Email confirmado! Você pode fazer login agora.');
-            toast.success("Email confirmado!", {
-              description: "Sua conta foi ativada. Faça login para continuar.",
-            });
-          }
-        } catch (finalError) {
-          setStatus('error');
-          setMessage('Ocorreu um erro inesperado. Tente fazer login normalmente.');
-          toast.error("Erro inesperado", {
-            description: "Tente fazer login normalmente.",
-          });
-        }
+        setStatus('error');
+        setMessage('Ocorreu um erro inesperado. Tente fazer login normalmente.');
+        toast.error("Erro inesperado", {
+          description: "Tente fazer login normalmente.",
+        });
       }
     };
 
@@ -242,6 +164,44 @@ const EmailConfirmation = () => {
 
   const handleGoToDashboard = () => {
     navigate('/dashboard');
+  };
+
+  const handleResendEmail = () => {
+    // Redirecionar para o login para que o usuário possa solicitar novo email
+    navigate('/auth', { 
+      state: { 
+        showSuccessMessage: true, 
+        message: "Faça login novamente para receber um novo email de confirmação." 
+      } 
+    });
+  };
+
+  const getStatusIcon = () => {
+    switch (status) {
+      case 'loading':
+        return <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />;
+      case 'success':
+        return <CheckCircle className="h-12 w-12 text-green-600" />;
+      case 'expired':
+        return <AlertTriangle className="h-12 w-12 text-orange-600" />;
+      case 'error':
+      default:
+        return <XCircle className="h-12 w-12 text-red-600" />;
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (status) {
+      case 'loading':
+        return "Processando confirmação do seu email...";
+      case 'success':
+        return "Email confirmado com sucesso!";
+      case 'expired':
+        return "Link de confirmação expirado";
+      case 'error':
+      default:
+        return "Problema na confirmação";
+    }
   };
 
   return (
@@ -257,16 +217,14 @@ const EmailConfirmation = () => {
             <CardTitle className="text-xl font-bold text-blue-700">Finance Home</CardTitle>
           </div>
           <CardDescription>
-            {status === 'loading' && "Processando confirmação do seu email..."}
-            {status === 'success' && "Email confirmado com sucesso!"}
-            {status === 'error' && "Problema na confirmação"}
+            {getStatusMessage()}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col items-center space-y-4">
             {status === 'loading' && (
               <>
-                <Loader2 className="h-12 w-12 text-blue-600 animate-spin" />
+                {getStatusIcon()}
                 <p className="text-center text-muted-foreground">
                   Aguarde enquanto confirmamos seu email...
                 </p>
@@ -275,7 +233,7 @@ const EmailConfirmation = () => {
             
             {status === 'success' && (
               <>
-                <CheckCircle className="h-12 w-12 text-green-600" />
+                {getStatusIcon()}
                 <p className="text-center text-green-700 font-medium">
                   {message}
                 </p>
@@ -290,15 +248,37 @@ const EmailConfirmation = () => {
               </>
             )}
             
+            {status === 'expired' && (
+              <>
+                {getStatusIcon()}
+                <p className="text-center text-orange-700 font-medium">
+                  {message}
+                </p>
+                <div className="flex flex-col gap-2 w-full">
+                  <Button onClick={handleResendEmail} className="w-full bg-orange-600 hover:bg-orange-700">
+                    Solicitar Novo Email
+                  </Button>
+                  <Button onClick={handleBackToLogin} variant="outline" className="w-full">
+                    Voltar para Login
+                  </Button>
+                </div>
+              </>
+            )}
+            
             {status === 'error' && (
               <>
-                <XCircle className="h-12 w-12 text-red-600" />
+                {getStatusIcon()}
                 <p className="text-center text-red-700 font-medium">
                   {message}
                 </p>
-                <Button onClick={handleBackToLogin} className="w-full">
-                  Voltar para Login
-                </Button>
+                <div className="flex flex-col gap-2 w-full">
+                  <Button onClick={handleResendEmail} className="w-full bg-blue-600 hover:bg-blue-700">
+                    Solicitar Novo Email
+                  </Button>
+                  <Button onClick={handleBackToLogin} variant="outline" className="w-full">
+                    Voltar para Login
+                  </Button>
+                </div>
               </>
             )}
           </div>
