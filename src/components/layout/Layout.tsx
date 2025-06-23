@@ -25,7 +25,7 @@ export default function Layout({ children, useModernSidebar = true }: LayoutProp
     closeTour
   } = useOnboardingTour();
 
-  // Se useModernSidebar for true, usa o novo layout moderno
+  // Usa o novo layout moderno por padrão
   if (useModernSidebar) {
     return <NewModernLayout>{children}</NewModernLayout>;
   }

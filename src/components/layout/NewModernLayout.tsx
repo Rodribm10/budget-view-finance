@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -26,7 +27,7 @@ import {
   MessageSquareText,
   Users,
   Settings,
-  Menu
+  Bell
 } from 'lucide-react';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
@@ -75,7 +76,7 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
   const mainItems = [
     {
       title: "Dashboard",
-      url: "/",
+      url: "/dashboard",
       icon: Home,
     },
     {
@@ -102,6 +103,11 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
       title: "Calendário",
       url: "/calendario",
       icon: Calendar,
+    },
+    {
+      title: "Avisos de Contas",
+      url: "/avisos-contas",
+      icon: Bell,
     },
     {
       title: "Assinatura",
