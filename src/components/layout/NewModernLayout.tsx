@@ -209,16 +209,19 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
 
         <SidebarInset className="flex-1">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SidebarTrigger className="-ml-1 hover:bg-blue-50 rounded-lg p-2" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Abrir/Fechar Menu</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <SidebarTrigger className="-ml-1 hover:bg-blue-50 rounded-lg p-2" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Abrir/Fechar Menu</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <span className="text-sm font-medium text-gray-600">Menu</span>
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto">
             <div className="container mx-auto px-4 py-6">
