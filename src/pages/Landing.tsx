@@ -107,9 +107,12 @@ const Landing = () => {
             <span className="text-2xl font-bold text-white">Finance Home</span>
           </div>
           <Link to="/auth">
-            <Button variant="outline" size="sm" className="text-white border-white hover:bg-white hover:text-slate-900">
-              Entrar
-            </Button>
+            <button className="p-[3px] relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg" />
+              <div className="px-6 py-2 bg-slate-900 rounded-[6px] relative group transition duration-200 text-white hover:bg-transparent">
+                Entrar
+              </div>
+            </button>
           </Link>
         </div>
       </header>
@@ -129,10 +132,13 @@ const Landing = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
             <Link to="/auth">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
-                Acessar Plataforma
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+              <button className="p-[3px] relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg" />
+                <div className="px-8 py-4 bg-slate-900 rounded-[6px] relative group transition duration-200 text-white hover:bg-transparent flex items-center gap-2 text-lg font-semibold">
+                  Acessar Plataforma
+                  <ArrowRight className="h-5 w-5" />
+                </div>
+              </button>
             </Link>
             
             <div className="flex items-center text-slate-300">
@@ -318,10 +324,13 @@ const Landing = () => {
             </p>
             
             <Link to="/auth">
-              <Button size="lg" className="bg-white text-green-600 hover:bg-slate-100 px-12 py-4 text-xl font-bold rounded-lg shadow-xl hover:shadow-2xl transition-all duration-300">
-                Acessar Agora
-                <ArrowRight className="ml-3 h-6 w-6" />
-              </Button>
+              <button className="p-[3px] relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-white/10 rounded-lg" />
+                <div className="px-12 py-4 bg-white/10 rounded-[6px] relative group transition duration-200 text-white hover:bg-transparent flex items-center gap-3 text-xl font-bold mx-auto w-fit backdrop-blur-sm">
+                  Acessar Agora
+                  <ArrowRight className="h-6 w-6" />
+                </div>
+              </button>
             </Link>
           </div>
         </div>

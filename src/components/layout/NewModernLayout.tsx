@@ -214,7 +214,7 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
         </Sidebar>
 
         <SidebarInset className="flex-1">
-          <header className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+          <div className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
             <div className="flex items-center gap-2">
               <TooltipProvider>
                 <Tooltip>
@@ -229,11 +229,10 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
               <span className="text-sm font-medium text-gray-600">Menu</span>
             </div>
             
-            {/* User Profile Button */}
             <div className="ml-auto">
               <UserProfileButton />
             </div>
-          </header>
+          </div>
           <main className="flex-1 overflow-y-auto">
             <div className="container mx-auto px-4 py-6">
               {children}
@@ -242,10 +241,8 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
         </SidebarInset>
       </SidebarProvider>
 
-      {/* Help Icon */}
       <HelpIcon />
 
-      {/* Tour de Onboarding */}
       <OnboardingTour
         isOpen={tourOpen}
         currentStep={currentStep}
