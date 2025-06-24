@@ -1,228 +1,178 @@
 
 import { useState, useEffect } from 'react';
-import Layout from '@/components/layout/Layout';
-import SummaryCard from '@/components/dashboard/SummaryCard';
-import TransactionsTable from '@/components/dashboard/TransactionsTable';
-import CategoryChart from '@/components/dashboard/CategoryChart';
-import MonthlyChart from '@/components/dashboard/MonthlyChart';
-import { MonthFilter } from '@/components/filters/MonthFilter';
-import { OnboardingTour, useOnboardingTour } from '@/components/onboarding';
-import { Wallet, ArrowUp, ArrowDown, PiggyBank } from 'lucide-react';
-import { Transaction, CategorySummary, MonthlyData } from '@/types/financialTypes';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { 
-  getTransacoes, 
-  getTransactionSummary, 
-  getCategorySummary, 
-  getMonthlyData 
-} from '@/services/transacao';
-import { getCartoes } from '@/services/cartaoCreditoService';
+import { ArrowUpIcon, ArrowDownIcon, CreditCardIcon, Target } from "lucide-react";
+import { getResumoFinanceiro } from "@/services/transacao";
+import { ResumoFinanceiro } from "@/types/financialTypes";
+import TransactionsTable from "@/components/dashboard/TransactionsTable";
+import { useTransactions } from "@/hooks/useTransactions";
+import CategoryChart from "@/components/dashboard/CategoryChart";
 
 const Dashboard = () => {
+  const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<CategorySummary[]>([]);
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
-  const [totals, setTotals] = useState({ receitas: 0, despesas: 0, saldo: 0, cartoes: 0 });
   const { toast } = useToast();
 
-  // Hook do tour de onboarding
-  const {
-    isOpen: tourIsOpen,
-    currentStep: tourCurrentStep,
-    nextStep: tourNextStep,
-    skipTour,
-    closeTour
-  } = useOnboardingTour();
-
-  // Função para obter o mês atual no formato YYYY-MM
   const getCurrentMonth = () => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   };
 
-  const [selectedMonth, setSelectedMonth] = useState<string>(getCurrentMonth());
+  const {
+    transactions,
+    isLoading: transactionsLoading,
+    formatCurrency
+  } = useTransactions({ monthFilter: getCurrentMonth() });
 
-  // Load data when component mounts or month changes
   useEffect(() => {
-    async function loadData() {
-      try {
-        setIsLoading(true);
-        console.log("🚀 [Dashboard] Iniciando carregamento de dados para o mês:", selectedMonth);
-        
-        // Verificar se existe email no localStorage
-        const userEmail = localStorage.getItem('userEmail');
-        console.log("📧 [Dashboard] Email no localStorage:", userEmail);
-        
-        if (!userEmail) {
-          console.error("❌ [Dashboard] Email não encontrado no localStorage!");
-          toast({
-            title: "Erro de autenticação",
-            description: "Email do usuário não encontrado. Faça login novamente.",
-            variant: "destructive"
-          });
-          return;
-        }
-        
-        // Buscar todos os dados necessários com filtro de mês
-        console.log("📊 [Dashboard] Buscando dados do Supabase...");
-        const [transacoesData, totalsData, categoriesData, monthlyDataResult, cartoesData] = await Promise.all([
-          getTransacoes(selectedMonth),
-          getTransactionSummary(selectedMonth),
-          getCategorySummary('despesa', selectedMonth),
-          getMonthlyData(), // Monthly data não precisa de filtro pois já mostra todos os meses
-          getCartoes()
-        ]);
-        
-        // Calcular total dos cartões
-        const totalCartoes = cartoesData.reduce((sum, cartao) => sum + (cartao.total_despesas || 0), 0);
-        
-        console.log("✅ [Dashboard] Dados obtidos com sucesso:", {
-          transacoes: transacoesData.length,
-          totals: totalsData,
-          categories: categoriesData.length,
-          monthlyData: monthlyDataResult.length,
-          cartoes: cartoesData.length,
-          totalCartoes: totalCartoes,
-          mesEscolhido: selectedMonth
-        });
-        
-        setTransactions(transacoesData);
-        setTotals({
-          ...totalsData,
-          cartoes: totalCartoes,
-          // Atualiza o saldo incluindo despesas de cartão
-          saldo: totalsData.receitas - totalsData.despesas - totalCartoes
-        });
-        setCategories(categoriesData);
-        setMonthlyData(monthlyDataResult);
-        
-        if (transacoesData.length > 0 || categoriesData.length > 0 || monthlyDataResult.length > 0) {
-          toast({
-            title: "Dados carregados com sucesso",
-            description: `${transacoesData.length} transações encontradas para ${selectedMonth}`
-          });
-        } else {
-          toast({
-            title: "Nenhum dado encontrado",
-            description: `Não foram encontradas transações para ${selectedMonth}`,
-            variant: "destructive"
-          });
-        }
-      } catch (error) {
-        console.error("💥 [Dashboard] Erro ao carregar dados:", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Verifique a conexão com o Supabase",
-          variant: "destructive"
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    }
+    const storedUserId = localStorage.getItem('userId');
+    const finDashUser = localStorage.getItem('finDashUser');
     
-    loadData();
-  }, [selectedMonth, toast]);
+    if (!storedUserId && finDashUser) {
+      localStorage.setItem('userId', finDashUser);
+    } else if (!storedUserId && !finDashUser) {
+      const defaultId = '9f267008-9128-4a2f-b730-de0a0b5602a9';
+      localStorage.setItem('userId', defaultId);
+    }
+  }, []);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(value);
+  const loadResumo = async () => {
+    try {
+      setIsLoading(true);
+      console.log("Carregando resumo financeiro...");
+      const data = await getResumoFinanceiro();
+      console.log("Resumo carregado:", data);
+      setResumo(data);
+    } catch (error) {
+      console.error("Erro ao carregar resumo:", error);
+      toast({
+        title: "Erro ao carregar resumo",
+        description: "Não foi possível obter os dados do Supabase",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Calculate total of all expenses (regular + credit cards)
-  const totalDespesasGeral = totals.despesas + totals.cartoes;
+  useEffect(() => {
+    loadResumo();
+  }, [toast]);
 
-  // Função para formatar o mês para exibição
-  const formatMonthDisplay = (month: string) => {
-    const [year, monthNum] = month.split('-');
-    const months = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-    return `${months[parseInt(monthNum) - 1]} ${year}`;
-  };
-
-  return (
-    <Layout>
+  if (isLoading) {
+    return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard Financeiro</h1>
-            <p className="text-sm text-muted-foreground">
-              Dados de: {formatMonthDisplay(selectedMonth)}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <MonthFilter 
-              selectedMonth={selectedMonth}
-              onMonthChange={setSelectedMonth}
-            />
-          </div>
-        </div>
-
-        {/* Resumo em cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <SummaryCard
-            title="Receitas"
-            value={formatCurrency(totals.receitas)}
-            icon={<ArrowUp size={24} className="text-green-600" />}
-            trend={5}
-            iconClass="bg-green-100"
-            valueClass="text-green-700"
-            className="border-green-200 shadow-lg"
-          />
-          <SummaryCard
-            title="Despesas"
-            value={formatCurrency(totalDespesasGeral)}
-            secondaryValue={`Cartões: ${formatCurrency(totals.cartoes)}`}
-            icon={<ArrowDown size={24} className="text-red-600" />}
-            trend={-2}
-            iconClass="bg-red-100"
-            valueClass="text-red-700"
-            className="border-red-200 shadow-lg"
-          />
-          <SummaryCard
-            title="Saldo"
-            value={formatCurrency(totals.saldo)}
-            icon={<Wallet size={24} className="text-blue-600" />}
-            iconClass="bg-blue-100"
-            valueClass="text-blue-700"
-            className="border-blue-200 shadow-lg"
-          />
-          <SummaryCard
-            title="Economia"
-            value={`${totals.receitas > 0 ? ((totals.saldo / totals.receitas) * 100).toFixed(1) : 0}%`}
-            secondaryValue={formatCurrency(totals.saldo)}
-            icon={<PiggyBank size={24} className="text-purple-600" />}
-            iconClass="bg-purple-100"
-            valueClass="text-purple-700"
-            className="border-purple-200 shadow-lg"
-          />
-        </div>
-
-        {/* ---- GRÁFICOS EM COLUNA ---- */}
-        <div className="flex flex-col gap-6 w-full">
-          <MonthlyChart data={monthlyData} isLoading={isLoading} />
-          <CategoryChart categories={categories} isLoading={isLoading} />
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Transações Recentes</h2>
-          <TransactionsTable transactions={transactions} isLoading={isLoading} />
+        <div className="grid gap-4 md:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+                <div className="h-4 w-4 bg-muted rounded animate-pulse"></div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-8 bg-muted rounded w-3/4 mb-2 animate-pulse"></div>
+                <div className="h-3 bg-muted rounded w-1/2 animate-pulse"></div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
+    );
+  }
 
-      {/* Tour de Onboarding */}
-      <OnboardingTour
-        isOpen={tourIsOpen}
-        currentStep={tourCurrentStep}
-        onNext={tourNextStep}
-        onSkip={skipTour}
-        onClose={closeTour}
-      />
-    </Layout>
+  return (
+    <div className="space-y-6" data-tour="dashboard-content">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Receitas</CardTitle>
+            <ArrowUpIcon className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {resumo ? formatCurrency(resumo.totalReceitas) : 'R$ 0,00'}
+            </div>
+            <p className="text-xs text-muted-foreground">Entradas do mês</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Despesas</CardTitle>
+            <ArrowDownIcon className="h-4 w-4 text-red-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {resumo ? formatCurrency(resumo.totalDespesas) : 'R$ 0,00'}
+            </div>
+            <p className="text-xs text-muted-foreground">Saídas do mês</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cartões de Crédito</CardTitle>
+            <CreditCardIcon className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {resumo ? formatCurrency(resumo.totalCartoes || 0) : 'R$ 0,00'}
+            </div>
+            <p className="text-xs text-muted-foreground">Gastos nos cartões</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
+            <Target className="h-4 w-4 text-purple-600" />
+          </CardHeader>
+          <CardContent>
+            <div className={`text-2xl font-bold ${
+              resumo && (resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0)) >= 0 
+                ? 'text-green-600' 
+                : 'text-red-600'
+            }`}>
+              {resumo ? formatCurrency(resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0)) : 'R$ 0,00'}
+            </div>
+            <p className="text-xs text-muted-foreground">Resultado do mês</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Despesas por Categoria</CardTitle>
+            <CardDescription>Distribuição dos seus gastos</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CategoryChart />
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-1">
+          <CardHeader>
+            <CardTitle>Últimas Transações</CardTitle>
+            <CardDescription>Suas transações mais recentes</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TransactionsTable 
+              transactions={transactions.slice(0, 5)} 
+              isLoading={transactionsLoading}
+              showPagination={false}
+              onEdit={() => {}}
+              onDelete={() => {}}
+            />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

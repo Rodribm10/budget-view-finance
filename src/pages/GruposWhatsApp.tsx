@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import Layout from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { listarGruposWhatsApp } from '@/services/gruposWhatsAppService';
@@ -65,31 +64,29 @@ const GruposWhatsApp = () => {
   }, []);
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight">Grupos do WhatsApp</h1>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={buscarGrupos} 
-              disabled={carregando}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${carregando ? 'animate-spin' : ''}`} />
-              {carregando ? 'Atualizando...' : 'Atualizar'}
-            </Button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold tracking-tight">Grupos do WhatsApp</h1>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={buscarGrupos} 
+            disabled={carregando}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${carregando ? 'animate-spin' : ''}`} />
+            {carregando ? 'Atualizando...' : 'Atualizar'}
+          </Button>
         </div>
-
-        <CreateGroupForm userEmail={userEmail} onSuccess={buscarGrupos} />
-        <GroupsList 
-          grupos={grupos} 
-          carregando={carregando} 
-          onDeleteGroup={handleDeleteGroup}
-        />
       </div>
-    </Layout>
+
+      <CreateGroupForm userEmail={userEmail} onSuccess={buscarGrupos} />
+      <GroupsList 
+        grupos={grupos} 
+        carregando={carregando} 
+        onDeleteGroup={handleDeleteGroup}
+      />
+    </div>
   );
 };
 

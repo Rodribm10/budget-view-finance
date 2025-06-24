@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import Layout from '@/components/layout/Layout';
 import { CartaoCredito, DespesaCartao } from '@/types/cartaoTypes';
 import { getCartoes, getDespesasCartao, getTotalDespesasCartao } from '@/services/cartaoCreditoService';
 import { useToast } from "@/components/ui/use-toast";
@@ -107,32 +106,30 @@ const CartoesCreditoPage = () => {
   }, []);
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <CartaoActions 
-          isDetalhes={detalheCartaoAberto}
-          cartaoSelecionado={cartaoSelecionado}
-          onVoltarParaLista={handleVoltarParaLista}
-          onCartaoSuccess={handleCartaoSuccess}
+    <div className="space-y-6">
+      <CartaoActions 
+        isDetalhes={detalheCartaoAberto}
+        cartaoSelecionado={cartaoSelecionado}
+        onVoltarParaLista={handleVoltarParaLista}
+        onCartaoSuccess={handleCartaoSuccess}
+        onDespesaSuccess={handleDespesaSuccess}
+      />
+
+      {!detalheCartaoAberto ? (
+        <CartaoListView
+          cartoes={cartoes}
+          isLoading={isLoading}
+          onCartaoClick={handleCartaoClick}
+        />
+      ) : cartaoSelecionado && (
+        <CartaoDetalhesAvancado
+          cartao={cartaoSelecionado}
+          despesas={despesas}
+          isLoading={isLoading}
           onDespesaSuccess={handleDespesaSuccess}
         />
-
-        {!detalheCartaoAberto ? (
-          <CartaoListView
-            cartoes={cartoes}
-            isLoading={isLoading}
-            onCartaoClick={handleCartaoClick}
-          />
-        ) : cartaoSelecionado && (
-          <CartaoDetalhesAvancado
-            cartao={cartaoSelecionado}
-            despesas={despesas}
-            isLoading={isLoading}
-            onDespesaSuccess={handleDespesaSuccess}
-          />
-        )}
-      </div>
-    </Layout>
+      )}
+    </div>
   );
 };
 

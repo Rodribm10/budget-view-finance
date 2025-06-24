@@ -1,6 +1,5 @@
 
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
-import Layout from '@/components/layout/Layout';
 import LoadingState from '@/components/whatsapp/LoadingState';
 import WhatsAppHeader from '@/components/whatsapp/WhatsAppHeader';
 import WhatsAppManager from '@/components/whatsapp/WhatsAppManager';
@@ -85,41 +84,37 @@ const WhatsApp = () => {
 
   if (checkingExistingInstance || isLoading) {
     return (
-      <Layout>
-        <LoadingState message="Verificando suas instâncias..." />
-      </Layout>
+      <LoadingState message="Verificando suas instâncias..." />
     );
   }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <WhatsAppHeader 
-          userEmail={userEmail}
-          onRefresh={recheckInstance}
-          isRefreshing={checkingExistingInstance}
-        />
-        
-        <WhatsAppManager
-          hasExistingInstance={hasExistingInstance}
-          existingInstanceData={existingInstanceData}
-          instances={instances}
-          isRefreshing={isRefreshing}
-          activeInstance={activeInstance}
-          qrDialogOpen={qrDialogOpen}
-          onInstanceCreated={handleInstanceCreated}
-          onViewQrCode={handleViewQrCode}
-          onDelete={handleDeleteInstanceWrapper}
-          onRestart={handleRestartInstance}
-          onLogout={handleLogoutInstance}
-          onDisconnect={handleDisconnectInstance}
-          onSetPresence={handleSetPresence}
-          onRefreshInstances={refreshInstances}
-          onStatusCheck={checkAllInstancesStatus}
-          setQrDialogOpen={setQrDialogOpen}
-        />
-      </div>
-    </Layout>
+    <div className="space-y-6">
+      <WhatsAppHeader 
+        userEmail={userEmail}
+        onRefresh={recheckInstance}
+        isRefreshing={checkingExistingInstance}
+      />
+      
+      <WhatsAppManager
+        hasExistingInstance={hasExistingInstance}
+        existingInstanceData={existingInstanceData}
+        instances={instances}
+        isRefreshing={isRefreshing}
+        activeInstance={activeInstance}
+        qrDialogOpen={qrDialogOpen}
+        onInstanceCreated={handleInstanceCreated}
+        onViewQrCode={handleViewQrCode}
+        onDelete={handleDeleteInstanceWrapper}
+        onRestart={handleRestartInstance}
+        onLogout={handleLogoutInstance}
+        onDisconnect={handleDisconnectInstance}
+        onSetPresence={handleSetPresence}
+        onRefreshInstances={refreshInstances}
+        onStatusCheck={checkAllInstancesStatus}
+        setQrDialogOpen={setQrDialogOpen}
+      />
+    </div>
   );
 };
 
