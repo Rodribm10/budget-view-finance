@@ -1,11 +1,10 @@
-
 // Re-export all transaction service functions
 export { getTransacoes } from './transacaoFetchService';
 export { 
   getTransactionSummary, 
-  getCategorySummary, 
-  getMonthlyData,
-  getResumoFinanceiro
+  getResumoFinanceiro, 
+  getCategorySummary,
+  getMonthlyData 
 } from './summaryService';
 export { 
   deleteTransacao, 
