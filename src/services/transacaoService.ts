@@ -7,5 +7,6 @@ export {
   getMonthlyData,
   deleteTransacao,
   updateTransacao,
-  formatCurrency
+  formatCurrency,
+  getResumoFinanceiro
 } from './transacao';

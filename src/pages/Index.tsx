@@ -1,16 +1,17 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowUpIcon, ArrowDownIcon, CreditCardIcon, Target } from "lucide-react";
-import { getResumoFinanceiro } from "@/services/transacao";
-import { ResumoFinanceiro } from "@/types/financialTypes";
+import { getResumoFinanceiro, getCategorySummary } from "@/services/transacao";
+import { ResumoFinanceiro, CategorySummary } from "@/types/financialTypes";
 import TransactionsTable from "@/components/dashboard/TransactionsTable";
 import { useTransactions } from "@/hooks/useTransactions";
 import CategoryChart from "@/components/dashboard/CategoryChart";
 
 const Dashboard = () => {
   const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -44,6 +45,10 @@ const Dashboard = () => {
       const data = await getResumoFinanceiro();
       console.log("Resumo carregado:", data);
       setResumo(data);
+      
+      // Load categories for chart
+      const categoriesData = await getCategorySummary('despesa');
+      setCategories(categoriesData);
     } catch (error) {
       console.error("Erro ao carregar resumo:", error);
       toast({
@@ -152,7 +157,7 @@ const Dashboard = () => {
             <CardDescription>Distribuição dos seus gastos</CardDescription>
           </CardHeader>
           <CardContent>
-            <CategoryChart />
+            <CategoryChart categories={categories} isLoading={isLoading} />
           </CardContent>
         </Card>
 

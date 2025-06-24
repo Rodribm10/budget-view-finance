@@ -3,11 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Meta, ResultadoMeta } from '@/types/financialTypes';
 
 // Obter todas as metas do usuário
-export const getMetas = async (userId: string): Promise<Meta[]> => {
+export const getMetas = async (): Promise<Meta[]> => {
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    throw new Error('Email do usuário não encontrado');
+  }
+
   const { data, error } = await supabase
     .from('metas')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', userEmail.trim().toLowerCase())
     .order('ano', { ascending: false })
     .order('mes', { ascending: false });
 
@@ -20,11 +26,11 @@ export const getMetas = async (userId: string): Promise<Meta[]> => {
 };
 
 // Obter meta específica
-export const getMeta = async (userId: string, mes: number, ano: number): Promise<Meta | null> => {
+export const getMeta = async (userEmail: string, mes: number, ano: number): Promise<Meta | null> => {
   const { data, error } = await supabase
     .from('metas')
     .select('*')
-    .eq('user_id', userId)
+    .eq('user_id', userEmail.trim().toLowerCase())
     .eq('mes', mes)
     .eq('ano', ano)
     .maybeSingle();
@@ -44,8 +50,10 @@ export const salvarMeta = async (meta: {
   ano: number,
   valor_meta: number
 }): Promise<Meta> => {
+  const normalizedEmail = meta.user_id.trim().toLowerCase();
+  
   // Verificar se já existe uma meta para este mês/ano
-  const existingMeta = await getMeta(meta.user_id, meta.mes, meta.ano);
+  const existingMeta = await getMeta(normalizedEmail, meta.mes, meta.ano);
   
   if (existingMeta) {
     // Atualizar meta existente
@@ -66,7 +74,7 @@ export const salvarMeta = async (meta: {
     // Criar nova meta
     const { data, error } = await supabase
       .from('metas')
-      .insert(meta)
+      .insert({ ...meta, user_id: normalizedEmail })
       .select()
       .single();
 
@@ -93,8 +101,14 @@ export const deletarMeta = async (metaId: string): Promise<void> => {
 };
 
 // Calcular resultados das metas
-export const calcularResultadosMetas = async (userId: string): Promise<ResultadoMeta[]> => {
-  const metas = await getMetas(userId);
+export const calcularResultadosMetas = async (): Promise<ResultadoMeta[]> => {
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    throw new Error('Email do usuário não encontrado');
+  }
+
+  const metas = await getMetas();
   const resultados: ResultadoMeta[] = [];
 
   for (const meta of metas) {
@@ -105,7 +119,7 @@ export const calcularResultadosMetas = async (userId: string): Promise<Resultado
     const { data: transacoes, error } = await supabase
       .from('transacoes')
       .select('*')
-      .eq('user', userId)
+      .eq('login', userEmail.trim().toLowerCase())
       .gte('quando', startDate.toISOString().split('T')[0])
       .lte('quando', endDate.toISOString().split('T')[0]);
     
@@ -116,12 +130,12 @@ export const calcularResultadosMetas = async (userId: string): Promise<Resultado
     
     // Calcular receitas e despesas do mês
     const receitas = transacoes
-      .filter(t => t.tipo?.toLowerCase() === 'receita')
-      .reduce((sum, t) => sum + Number(t.valor || 0), 0);
+      ?.filter(t => t.tipo?.toLowerCase() === 'receita')
+      .reduce((sum, t) => sum + Number(t.valor || 0), 0) || 0;
     
     const despesas = transacoes
-      .filter(t => t.tipo?.toLowerCase() === 'despesa')
-      .reduce((sum, t) => sum + Number(t.valor || 0), 0);
+      ?.filter(t => t.tipo?.toLowerCase() === 'despesa')
+      .reduce((sum, t) => sum + Number(t.valor || 0), 0) || 0;
     
     // Calcular economia real
     const economiaReal = receitas - despesas;

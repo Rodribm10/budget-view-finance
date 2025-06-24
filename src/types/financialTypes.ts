@@ -49,6 +49,22 @@ export interface Meta {
   created_at?: string;
 }
 
+export interface MetaFinanceira {
+  id: string;
+  user_id: string;
+  mes: number;
+  ano: number;
+  valor_meta: number;
+  created_at?: string;
+}
+
+export interface ResumoFinanceiro {
+  totalReceitas: number;
+  totalDespesas: number;
+  totalCartoes?: number;
+  saldo?: number;
+}
+
 export interface ResultadoMeta {
   mes: number;
   ano: number;

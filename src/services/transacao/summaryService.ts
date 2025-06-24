@@ -1,32 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { CategorySummary, MonthlyData } from "@/types/financialTypes";
+import { CategorySummary, MonthlyData, ResumoFinanceiro } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
 
 /**
- * Get transaction summary (totals for incomes and expenses) with optional month filter
- * @param monthFilter - Optional month filter in format 'YYYY-MM'
- * @returns Promise with summary data
+ * Get transaction summary (total income, expenses, balance)
+ * @returns Promise with transaction summary
  */
-export async function getTransactionSummary(monthFilter?: string) {
-  console.log("Buscando resumo das transações...", monthFilter ? `Filtro do mês: ${monthFilter}` : "Sem filtro de mês");
+export async function getTransactionSummary(): Promise<{ totalReceitas: number; totalDespesas: number; saldo: number }> {
+  console.log("📊 [getTransactionSummary] Calculando resumo de transações...");
   
   const normalizedEmail = getUserEmail();
   
   if (!normalizedEmail) {
-    return { receitas: 0, despesas: 0, saldo: 0 };
+    console.error("❌ [getTransactionSummary] Email não encontrado");
+    return { totalReceitas: 0, totalDespesas: 0, saldo: 0 };
   }
-  
+
   try {
-    // Get user groups by email
     const groupIds = await getUserGroups(normalizedEmail);
     
-    // Build the query with month filter if provided
-    let query = supabase
-      .from('transacoes')
-      .select('tipo, valor');
-
-    // Apply filters properly
+    let query = supabase.from('transacoes').select('tipo, valor');
+    
     if (groupIds.length > 0) {
       const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
       query = query.or(orFilter);
@@ -34,74 +29,118 @@ export async function getTransactionSummary(monthFilter?: string) {
       query = query.eq('login', normalizedEmail);
     }
 
-    // Apply month filter if provided
-    if (monthFilter) {
-      const startDate = `${monthFilter}-01`;
-      const year = parseInt(monthFilter.split('-')[0]);
-      const month = parseInt(monthFilter.split('-')[1]);
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
-      
-      query = query
-        .gte('quando', startDate)
-        .lte('quando', `${endDate}T23:59:59.999Z`);
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('❌ [getTransactionSummary] Erro:', error);
+      return { totalReceitas: 0, totalDespesas: 0, saldo: 0 };
+    }
+
+    const receitas = data
+      .filter(t => t.tipo?.toLowerCase() === 'receita')
+      .reduce((sum, t) => sum + Number(t.valor || 0), 0);
+
+    const despesas = data
+      .filter(t => t.tipo?.toLowerCase() === 'despesa')
+      .reduce((sum, t) => sum + Number(t.valor || 0), 0);
+
+    const saldo = receitas - despesas;
+
+    console.log(`📊 [getTransactionSummary] Receitas: ${receitas}, Despesas: ${despesas}, Saldo: ${saldo}`);
+
+    return { totalReceitas: receitas, totalDespesas: despesas, saldo };
+  } catch (error) {
+    console.error('💥 [getTransactionSummary] Erro geral:', error);
+    return { totalReceitas: 0, totalDespesas: 0, saldo: 0 };
+  }
+}
+
+/**
+ * Get financial summary including credit cards
+ * @returns Promise with complete financial summary
+ */
+export async function getResumoFinanceiro(): Promise<ResumoFinanceiro> {
+  console.log("📊 [getResumoFinanceiro] Calculando resumo financeiro completo...");
+  
+  const normalizedEmail = getUserEmail();
+  
+  if (!normalizedEmail) {
+    console.error("❌ [getResumoFinanceiro] Email não encontrado");
+    return { totalReceitas: 0, totalDespesas: 0, totalCartoes: 0, saldo: 0 };
+  }
+
+  try {
+    const groupIds = await getUserGroups(normalizedEmail);
+    
+    let query = supabase.from('transacoes').select('tipo, valor');
+    
+    if (groupIds.length > 0) {
+      const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
+      query = query.or(orFilter);
+    } else {
+      query = query.eq('login', normalizedEmail);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Erro ao buscar resumo das transações:', error);
-      throw new Error('Não foi possível carregar o resumo das transações');
+      console.error('❌ [getResumoFinanceiro] Erro:', error);
+      return { totalReceitas: 0, totalDespesas: 0, totalCartoes: 0, saldo: 0 };
     }
 
-    console.log("Dados para resumo encontrados:", data);
+    const receitas = data
+      .filter(t => t.tipo?.toLowerCase() === 'receita')
+      .reduce((sum, t) => sum + Number(t.valor || 0), 0);
 
-    const totalReceitas = data
-      .filter((item: any) => item.tipo?.toLowerCase() === 'receita')
-      .reduce((sum: number, item: any) => sum + Math.abs(item.valor || 0), 0);
+    const despesas = data
+      .filter(t => t.tipo?.toLowerCase() === 'despesa')
+      .reduce((sum, t) => sum + Number(t.valor || 0), 0);
 
-    const totalDespesas = data
-      .filter((item: any) => (item.tipo?.toLowerCase() === 'despesa'))
-      .reduce((sum: number, item: any) => sum + Math.abs(item.valor || 0), 0);
+    // Get credit card expenses
+    const { data: cartaoData, error: cartaoError } = await supabase
+      .from('despesas_cartao')
+      .select('valor')
+      .eq('login', normalizedEmail);
 
-    const resultado = {
-      receitas: totalReceitas,
-      despesas: totalDespesas,
-      saldo: totalReceitas - totalDespesas
+    const totalCartoes = cartaoError ? 0 : 
+      (cartaoData || []).reduce((sum, despesa) => sum + Number(despesa.valor || 0), 0);
+
+    const saldo = receitas - despesas - totalCartoes;
+
+    console.log(`📊 [getResumoFinanceiro] Receitas: ${receitas}, Despesas: ${despesas}, Cartões: ${totalCartoes}, Saldo: ${saldo}`);
+
+    return { 
+      totalReceitas: receitas, 
+      totalDespesas: despesas, 
+      totalCartoes,
+      saldo 
     };
-
-    console.log("Resumo calculado:", resultado);
-    return resultado;
   } catch (error) {
-    console.error('Erro ao buscar resumo das transações:', error);
-    return { receitas: 0, despesas: 0, saldo: 0 };
+    console.error('💥 [getResumoFinanceiro] Erro geral:', error);
+    return { totalReceitas: 0, totalDespesas: 0, totalCartoes: 0, saldo: 0 };
   }
 }
 
 /**
- * Get category summary for transactions with optional month filter
- * @param tipoFiltro Filter by transaction type ('receita', 'despesa', or 'all')
- * @param monthFilter - Optional month filter in format 'YYYY-MM'
- * @returns Promise with category summary data
+ * Get category summary for expenses or income
+ * @param tipo - Transaction type filter ('despesa', 'receita', 'all')
+ * @returns Promise with array of category summaries
  */
-export async function getCategorySummary(tipoFiltro: string = 'despesa', monthFilter?: string): Promise<CategorySummary[]> {
-  console.log(`Buscando resumo de categorias para tipo: ${tipoFiltro}`, monthFilter ? `Filtro do mês: ${monthFilter}` : "Sem filtro de mês");
+export async function getCategorySummary(tipo: string = 'despesa'): Promise<CategorySummary[]> {
+  console.log(`📋 [getCategorySummary] Obtendo resumo por categoria para tipo: ${tipo}`);
   
   const normalizedEmail = getUserEmail();
   
   if (!normalizedEmail) {
+    console.error("❌ [getCategorySummary] Email não encontrado");
     return [];
   }
-  
+
   try {
-    // Get user groups by email
     const groupIds = await getUserGroups(normalizedEmail);
     
-    // Build the query with month filter if provided
-    let query = supabase
-      .from('transacoes')
-      .select('categoria, valor, tipo');
-
-    // Apply filters properly
+    let query = supabase.from('transacoes').select('categoria, valor, tipo');
+    
     if (groupIds.length > 0) {
       const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
       query = query.or(orFilter);
@@ -109,94 +148,78 @@ export async function getCategorySummary(tipoFiltro: string = 'despesa', monthFi
       query = query.eq('login', normalizedEmail);
     }
 
-    // Apply month filter if provided
-    if (monthFilter) {
-      const startDate = `${monthFilter}-01`;
-      const year = parseInt(monthFilter.split('-')[0]);
-      const month = parseInt(monthFilter.split('-')[1]);
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
-      
-      query = query
-        .gte('quando', startDate)
-        .lte('quando', `${endDate}T23:59:59.999Z`);
+    // Apply type filter if not 'all'
+    if (tipo !== 'all') {
+      query = query.eq('tipo', tipo);
     }
 
     const { data, error } = await query;
 
     if (error) {
-      console.error('Erro ao buscar resumo de categorias:', error);
-      throw new Error('Não foi possível carregar o resumo por categoria');
+      console.error('❌ [getCategorySummary] Erro:', error);
+      return [];
     }
-    
-    console.log("Dados de categorias encontrados:", data);
-    
-    // Filter according to the requested type (incomes, expenses, or both)
-    let filteredData = data;
-    if (tipoFiltro.toLowerCase() === 'despesa') {
-      filteredData = data.filter((item: any) => item.tipo?.toLowerCase() === 'despesa');
-    } else if (tipoFiltro.toLowerCase() === 'receita') {
-      filteredData = data.filter((item: any) => item.tipo?.toLowerCase() === 'receita');
+
+    if (!data || data.length === 0) {
+      console.warn(`⚠️ [getCategorySummary] Nenhuma transação encontrada para tipo: ${tipo}`);
+      return [];
     }
-    
-    console.log(`${filteredData.length} itens filtrados para tipo: ${tipoFiltro}`);
-    
-    // Group by category
-    const categorias: Record<string, number> = {};
-    filteredData.forEach((item: any) => {
-      if (item.valor) {
-        const categoriaKey = item.categoria || 'Outros';
-        if (!categorias[categoriaKey]) {
-          categorias[categoriaKey] = 0;
-        }
-        categorias[categoriaKey] += Math.abs(item.valor);
-      }
+
+    // Group by category and sum values
+    const categoryMap: { [key: string]: number } = {};
+    let total = 0;
+
+    data.forEach((transaction) => {
+      const categoria = transaction.categoria || 'Outros';
+      const valor = Math.abs(Number(transaction.valor || 0));
+      
+      categoryMap[categoria] = (categoryMap[categoria] || 0) + valor;
+      total += valor;
     });
-    
-    // Calculate the total for percentages
-    const total = Object.values(categorias).reduce((sum, valor) => sum + valor, 0);
 
-    // Colors for categories (reuse colors in mockData)
-    const cores = ["#F59E0B", "#60A5FA", "#8B5CF6", "#EF4444", "#10B981", "#6366F1", "#EC4899", "#14B8A6"];
-    
-    // Map to the expected format
-    const resultado = Object.entries(categorias).map(([categoria, valor], index) => ({
-      categoria,
-      valor,
-      percentage: total > 0 ? valor / total : 0,
-      color: cores[index % cores.length]
-    }));
+    // Convert to CategorySummary array with colors
+    const colors = [
+      '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
+      '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
+      '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56'
+    ];
 
-    console.log("Resumo de categorias calculado:", resultado);
-    return resultado;
+    const categoryArray = Object.entries(categoryMap)
+      .map(([categoria, valor], index) => ({
+        categoria,
+        valor,
+        percentage: total > 0 ? valor / total : 0,
+        color: colors[index % colors.length]
+      }))
+      .sort((a, b) => b.valor - a.valor);
+
+    console.log(`📋 [getCategorySummary] ${categoryArray.length} categorias processadas`);
+    return categoryArray;
   } catch (error) {
-    console.error('Erro ao buscar resumo de categorias:', error);
+    console.error('💥 [getCategorySummary] Erro geral:', error);
     return [];
   }
 }
 
 /**
- * Get monthly data for transactions
- * @returns Promise with monthly data
+ * Get monthly data for charts
+ * @returns Promise with array of monthly data
  */
 export async function getMonthlyData(): Promise<MonthlyData[]> {
-  console.log("Buscando dados mensais...");
+  console.log("📈 [getMonthlyData] Obtendo dados mensais...");
   
   const normalizedEmail = getUserEmail();
   
   if (!normalizedEmail) {
+    console.error("❌ [getMonthlyData] Email não encontrado");
     return [];
   }
-  
+
   try {
-    // Get user groups by email
     const groupIds = await getUserGroups(normalizedEmail);
     
-    // Build the query properly
-    let query = supabase
-      .from('transacoes')
-      .select('quando, valor, tipo');
-
-    // Apply filters properly
+    let query = supabase.from('transacoes').select('quando, tipo, valor');
+    
     if (groupIds.length > 0) {
       const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
       query = query.or(orFilter);
@@ -204,49 +227,55 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
       query = query.eq('login', normalizedEmail);
     }
 
+    // Get last 12 months
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - 11);
+
+    query = query
+      .gte('quando', startDate.toISOString().split('T')[0])
+      .lte('quando', endDate.toISOString().split('T')[0]);
+
     const { data, error } = await query;
 
     if (error) {
-      console.error('Erro ao buscar dados mensais:', error);
-      throw new Error('Não foi possível carregar os dados mensais');
+      console.error('❌ [getMonthlyData] Erro:', error);
+      return [];
     }
 
-    console.log("Dados mensais encontrados:", data);
+    // Group by month
+    const monthlyMap: { [key: string]: { receitas: number; despesas: number } } = {};
 
-    const meses: Record<string, { receitas: number, despesas: number }> = {};
-    const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    
-    // Initialize months
-    nomesMeses.forEach(mes => {
-      meses[mes] = { receitas: 0, despesas: 0 };
-    });
+    data?.forEach((transaction) => {
+      const date = new Date(transaction.quando);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { receitas: 0, despesas: 0 };
+      }
 
-    // Group by month, normalizing the type
-    data.forEach((item: any) => {
-      if (item.quando && item.valor) {
-        const data = new Date(item.quando);
-        const mesIndex = data.getMonth();
-        const nomeMes = nomesMeses[mesIndex];
-        
-        if (item.tipo?.toLowerCase() === 'receita') {
-          meses[nomeMes].receitas += Math.abs(item.valor);
-        } else {
-          meses[nomeMes].despesas += Math.abs(item.valor);
-        }
+      const valor = Math.abs(Number(transaction.valor || 0));
+      
+      if (transaction.tipo?.toLowerCase() === 'receita') {
+        monthlyMap[monthKey].receitas += valor;
+      } else {
+        monthlyMap[monthKey].despesas += valor;
       }
     });
 
-    // Convert to the expected format
-    const resultado = Object.entries(meses).map(([month, values]) => ({
-      month,
-      receitas: values.receitas,
-      despesas: values.despesas
-    }));
+    // Convert to array and sort
+    const monthlyArray = Object.entries(monthlyMap)
+      .map(([month, data]) => ({
+        month,
+        receitas: data.receitas,
+        despesas: data.despesas
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
 
-    console.log("Dados mensais calculados:", resultado);
-    return resultado;
+    console.log(`📈 [getMonthlyData] ${monthlyArray.length} meses processados`);
+    return monthlyArray;
   } catch (error) {
-    console.error('Erro ao buscar dados mensais:', error);
+    console.error('💥 [getMonthlyData] Erro geral:', error);
     return [];
   }
 }

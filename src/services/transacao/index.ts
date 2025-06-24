@@ -4,7 +4,8 @@ export { getTransacoes } from './transacaoFetchService';
 export { 
   getTransactionSummary, 
   getCategorySummary, 
-  getMonthlyData 
+  getMonthlyData,
+  getResumoFinanceiro
 } from './summaryService';
 export { 
   deleteTransacao, 
