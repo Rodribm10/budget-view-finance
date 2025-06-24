@@ -2,12 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowUpIcon, ArrowDownIcon, CreditCardIcon, Target } from "lucide-react";
+import { ArrowUpIcon, ArrowDownIcon, CreditCardIcon, Target, TrendingUpIcon, TrendingDownIcon } from "lucide-react";
 import { getResumoFinanceiro, getCategorySummary } from "@/services/transacao";
 import { ResumoFinanceiro, CategorySummary } from "@/types/financialTypes";
 import TransactionsTable from "@/components/dashboard/TransactionsTable";
 import { useTransactions } from "@/hooks/useTransactions";
 import CategoryChart from "@/components/dashboard/CategoryChart";
+import { SimpleCard } from "@/components/ui/simple-card";
 
 const Dashboard = () => {
   const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
@@ -86,6 +87,8 @@ const Dashboard = () => {
     );
   }
 
+  const saldo = resumo ? resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0) : 0;
+
   return (
     <div className="space-y-6" data-tour="dashboard-content">
       <div className="flex items-center justify-between">
@@ -139,43 +142,67 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${
-              resumo && (resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0)) >= 0 
-                ? 'text-green-600' 
-                : 'text-red-600'
+              saldo >= 0 ? 'text-green-600' : 'text-red-600'
             }`}>
-              {resumo ? formatCurrency(resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0)) : 'R$ 0,00'}
+              {resumo ? formatCurrency(saldo) : 'R$ 0,00'}
             </div>
             <p className="text-xs text-muted-foreground">Resultado do mês</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Despesas por Categoria</CardTitle>
-            <CardDescription>Distribuição dos seus gastos</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <CategoryChart categories={categories} isLoading={isLoading} />
-          </CardContent>
-        </Card>
+      <div className="space-y-6">
+        {/* 1. Receitas vs Despesas */}
+        <SimpleCard title="Receitas vs Despesas" className="border-green-200">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <TrendingUpIcon className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Receitas</p>
+                <p className="text-xl font-bold text-green-600">
+                  {resumo ? formatCurrency(resumo.totalReceitas) : 'R$ 0,00'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <TrendingDownIcon className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Despesas</p>
+                <p className="text-xl font-bold text-red-600">
+                  {resumo ? formatCurrency(resumo.totalDespesas + (resumo.totalCartoes || 0)) : 'R$ 0,00'}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Resultado:</span>
+              <span className={`text-lg font-bold ${saldo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {resumo ? formatCurrency(saldo) : 'R$ 0,00'}
+              </span>
+            </div>
+          </div>
+        </SimpleCard>
 
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Últimas Transações</CardTitle>
-            <CardDescription>Suas transações mais recentes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TransactionsTable 
-              transactions={transactions.slice(0, 5)} 
-              isLoading={transactionsLoading}
-              showPagination={false}
-              onEdit={() => {}}
-              onDelete={() => {}}
-            />
-          </CardContent>
-        </Card>
+        {/* 2. Gastos por Categoria */}
+        <SimpleCard title="Despesas por Categoria" className="border-orange-200">
+          <CategoryChart categories={categories} isLoading={isLoading} />
+        </SimpleCard>
+
+        {/* 3. Últimas Transações */}
+        <SimpleCard title="Últimas Transações" className="border-blue-200">
+          <TransactionsTable 
+            transactions={transactions.slice(0, 5)} 
+            isLoading={transactionsLoading}
+            showPagination={false}
+            onEdit={() => {}}
+            onDelete={() => {}}
+          />
+        </SimpleCard>
       </div>
     </div>
   );

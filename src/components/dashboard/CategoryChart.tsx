@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { CardSpotlight } from '@/components/ui/card-spotlight';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { CategorySummary } from '@/types/financialTypes';
 
@@ -52,57 +51,50 @@ const CategoryChart: React.FC<CategoryChartProps> = ({ categories, isLoading = f
   };
 
   return (
-    <CardSpotlight className="dashboard-card h-full animate-fade-in bg-gradient-to-br from-orange-50 via-white to-indigo-50 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900">
-      <div className="pb-2 bg-gradient-to-r from-indigo-50/60 to-orange-50/0 dark:from-zinc-900 dark:to-zinc-900 rounded-t-2xl -m-6 mb-4 p-6">
-        <div className="text-lg font-bold tracking-tight text-zinc-700 dark:text-white flex items-center relative z-20">
-          <span className="mr-2">🧾</span> Gastos por Categoria
+    <div className="h-full animate-fade-in">
+      {isLoading ? (
+        <div className="flex items-center justify-center h-[260px]">
+          <div className="h-32 w-32 rounded-full border-4 border-t-primary border-opacity-20 animate-spin" />
         </div>
-      </div>
-      <div className="relative z-20">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-[260px]">
-            <div className="h-32 w-32 rounded-full border-4 border-t-primary border-opacity-20 animate-spin" />
-          </div>
-        ) : validCategories.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[260px] text-muted-foreground">
-            <span>Sem dados disponíveis</span>
-            <span className="text-xs mt-2">Verifique se existem transações do tipo 'despesa' cadastradas</span>
-          </div>
-        ) : (
-          <div className="h-[300px] relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={validCategories}
-                  cx="50%"
-                  cy="45%"
-                  outerRadius={90}
-                  innerRadius={40}
-                  fill="#8884d8"
-                  dataKey="valor"
-                  nameKey="categoria"
-                  paddingAngle={2}
-                  strokeWidth={2}
-                  stroke="#fff"
-                  isAnimationActive={true}
-                  animationDuration={1300}
-                >
-                  {validCategories.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.color} 
-                      style={{ filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.08))' }}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={renderCustomTooltip} />
-                <Legend content={renderCustomLegend} layout="horizontal" verticalAlign="bottom" />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
-    </CardSpotlight>
+      ) : validCategories.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-[260px] text-muted-foreground">
+          <span>Sem dados disponíveis</span>
+          <span className="text-xs mt-2">Verifique se existem transações do tipo 'despesa' cadastradas</span>
+        </div>
+      ) : (
+        <div className="h-[300px] relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={validCategories}
+                cx="50%"
+                cy="45%"
+                outerRadius={90}
+                innerRadius={40}
+                fill="#8884d8"
+                dataKey="valor"
+                nameKey="categoria"
+                paddingAngle={2}
+                strokeWidth={2}
+                stroke="#fff"
+                isAnimationActive={true}
+                animationDuration={1300}
+              >
+                {validCategories.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color} 
+                    style={{ filter: 'drop-shadow(0px 2px 3px rgba(0,0,0,0.08))' }}
+                  />
+                ))}
+              </Pie>
+              <Tooltip content={renderCustomTooltip} />
+              <Legend content={renderCustomLegend} layout="horizontal" verticalAlign="bottom" />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+    </div>
   );
 };
 

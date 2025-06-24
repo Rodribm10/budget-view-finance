@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { CardSpotlight } from '@/components/ui/card-spotlight';
 import { ArrowUp, ArrowDown, CreditCard } from 'lucide-react';
+import { SimpleCard } from '@/components/ui/simple-card';
 
 interface TransactionSummaryCardsProps {
   totalReceitas: number;
@@ -21,42 +21,42 @@ export const TransactionSummaryCards = ({
 
   return (
     <div className="grid gap-4 md:grid-cols-3">
-      <CardSpotlight className="border-2 border-green-200">
+      <SimpleCard className="border-green-200">
         <div className="pb-2 bg-green-50 rounded-t-lg -m-6 mb-4 p-6">
-          <div className="text-green-700 flex items-center font-bold relative z-20">
+          <div className="text-green-700 flex items-center font-bold">
             <ArrowUp className="h-5 w-5 mr-2 text-green-600" />
             Ganhos do mês
           </div>
         </div>
-        <div className="pt-0 relative z-20">
+        <div className="pt-0">
           <p className="text-2xl font-bold text-green-600">
             {formatCurrency(totalReceitas)}
           </p>
         </div>
-      </CardSpotlight>
+      </SimpleCard>
       
-      <CardSpotlight className="border-2 border-red-200">
+      <SimpleCard className="border-red-200">
         <div className="pb-2 bg-red-50 rounded-t-lg -m-6 mb-4 p-6">
-          <div className="text-red-700 flex items-center font-bold relative z-20">
+          <div className="text-red-700 flex items-center font-bold">
             <ArrowDown className="h-5 w-5 mr-2 text-red-600" />
             Gastos do mês
           </div>
         </div>
-        <div className="pt-0 relative z-20">
+        <div className="pt-0">
           <p className="text-2xl font-bold text-red-600">
             {formatCurrency(totalDespesas)}
           </p>
         </div>
-      </CardSpotlight>
+      </SimpleCard>
 
-      <CardSpotlight className="border-2 border-blue-200">
+      <SimpleCard className="border-blue-200">
         <div className="pb-2 bg-blue-50 rounded-t-lg -m-6 mb-4 p-6">
-          <div className="text-blue-700 flex items-center font-bold relative z-20">
+          <div className="text-blue-700 flex items-center font-bold">
             <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
             Gastos em cartões
           </div>
         </div>
-        <div className="pt-0 space-y-1 relative z-20">
+        <div className="pt-0 space-y-1">
           <p className="text-2xl font-bold text-blue-600">
             {formatCurrency(totalCartoes)}
           </p>
@@ -65,7 +65,7 @@ export const TransactionSummaryCards = ({
             <span className="font-bold text-red-600">{formatCurrency(totalGeral)}</span>
           </div>
         </div>
-      </CardSpotlight>
+      </SimpleCard>
     </div>
   );
 };

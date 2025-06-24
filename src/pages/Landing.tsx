@@ -17,6 +17,7 @@ import {
   BarChart3,
   Calendar
 } from 'lucide-react';
+import { CardContainer, CardBody, CardItem } from '@/components/ui/3d-card';
 
 const Landing = () => {
   const features = [
@@ -79,7 +80,7 @@ const Landing = () => {
     },
     {
       step: "2",
-      title: "Visualize no Dashboard",
+      title: "Visualize no Dashboard", 
       description: "Acompanhe seus gastos em tempo real com gráficos e relatórios automáticos",
       icon: <BarChart3 className="h-8 w-8" />,
       image: "/dashboard-screenshot.png"
@@ -178,7 +179,7 @@ const Landing = () => {
           </div>
 
           <div className="max-w-6xl mx-auto space-y-20">
-            {/* Step 1 - WhatsApp Methods */}
+            {/* Step 1 - WhatsApp Methods with 3D Cards */}
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 text-white rounded-full text-xl font-bold mb-6">
                 {howItWorksSteps[0].step}
@@ -188,29 +189,47 @@ const Landing = () => {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {howItWorksSteps[0].methods.map((method, index) => (
-                  <div key={index} className="bg-slate-700/50 p-6 rounded-xl border border-slate-600 hover:border-green-500 transition-all duration-300">
-                    <div className="bg-green-500/20 p-3 rounded-lg w-fit mx-auto mb-4 text-green-400">
-                      {method.icon}
-                    </div>
-                    <h4 className="text-xl font-semibold text-white mb-2">{method.title}</h4>
-                    <p className="text-slate-300 mb-4">{method.description}</p>
-                    <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
-                      <img 
-                        src={method.image} 
-                        alt={`Exemplo ${method.title}`}
-                        className="max-w-full max-h-full object-contain rounded-lg"
-                        onError={(e) => {
-                          console.error(`Failed to load image: ${method.image}`);
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  </div>
+                  <CardContainer key={index} className="inter-var" containerClassName="py-10">
+                    <CardBody className="bg-slate-700/50 relative group/card hover:shadow-2xl hover:shadow-emerald-500/[0.1] border-slate-600 w-auto h-auto rounded-xl p-6 border">
+                      <CardItem
+                        translateZ="50"
+                        className="bg-green-500/20 p-3 rounded-lg w-fit mx-auto mb-4 text-green-400"
+                      >
+                        {method.icon}
+                      </CardItem>
+                      <CardItem
+                        translateZ="60"
+                        className="text-xl font-semibold text-white mb-2 text-center"
+                      >
+                        {method.title}
+                      </CardItem>
+                      <CardItem
+                        as="p"
+                        translateZ="60"
+                        className="text-slate-300 mb-4 text-center"
+                      >
+                        {method.description}
+                      </CardItem>
+                      <CardItem translateZ="100" className="w-full">
+                        <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+                          <img 
+                            src={method.image} 
+                            alt={`Exemplo ${method.title}`}
+                            className="max-w-full max-h-full object-contain rounded-lg group-hover/card:shadow-xl"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${method.image}`);
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      </CardItem>
+                    </CardBody>
+                  </CardContainer>
                 ))}
               </div>
             </div>
 
-            {/* Step 2 - Dashboard */}
+            {/* Step 2 - Dashboard with 3D Card */}
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-500 text-white rounded-full text-xl font-bold mb-6">
                 {howItWorksSteps[1].step}
@@ -219,23 +238,27 @@ const Landing = () => {
               <p className="text-lg text-slate-300 mb-8">{howItWorksSteps[1].description}</p>
               
               <div className="max-w-4xl mx-auto">
-                <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
-                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={howItWorksSteps[1].image} 
-                      alt="Dashboard do sistema"
-                      className="max-w-full max-h-full object-contain rounded-lg"
-                      onError={(e) => {
-                        console.error(`Failed to load image: ${howItWorksSteps[1].image}`);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
+                <CardContainer className="inter-var" containerClassName="py-10">
+                  <CardBody className="bg-slate-700/50 relative group/card hover:shadow-2xl hover:shadow-blue-500/[0.1] border-slate-600 w-full h-auto rounded-xl p-6 border">
+                    <CardItem translateZ="100" className="w-full">
+                      <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={howItWorksSteps[1].image} 
+                          alt="Dashboard do sistema"
+                          className="max-w-full max-h-full object-contain rounded-lg group-hover/card:shadow-xl"
+                          onError={(e) => {
+                            console.error(`Failed to load image: ${howItWorksSteps[1].image}`);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </CardItem>
+                  </CardBody>
+                </CardContainer>
               </div>
             </div>
 
-            {/* Step 3 - Calendar */}
+            {/* Step 3 - Calendar with 3D Card */}
             <div className="text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-500 text-white rounded-full text-xl font-bold mb-6">
                 {howItWorksSteps[2].step}
@@ -244,19 +267,23 @@ const Landing = () => {
               <p className="text-lg text-slate-300 mb-8">{howItWorksSteps[2].description}</p>
               
               <div className="max-w-4xl mx-auto">
-                <div className="bg-slate-700/50 p-6 rounded-xl border border-slate-600">
-                  <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
-                    <img 
-                      src={howItWorksSteps[2].image} 
-                      alt="Calendário do sistema"
-                      className="max-w-full max-h-full object-contain rounded-lg"
-                      onError={(e) => {
-                        console.error(`Failed to load image: ${howItWorksSteps[2].image}`);
-                        e.currentTarget.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                </div>
+                <CardContainer className="inter-var" containerClassName="py-10">
+                  <CardBody className="bg-slate-700/50 relative group/card hover:shadow-2xl hover:shadow-purple-500/[0.1] border-slate-600 w-full h-auto rounded-xl p-6 border">
+                    <CardItem translateZ="100" className="w-full">
+                      <div className="aspect-video bg-slate-800 rounded-lg flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={howItWorksSteps[2].image} 
+                          alt="Calendário do sistema"
+                          className="max-w-full max-h-full object-contain rounded-lg group-hover/card:shadow-xl"
+                          onError={(e) => {
+                            console.error(`Failed to load image: ${howItWorksSteps[2].image}`);
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </CardItem>
+                  </CardBody>
+                </CardContainer>
               </div>
             </div>
           </div>
