@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CategorySummary, MonthlyData, ResumoFinanceiro } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
@@ -177,13 +176,17 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       total += valor;
     });
 
-    // Convert to CategorySummary array with colors
+    // Enhanced color palette with more distinct colors - avoiding white/light colors
     const colors = [
-      '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', 
-      '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
-      '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56'
+      '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
+      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+      '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2',
+      '#A3E4D7', '#FAD7A0', '#D5A6BD', '#AED6F1', '#A9DFBF',
+      '#FF8A80', '#80CBC4', '#81C784', '#FFB74D', '#F48FB1',
+      '#CE93D8', '#90CAF9', '#A5D6A7', '#FFCC02', '#FFAB40'
     ];
 
+    // Convert to CategorySummary array with colors
     const categoryArray = Object.entries(categoryMap)
       .map(([categoria, valor], index) => ({
         categoria,
@@ -202,11 +205,11 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
 }
 
 /**
- * Get monthly data for charts
+ * Get monthly data for charts - full year
  * @returns Promise with array of monthly data
  */
 export async function getMonthlyData(): Promise<MonthlyData[]> {
-  console.log("📈 [getMonthlyData] Obtendo dados mensais...");
+  console.log("📈 [getMonthlyData] Obtendo dados mensais do ano completo...");
   
   const normalizedEmail = getUserEmail();
   
@@ -227,10 +230,10 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
       query = query.eq('login', normalizedEmail);
     }
 
-    // Get last 12 months
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 11);
+    // Get full current year
+    const currentYear = new Date().getFullYear();
+    const startDate = new Date(currentYear, 0, 1); // January 1st
+    const endDate = new Date(currentYear, 11, 31); // December 31st
 
     query = query
       .gte('quando', startDate.toISOString().split('T')[0])
