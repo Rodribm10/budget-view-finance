@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CartaoCredito } from "@/types/cartaoTypes";
 import { gerarCartaoCodigo } from "./cartaoCodigoUtils";
@@ -185,5 +184,77 @@ export async function criarCartao(
   } catch (error) {
     console.error('Erro ao criar cartão:', error);
     return null;
+  }
+}
+
+/**
+ * Deletes a credit card and all its associated expenses
+ * @param cartaoId Card ID to delete
+ * @returns Success status
+ */
+export async function excluirCartao(cartaoId: string): Promise<boolean> {
+  const userEmail = localStorage.getItem('userEmail');
+  
+  if (!userEmail) {
+    console.error('Email do usuário não encontrado no localStorage');
+    return false;
+  }
+  
+  const normalizedEmail = userEmail.trim().toLowerCase();
+  
+  try {
+    // First, get the card name to delete associated expenses
+    const { data: cardData, error: cardError } = await supabase
+      .from('cartoes_credito')
+      .select('nome')
+      .eq('id', cartaoId)
+      .eq('login', normalizedEmail)
+      .single();
+      
+    if (cardError) {
+      console.error('Erro ao obter dados do cartão:', cardError);
+      return false;
+    }
+    
+    // Delete all expenses associated with this card
+    const { error: expensesError } = await supabase
+      .from('despesas_cartao')
+      .delete()
+      .eq('nome', cardData.nome)
+      .eq('login', normalizedEmail);
+      
+    if (expensesError) {
+      console.error('Erro ao excluir despesas do cartão:', expensesError);
+      return false;
+    }
+    
+    // Delete all invoices associated with this card
+    const { error: invoicesError } = await supabase
+      .from('faturas_cartao')
+      .delete()
+      .eq('cartao_id', cartaoId)
+      .eq('login', normalizedEmail);
+      
+    if (invoicesError) {
+      console.error('Erro ao excluir faturas do cartão:', invoicesError);
+      // Continue with card deletion even if invoices fail
+    }
+    
+    // Finally, delete the card itself
+    const { error: cardDeleteError } = await supabase
+      .from('cartoes_credito')
+      .delete()
+      .eq('id', cartaoId)
+      .eq('login', normalizedEmail);
+      
+    if (cardDeleteError) {
+      console.error('Erro ao excluir cartão:', cardDeleteError);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erro ao excluir cartão:', error);
+    return false;
   }
 }

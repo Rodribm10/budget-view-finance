@@ -86,6 +86,15 @@ const CartoesCreditoPage = () => {
     });
   };
 
+  const handleCartaoDeleted = () => {
+    loadCartoes();
+    if (detalheCartaoAberto) {
+      setDetalheCartaoAberto(false);
+      setCartaoSelecionado(null);
+      setDespesas([]);
+    }
+  };
+
   const handleCartaoClick = async (cartao: CartaoCredito) => {
     const totalDespesas = await getTotalDespesasCartao(cartao.id);
     const updatedCartao = { ...cartao, total_despesas: totalDespesas };
@@ -120,6 +129,7 @@ const CartoesCreditoPage = () => {
           cartoes={cartoes}
           isLoading={isLoading}
           onCartaoClick={handleCartaoClick}
+          onCartaoDeleted={handleCartaoDeleted}
         />
       ) : cartaoSelecionado && (
         <CartaoDetalhesAvancado

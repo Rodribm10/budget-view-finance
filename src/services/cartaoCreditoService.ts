@@ -7,7 +7,8 @@
 export {
   getCartoes,
   criarCartao,
-  getCartao
+  getCartao,
+  excluirCartao
 } from './cartao/cartoesService';
 
 // Re-export all functions from despesas services
