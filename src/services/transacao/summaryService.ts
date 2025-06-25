@@ -192,6 +192,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
     // Use the EXACT same query structure as getResumoFinanceiro
     let query = supabase.from('transacoes').select('categoria, valor, tipo');
     
+    // Apply EXACT same user/group filter as getResumoFinanceiro
     if (groupIds.length > 0) {
       const orFilter = `login.eq.${normalizedEmail},grupo_id.in.(${groupIds.map(id => `"${id}"`).join(',')})`;
       query = query.or(orFilter);
