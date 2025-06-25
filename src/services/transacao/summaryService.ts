@@ -200,10 +200,11 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       query = query.eq('login', normalizedEmail);
     }
 
-    // Apply type filter CORRECTLY - only if not 'all'
+    // Apply type filter with case-insensitive comparison - only if not 'all'
     if (tipo !== 'all') {
-      query = query.eq('tipo', tipo);
-      console.log(`📋 [getCategorySummary] Filtro de tipo aplicado: ${tipo}`);
+      // Use ilike for case-insensitive comparison
+      query = query.ilike('tipo', tipo);
+      console.log(`📋 [getCategorySummary] Filtro de tipo case-insensitive aplicado: ${tipo}`);
     }
 
     // Apply EXACT same month filter as getResumoFinanceiro
@@ -239,7 +240,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
     let total = 0;
 
     data.forEach((transaction) => {
-      // Handle NULL categories properly - use "Sem Categoria" for NULL/empty values
+      // Handle NULL/empty categories properly - ALWAYS use "Sem Categoria" for NULL/empty values
       let categoria = 'Sem Categoria';
       
       if (transaction.categoria && typeof transaction.categoria === 'string') {
@@ -252,10 +253,12 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       // Use absolute values to match getResumoFinanceiro calculation
       const valor = Math.abs(Number(transaction.valor || 0));
       
-      if (valor > 0) {
-        categoryMap[categoria] = (categoryMap[categoria] || 0) + valor;
-        total += valor;
+      // Always add to categoryMap, even if valor is 0 (to show categories with 0 value)
+      if (!categoryMap[categoria]) {
+        categoryMap[categoria] = 0;
       }
+      categoryMap[categoria] += valor;
+      total += valor;
     });
 
     console.log(`📋 [getCategorySummary] Categorias processadas:`, Object.keys(categoryMap));
@@ -268,9 +271,8 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
     ];
 
-    // Convert to CategorySummary array with colors and filter out categories with 0 value
+    // Convert to CategorySummary array with colors - include ALL categories, even with 0 value
     const categoryArray = Object.entries(categoryMap)
-      .filter(([_, valor]) => valor > 0) // Filter out categories with 0 value
       .map(([categoria, valor], index) => ({
         categoria,
         valor,
@@ -279,7 +281,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       }))
       .sort((a, b) => b.valor - a.valor);
 
-    console.log(`📋 [getCategorySummary] Resultado final (filtrado):`, categoryArray);
+    console.log(`📋 [getCategorySummary] Resultado final:`, categoryArray);
     console.log(`📋 [getCategorySummary] Total final das categorias: ${categoryArray.reduce((sum, cat) => sum + cat.valor, 0)}`);
     
     return categoryArray;
