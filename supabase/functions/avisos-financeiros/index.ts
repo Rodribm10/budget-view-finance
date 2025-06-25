@@ -45,11 +45,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const agora = new Date()
-    const hoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())
-    const horaAtual = agora.toTimeString().slice(0, 5) // HH:MM
+    // Usar horário de Brasília (UTC-3)
+    const agoraBrasilia = new Date(new Date().getTime() - (3 * 60 * 60 * 1000))
+    const hojeBrasilia = new Date(agoraBrasilia.getFullYear(), agoraBrasilia.getMonth(), agoraBrasilia.getDate())
+    const horaAtualBrasilia = agoraBrasilia.toTimeString().slice(0, 5) // HH:MM
     
-    console.log(`Executando verificação de avisos às ${horaAtual}`)
+    console.log(`Executando verificação de avisos às ${horaAtualBrasilia} (horário de Brasília)`)
+    console.log(`Data atual (Brasília): ${hojeBrasilia.toISOString().split('T')[0]}`)
 
     // Buscar todas as contas ativas incluindo email e whatsapp do usuário
     const { data: contas, error: contasError } = await supabase
@@ -67,31 +69,42 @@ serve(async (req) => {
     let avisosEnviados = 0
 
     for (const conta of contas || []) {
+      console.log(`\n--- Processando conta: ${conta.nome_conta} ---`)
+      console.log(`Dia vencimento: ${conta.dia_vencimento}`)
+      console.log(`Dias antecedência: ${conta.dias_antecedencia}`)
+      console.log(`Hora aviso: ${conta.hora_aviso}`)
+      
       // Calcular próxima data de vencimento
       const diaVencimento = conta.dia_vencimento
-      let proximoVencimento = new Date(hoje.getFullYear(), hoje.getMonth(), diaVencimento)
+      let proximoVencimento = new Date(hojeBrasilia.getFullYear(), hojeBrasilia.getMonth(), diaVencimento)
       
       // Se o dia já passou neste mês, usar o próximo mês
-      if (proximoVencimento <= hoje) {
-        proximoVencimento = new Date(hoje.getFullYear(), hoje.getMonth() + 1, diaVencimento)
+      if (proximoVencimento <= hojeBrasilia) {
+        proximoVencimento = new Date(hojeBrasilia.getFullYear(), hojeBrasilia.getMonth() + 1, diaVencimento)
       }
 
       // Calcular dias restantes
-      const diffTime = proximoVencimento.getTime() - hoje.getTime()
+      const diffTime = proximoVencimento.getTime() - hojeBrasilia.getTime()
       const diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 
+      console.log(`Próximo vencimento: ${proximoVencimento.toISOString().split('T')[0]}`)
+      console.log(`Dias restantes: ${diasRestantes}`)
+      console.log(`Hora atual: ${horaAtualBrasilia}, Hora aviso: ${conta.hora_aviso}`)
+
       // Verificar se deve enviar aviso
+      // Enviar aviso nos dias de antecedência E no dia do vencimento
       const deveEnviarAviso = (
-        diasRestantes <= conta.dias_antecedencia && 
-        diasRestantes >= 1 &&
-        horaAtual === conta.hora_aviso
+        (diasRestantes <= conta.dias_antecedencia && diasRestantes >= 0) &&
+        horaAtualBrasilia === conta.hora_aviso
       )
 
+      console.log(`Deve enviar aviso: ${deveEnviarAviso}`)
+
       if (deveEnviarAviso) {
-        console.log(`Enviando aviso para conta: ${conta.nome_conta}, dias restantes: ${diasRestantes}`)
+        console.log(`🔔 Enviando aviso para conta: ${conta.nome_conta}, dias restantes: ${diasRestantes}`)
 
         // Verificar se já foi enviado aviso hoje
-        const dataAviso = hoje.toISOString().split('T')[0]
+        const dataAviso = hojeBrasilia.toISOString().split('T')[0]
         const { data: avisoExistente } = await supabase
           .from('avisos_enviados')
           .select('id')
@@ -100,7 +113,7 @@ serve(async (req) => {
           .single()
 
         if (avisoExistente) {
-          console.log(`Aviso já enviado hoje para conta: ${conta.nome_conta}`)
+          console.log(`⚠️ Aviso já enviado hoje para conta: ${conta.nome_conta}`)
           continue
         }
 
@@ -119,6 +132,8 @@ serve(async (req) => {
           webhook_url: 'https://webhookn8n.innova1001.com.br/webhook/avisosfinancehome'
         }
 
+        console.log(`📤 Dados do webhook:`, JSON.stringify(avisoData, null, 2))
+
         try {
           // Enviar webhook
           const webhookResponse = await fetch('https://webhookn8n.innova1001.com.br/webhook/avisosfinancehome', {
@@ -130,6 +145,7 @@ serve(async (req) => {
           })
 
           const statusEnvio = webhookResponse.ok ? 'enviado' : 'erro'
+          console.log(`📊 Status do webhook: ${webhookResponse.status} - ${statusEnvio}`)
           
           // Registrar envio
           await supabase
@@ -137,7 +153,7 @@ serve(async (req) => {
             .insert({
               conta_id: conta.id,
               data_aviso: dataAviso,
-              hora_aviso: horaAtual,
+              hora_aviso: horaAtualBrasilia,
               dados_webhook: avisoData,
               status_envio: statusEnvio,
               tentativas: 1
@@ -147,11 +163,11 @@ serve(async (req) => {
             avisosEnviados++
             console.log(`✅ Aviso enviado com sucesso para: ${conta.nome_conta} (${conta.whatsapp_usuario})`)
           } else {
-            console.error(`❌ Erro ao enviar webhook para: ${conta.nome_conta}`)
+            console.error(`❌ Erro ao enviar webhook para: ${conta.nome_conta} - Status: ${webhookResponse.status}`)
           }
 
         } catch (error) {
-          console.error(`Erro ao processar conta ${conta.nome_conta}:`, error)
+          console.error(`💥 Erro ao processar conta ${conta.nome_conta}:`, error)
           
           // Registrar erro
           await supabase
@@ -159,22 +175,26 @@ serve(async (req) => {
             .insert({
               conta_id: conta.id,
               data_aviso: dataAviso,
-              hora_aviso: horaAtual,
+              hora_aviso: horaAtualBrasilia,
               dados_webhook: avisoData,
               status_envio: 'erro',
               tentativas: 1
             })
         }
+      } else {
+        console.log(`⏭️ Não é hora de enviar aviso para: ${conta.nome_conta}`)
       }
     }
 
-    console.log(`Processamento concluído. ${avisosEnviados} avisos enviados.`)
+    console.log(`\n🎯 Processamento concluído. ${avisosEnviados} avisos enviados.`)
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         avisosEnviados,
-        timestamp: agora.toISOString()
+        timestamp: agoraBrasilia.toISOString(),
+        horario_brasilia: horaAtualBrasilia,
+        data_brasilia: hojeBrasilia.toISOString().split('T')[0]
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -182,7 +202,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Erro na função de avisos:', error)
+    console.error('💥 Erro na função de avisos:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
