@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ArrowUp, ArrowDown, CreditCard } from 'lucide-react';
-import { SimpleCard } from '@/components/ui/simple-card';
 
 interface TransactionSummaryCardsProps {
   totalReceitas: number;
@@ -16,66 +15,58 @@ export const TransactionSummaryCards = ({
   totalCartoes,
   formatCurrency 
 }: TransactionSummaryCardsProps) => {
-  // Calculate the grand total of all expenses
   const totalGeral = totalDespesas + totalCartoes;
 
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-      <SimpleCard className="border-green-200">
-        <div className="pb-2 bg-green-50 rounded-t-lg -m-6 mb-4 p-6">
-          <div className="text-green-700 flex items-center font-bold">
-            <ArrowUp className="h-5 w-5 mr-2 text-green-600" />
-            Ganhos do mês
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+      {/* Card Ganhos do mês */}
+      <div className="bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-green-500 rounded-full">
+            <ArrowUp className="h-5 w-5 text-white" />
           </div>
+          <h3 className="font-semibold text-green-800">Ganhos do mês</h3>
         </div>
-        <div className="pt-0">
-          <p className="text-xl sm:text-2xl font-bold text-green-600 break-words">
-            {formatCurrency(totalReceitas)}
+        <p className="text-2xl font-bold text-green-700">
+          {formatCurrency(totalReceitas)}
+        </p>
+      </div>
+
+      {/* Card Gastos do mês */}
+      <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-200 rounded-xl p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-red-500 rounded-full">
+            <ArrowDown className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-red-800">Gastos do mês</h3>
+        </div>
+        <p className="text-2xl font-bold text-red-700">
+          {formatCurrency(totalDespesas)}
+        </p>
+      </div>
+
+      {/* Card Gastos em cartões */}
+      <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-6 shadow-sm">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 bg-blue-500 rounded-full">
+            <CreditCard className="h-5 w-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-blue-800">Gastos em cartões</h3>
+        </div>
+        <div className="space-y-2">
+          <p className="text-2xl font-bold text-blue-700">
+            {formatCurrency(totalCartoes)}
           </p>
-        </div>
-      </SimpleCard>
-      
-      <SimpleCard className="border-red-200">
-        <div className="pb-2 bg-red-50 rounded-t-lg -m-6 mb-4 p-6">
-          <div className="text-red-700 flex items-center font-bold">
-            <ArrowDown className="h-5 w-5 mr-2 text-red-600" />
-            Gastos do mês
-          </div>
-        </div>
-        <div className="pt-0 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600 font-medium">Despesas:</span>
-            <span className="text-lg sm:text-xl font-bold text-red-600 break-words">
-              {formatCurrency(totalDespesas)}
-            </span>
-          </div>
-          {totalCartoes > 0 && (
-            <div className="flex items-center justify-between pt-1 border-t border-red-100">
-              <span className="text-sm text-gray-600 font-medium">Cartões:</span>
-              <span className="text-lg sm:text-xl font-bold text-red-500 break-words">
-                {formatCurrency(totalCartoes)}
+          <div className="pt-2 border-t border-blue-200">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-blue-600">Total geral:</span>
+              <span className="font-bold text-red-600">
+                {formatCurrency(totalGeral)}
               </span>
             </div>
-          )}
-        </div>
-      </SimpleCard>
-
-      <SimpleCard className="border-blue-200">
-        <div className="pb-2 bg-blue-50 rounded-t-lg -m-6 mb-4 p-6">
-          <div className="text-blue-700 flex items-center font-bold">
-            <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
-            Total geral
           </div>
         </div>
-        <div className="pt-0">
-          <p className="text-xl sm:text-2xl font-bold text-blue-600 break-words">
-            {formatCurrency(totalGeral)}
-          </p>
-          <p className="text-xs text-blue-500 mt-1">
-            Despesas + Cartões
-          </p>
-        </div>
-      </SimpleCard>
+      </div>
     </div>
   );
 };

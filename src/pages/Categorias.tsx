@@ -2,49 +2,44 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Trash2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { SimpleCard } from "@/components/ui/simple-card";
+import { getCategorySummary } from '@/services/transacao';
+import { CategorySummary } from '@/types/financialTypes';
 
-interface Categoria {
-  id: string;
+interface CategoryCard {
   nome: string;
-  tipo: 'receita' | 'despesa';
+  valor: number;
+  percentual: number;
   cor: string;
-  total?: number;
 }
 
 const Categorias = () => {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [categories, setCategories] = useState<CategorySummary[]>([]);
+  const [filtro, setFiltro] = useState<'despesa' | 'receita'>('despesa');
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Mock data - replace with actual API calls
-  useEffect(() => {
-    const mockCategorias: Categoria[] = [
-      { id: '1', nome: 'Alimentação', tipo: 'despesa', cor: '#ef4444', total: 850.50 },
-      { id: '2', nome: 'Transporte', tipo: 'despesa', cor: '#f97316', total: 420.30 },
-      { id: '3', nome: 'Lazer', tipo: 'despesa', cor: '#eab308', total: 300.00 },
-      { id: '4', nome: 'Salário', tipo: 'receita', cor: '#22c55e', total: 5000.00 },
-      { id: '5', nome: 'Freelance', tipo: 'receita', cor: '#10b981', total: 1200.00 },
-      { id: '6', nome: 'Educação', tipo: 'despesa', cor: '#3b82f6', total: 450.00 },
-    ];
-    
-    setTimeout(() => {
-      setCategorias(mockCategorias);
+  const loadCategories = async () => {
+    try {
+      setIsLoading(true);
+      const data = await getCategorySummary(filtro);
+      setCategories(data);
+    } catch (error) {
+      console.error("Erro ao carregar categorias:", error);
+      toast({
+        title: "Erro ao carregar categorias",
+        description: "Não foi possível obter os dados das categorias",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    }
+  };
 
-  const filteredCategorias = categorias.filter(categoria =>
-    categoria.nome.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const receitas = filteredCategorias.filter(cat => cat.tipo === 'receita');
-  const despesas = filteredCategorias.filter(cat => cat.tipo === 'despesa');
+  useEffect(() => {
+    loadCategories();
+  }, [filtro]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -53,29 +48,22 @@ const Categorias = () => {
     }).format(value);
   };
 
-  const handleEdit = (categoria: Categoria) => {
-    toast({
-      title: "Editar categoria",
-      description: `Função de edição para ${categoria.nome} será implementada`,
-    });
+  const formatPercentage = (value: number) => {
+    return `${(value * 100).toFixed(1)}%`;
   };
 
-  const handleDelete = (categoria: Categoria) => {
-    toast({
-      title: "Excluir categoria",
-      description: `Função de exclusão para ${categoria.nome} será implementada`,
-    });
-  };
+  const totalGeral = categories.reduce((sum, cat) => sum + cat.valor, 0);
 
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Categorias</h1>
-          <Button disabled>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Categoria
-          </Button>
+          <Select disabled>
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Carregando..." />
+            </SelectTrigger>
+          </Select>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -98,125 +86,118 @@ const Categorias = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Categorias</h1>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nova Categoria
-        </Button>
-      </div>
-
-      <SimpleCard className="border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar categorias..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600">Filtrar por:</span>
+          <Select value={filtro} onValueChange={(value: 'despesa' | 'receita') => setFiltro(value)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="despesa">Despesas</SelectItem>
+              <SelectItem value="receita">Receitas</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      </SimpleCard>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <SimpleCard title="Receitas" className="border-green-200">
-          <div className="space-y-3">
-            {receitas.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                Nenhuma categoria de receita encontrada
-              </p>
-            ) : (
-              receitas.map((categoria) => (
-                <div
-                  key={categoria.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: categoria.cor }}
-                    />
-                    <div>
-                      <p className="font-medium">{categoria.nome}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {categoria.total ? formatCurrency(categoria.total) : 'R$ 0,00'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      {categoria.tipo}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(categoria)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(categoria)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </SimpleCard>
-
-        <SimpleCard title="Despesas" className="border-red-200">
-          <div className="space-y-3">
-            {despesas.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
-                Nenhuma categoria de despesa encontrada
-              </p>
-            ) : (
-              despesas.map((categoria) => (
-                <div
-                  key={categoria.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: categoria.cor }}
-                    />
-                    <div>
-                      <p className="font-medium">{categoria.nome}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {categoria.total ? formatCurrency(categoria.total) : 'R$ 0,00'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="bg-red-100 text-red-800">
-                      {categoria.tipo}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(categoria)}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(categoria)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </SimpleCard>
       </div>
+
+      {/* Cards das Categorias */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {categories.map((categoria, index) => (
+          <Card key={categoria.categoria} className="relative overflow-hidden border-2 hover:shadow-lg transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3 mb-2">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: categoria.color || '#6B7280' }}
+                />
+                <h3 className="font-semibold text-gray-800">{categoria.categoria}</h3>
+              </div>
+              <div className="space-y-2">
+                <p className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(categoria.valor)}
+                </p>
+                <div className="space-y-1">
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        backgroundColor: categoria.color || '#6B7280',
+                        width: `${Math.min(categoria.percentage * 100, 100)}%`
+                      }}
+                    />
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {formatPercentage(categoria.percentage)} do total
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Resumo de Categorias */}
+      {categories.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Resumo de Categorias ({filtro === 'despesa' ? 'Despesas' : 'Receitas'})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 px-4">Categoria</th>
+                    <th className="text-right py-2 px-4">Valor</th>
+                    <th className="text-right py-2 px-4">Percentual</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {categories.map((categoria) => (
+                    <tr key={categoria.categoria} className="border-b hover:bg-gray-50">
+                      <td className="py-2 px-4">
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: categoria.color || '#6B7280' }}
+                          />
+                          {categoria.categoria}
+                        </div>
+                      </td>
+                      <td className="text-right py-2 px-4 font-medium">
+                        {formatCurrency(categoria.valor)}
+                      </td>
+                      <td className="text-right py-2 px-4">
+                        {formatPercentage(categoria.percentage)}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 font-bold">
+                    <td className="py-2 px-4">Total</td>
+                    <td className="text-right py-2 px-4">{formatCurrency(totalGeral)}</td>
+                    <td className="text-right py-2 px-4">100%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {categories.length === 0 && !isLoading && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <p className="text-gray-500">
+              Nenhuma categoria encontrada para {filtro === 'despesa' ? 'despesas' : 'receitas'}.
+            </p>
+            <p className="text-sm text-gray-400 mt-2">
+              Adicione algumas transações para ver as categorias aqui.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
