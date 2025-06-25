@@ -189,6 +189,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
   try {
     const groupIds = await getUserGroups(normalizedEmail);
     
+    // Use the EXACT same query structure as getResumoFinanceiro
     let query = supabase.from('transacoes').select('categoria, valor, tipo');
     
     if (groupIds.length > 0) {
@@ -203,7 +204,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       query = query.eq('tipo', tipo);
     }
 
-    // Apply month filter if provided
+    // Apply EXACT same month filter as getResumoFinanceiro
     if (monthFilter) {
       const startDate = `${monthFilter}-01`;
       const year = parseInt(monthFilter.split('-')[0]);
@@ -231,7 +232,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
 
     console.log(`📋 [getCategorySummary] Dados recebidos (${data.length} registros):`, data.slice(0, 5));
 
-    // Group by category and sum values
+    // Group by category and sum values - use ABSOLUTE values like in getResumoFinanceiro
     const categoryMap: { [key: string]: number } = {};
     let total = 0;
 
@@ -246,6 +247,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
         }
       }
       
+      // Use the EXACT same calculation as getResumoFinanceiro - absolute values
       const valor = Math.abs(Number(transaction.valor || 0));
       
       if (valor > 0) {
@@ -255,7 +257,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
     });
 
     console.log(`📋 [getCategorySummary] Categorias encontradas:`, Object.keys(categoryMap));
-    console.log(`📋 [getCategorySummary] Total geral: ${total}`);
+    console.log(`📋 [getCategorySummary] Total calculado: ${total}`);
 
     // Enhanced color palette with more distinct colors - avoiding white/light colors
     const colors = [
@@ -275,6 +277,8 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       .sort((a, b) => b.valor - a.valor);
 
     console.log(`📋 [getCategorySummary] Resultado final (filtrado):`, categoryArray);
+    console.log(`📋 [getCategorySummary] Total final das categorias: ${categoryArray.reduce((sum, cat) => sum + cat.valor, 0)}`);
+    
     return categoryArray;
   } catch (error) {
     console.error('💥 [getCategorySummary] Erro geral:', error);
