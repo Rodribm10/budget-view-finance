@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { CategorySummary, MonthlyData, ResumoFinanceiro } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
@@ -199,8 +198,9 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
     ];
 
-    // Convert to CategorySummary array with colors
+    // Convert to CategorySummary array with colors and filter out categories with 0 value
     const categoryArray = Object.entries(categoryMap)
+      .filter(([_, valor]) => valor > 0) // Filter out categories with 0 value
       .map(([categoria, valor], index) => ({
         categoria,
         valor,
@@ -209,7 +209,7 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       }))
       .sort((a, b) => b.valor - a.valor);
 
-    console.log(`📋 [getCategorySummary] Resultado final:`, categoryArray);
+    console.log(`📋 [getCategorySummary] Resultado final (filtrado):`, categoryArray);
     return categoryArray;
   } catch (error) {
     console.error('💥 [getCategorySummary] Erro geral:', error);
