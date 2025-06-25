@@ -1,13 +1,16 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CategorySummary, MonthlyData, ResumoFinanceiro } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
 
 /**
  * Get transaction summary (total income, expenses, balance)
+ * @param monthFilter - Optional month filter in format 'YYYY-MM'
  * @returns Promise with transaction summary
  */
-export async function getTransactionSummary(): Promise<{ totalReceitas: number; totalDespesas: number; saldo: number }> {
+export async function getTransactionSummary(monthFilter?: string): Promise<{ totalReceitas: number; totalDespesas: number; saldo: number }> {
   console.log("📊 [getTransactionSummary] Calculando resumo de transações...");
+  console.log("📊 [getTransactionSummary] Filtro de mês:", monthFilter);
   
   const normalizedEmail = getUserEmail();
   
@@ -26,6 +29,20 @@ export async function getTransactionSummary(): Promise<{ totalReceitas: number; 
       query = query.or(orFilter);
     } else {
       query = query.eq('login', normalizedEmail);
+    }
+
+    // Apply month filter if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      query = query
+        .gte('quando', startDate)
+        .lte('quando', `${endDate}T23:59:59.999Z`);
+      
+      console.log(`📅 [getTransactionSummary] Filtro de data aplicado: ${startDate} até ${endDate}`);
     }
 
     const { data, error } = await query;
@@ -56,10 +73,12 @@ export async function getTransactionSummary(): Promise<{ totalReceitas: number; 
 
 /**
  * Get financial summary including credit cards
+ * @param monthFilter - Optional month filter in format 'YYYY-MM'
  * @returns Promise with complete financial summary
  */
-export async function getResumoFinanceiro(): Promise<ResumoFinanceiro> {
+export async function getResumoFinanceiro(monthFilter?: string): Promise<ResumoFinanceiro> {
   console.log("📊 [getResumoFinanceiro] Calculando resumo financeiro completo...");
+  console.log("📊 [getResumoFinanceiro] Filtro de mês:", monthFilter);
   
   const normalizedEmail = getUserEmail();
   
@@ -80,6 +99,20 @@ export async function getResumoFinanceiro(): Promise<ResumoFinanceiro> {
       query = query.eq('login', normalizedEmail);
     }
 
+    // Apply month filter if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      query = query
+        .gte('quando', startDate)
+        .lte('quando', `${endDate}T23:59:59.999Z`);
+      
+      console.log(`📅 [getResumoFinanceiro] Filtro de data aplicado: ${startDate} até ${endDate}`);
+    }
+
     const { data, error } = await query;
 
     if (error) {
@@ -95,11 +128,27 @@ export async function getResumoFinanceiro(): Promise<ResumoFinanceiro> {
       .filter(t => t.tipo?.toLowerCase() === 'despesa')
       .reduce((sum, t) => sum + Number(t.valor || 0), 0);
 
-    // Get credit card expenses
-    const { data: cartaoData, error: cartaoError } = await supabase
+    // Get credit card expenses with month filter
+    let cartaoQuery = supabase
       .from('despesas_cartao')
       .select('valor')
       .eq('login', normalizedEmail);
+
+    // Apply month filter to credit card expenses if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      cartaoQuery = cartaoQuery
+        .gte('data_despesa', startDate)
+        .lte('data_despesa', endDate);
+      
+      console.log(`📅 [getResumoFinanceiro] Filtro aplicado também aos cartões: ${startDate} até ${endDate}`);
+    }
+
+    const { data: cartaoData, error: cartaoError } = await cartaoQuery;
 
     const totalCartoes = cartaoError ? 0 : 
       (cartaoData || []).reduce((sum, despesa) => sum + Number(despesa.valor || 0), 0);
@@ -123,10 +172,12 @@ export async function getResumoFinanceiro(): Promise<ResumoFinanceiro> {
 /**
  * Get category summary for expenses or income
  * @param tipo - Transaction type filter ('despesa', 'receita', 'all')
+ * @param monthFilter - Optional month filter in format 'YYYY-MM'
  * @returns Promise with array of category summaries
  */
-export async function getCategorySummary(tipo: string = 'despesa'): Promise<CategorySummary[]> {
+export async function getCategorySummary(tipo: string = 'despesa', monthFilter?: string): Promise<CategorySummary[]> {
   console.log(`📋 [getCategorySummary] Obtendo resumo por categoria para tipo: ${tipo}`);
+  console.log("📋 [getCategorySummary] Filtro de mês:", monthFilter);
   
   const normalizedEmail = getUserEmail();
   
@@ -150,6 +201,20 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
     // Apply type filter if not 'all'
     if (tipo !== 'all') {
       query = query.eq('tipo', tipo);
+    }
+
+    // Apply month filter if provided
+    if (monthFilter) {
+      const startDate = `${monthFilter}-01`;
+      const year = parseInt(monthFilter.split('-')[0]);
+      const month = parseInt(monthFilter.split('-')[1]);
+      const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+      
+      query = query
+        .gte('quando', startDate)
+        .lte('quando', `${endDate}T23:59:59.999Z`);
+      
+      console.log(`📅 [getCategorySummary] Filtro de data aplicado: ${startDate} até ${endDate}`);
     }
 
     const { data, error } = await query;

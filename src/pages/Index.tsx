@@ -47,13 +47,13 @@ const Dashboard = () => {
   const loadResumo = async () => {
     try {
       setIsLoading(true);
-      console.log("Carregando resumo financeiro...");
-      const data = await getResumoFinanceiro();
+      console.log("Carregando resumo financeiro com filtro:", selectedMonth);
+      const data = await getResumoFinanceiro(selectedMonth);
       console.log("Resumo carregado:", data);
       setResumo(data);
       
-      // Load categories for chart
-      const categoriesData = await getCategorySummary('despesa');
+      // Load categories for chart with month filter
+      const categoriesData = await getCategorySummary('despesa', selectedMonth);
       setCategories(categoriesData);
 
       // Load monthly data for chart
