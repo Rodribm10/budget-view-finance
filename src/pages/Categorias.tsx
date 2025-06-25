@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { getCategorySummary } from '@/services/transacao';
 import { CategorySummary } from '@/types/financialTypes';
+import { MonthFilter } from "@/components/filters/MonthFilter";
 
 interface CategoryCard {
   nome: string;
@@ -17,13 +18,19 @@ interface CategoryCard {
 const Categorias = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [filtro, setFiltro] = useState<'despesa' | 'receita'>('despesa');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const loadCategories = async () => {
     try {
       setIsLoading(true);
-      const data = await getCategorySummary(filtro);
+      console.log("Carregando categorias com filtro:", filtro, "mês:", selectedMonth);
+      const data = await getCategorySummary(filtro, selectedMonth);
+      console.log("Categorias carregadas:", data);
       setCategories(data);
     } catch (error) {
       console.error("Erro ao carregar categorias:", error);
@@ -39,7 +46,7 @@ const Categorias = () => {
 
   useEffect(() => {
     loadCategories();
-  }, [filtro]);
+  }, [filtro, selectedMonth]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -59,11 +66,17 @@ const Categorias = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold">Categorias</h1>
-          <Select disabled>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Carregando..." />
-            </SelectTrigger>
-          </Select>
+          <div className="flex items-center gap-3">
+            <MonthFilter 
+              selectedMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
+            />
+            <Select disabled>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Carregando..." />
+              </SelectTrigger>
+            </Select>
+          </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -87,6 +100,10 @@ const Categorias = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Categorias</h1>
         <div className="flex items-center gap-3">
+          <MonthFilter 
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
           <span className="text-sm text-gray-600">Filtrar por:</span>
           <Select value={filtro} onValueChange={(value: 'despesa' | 'receita') => setFiltro(value)}>
             <SelectTrigger className="w-32">
@@ -141,7 +158,7 @@ const Categorias = () => {
         <Card>
           <CardHeader>
             <CardTitle>
-              Resumo de Categorias ({filtro === 'despesa' ? 'Despesas' : 'Receitas'})
+              Resumo de Categorias ({filtro === 'despesa' ? 'Despesas' : 'Receitas'}) - {selectedMonth}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -190,7 +207,7 @@ const Categorias = () => {
         <Card>
           <CardContent className="text-center py-12">
             <p className="text-gray-500">
-              Nenhuma categoria encontrada para {filtro === 'despesa' ? 'despesas' : 'receitas'}.
+              Nenhuma categoria encontrada para {filtro === 'despesa' ? 'despesas' : 'receitas'} no mês {selectedMonth}.
             </p>
             <p className="text-sm text-gray-400 mt-2">
               Adicione algumas transações para ver as categorias aqui.

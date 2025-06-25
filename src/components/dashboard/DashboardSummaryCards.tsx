@@ -62,7 +62,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
             <p className="text-base sm:text-xl xl:text-2xl font-bold text-red-600 leading-tight">
               {resumo ? formatCurrency(resumo.totalDespesas) : 'R$ 0,00'}
             </p>
-            {resumo && resumo.totalCartoes > 0 && (
+            {resumo && resumo.totalCartoes && resumo.totalCartoes > 0 && (
               <div className="pt-1 border-t border-red-200">
                 <p className="text-xs text-red-500">
                   <span className="font-medium">Cartões: </span>
