@@ -9,17 +9,21 @@ import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState"
 import DashboardSummaryCards from "@/components/dashboard/DashboardSummaryCards";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";
 import DashboardRecentTransactions from "@/components/dashboard/DashboardRecentTransactions";
+import { MonthFilter } from "@/components/filters/MonthFilter";
 
 const Dashboard = () => {
   const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const { toast } = useToast();
 
   const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return selectedMonth;
   };
 
   const {
@@ -69,7 +73,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadResumo();
-  }, [toast]);
+  }, [toast, selectedMonth]);
 
   if (isLoading) {
     return <DashboardLoadingState />;
@@ -78,6 +82,15 @@ const Dashboard = () => {
   return (
     <div className="space-y-6" data-tour="dashboard-content">
       <DashboardHeader />
+      
+      {/* Filtro de Mês/Ano */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Dashboard</h2>
+        <MonthFilter 
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
+        />
+      </div>
       
       <DashboardSummaryCards 
         resumo={resumo} 

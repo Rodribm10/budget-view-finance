@@ -16,7 +16,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
   const saldo = resumo ? resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0) : 0;
 
   return (
-    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
       {/* Card Receitas - Clicável */}
       <Card 
         className="relative overflow-hidden border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-100 shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group transform hover:scale-105"
@@ -34,7 +34,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
           </div>
           <div className="space-y-1 sm:space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-green-700">Receitas</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600 break-words">
+            <p className="text-base sm:text-xl xl:text-2xl font-bold text-green-600 leading-tight">
               {resumo ? formatCurrency(resumo.totalReceitas) : 'R$ 0,00'}
             </p>
             <p className="text-xs text-green-600 opacity-80">Clique para ver detalhes</p>
@@ -59,7 +59,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
           </div>
           <div className="space-y-1 sm:space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-red-700">Despesas</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-red-600 break-words">
+            <p className="text-base sm:text-xl xl:text-2xl font-bold text-red-600 leading-tight">
               {resumo ? formatCurrency(resumo.totalDespesas) : 'R$ 0,00'}
             </p>
             {resumo && resumo.totalCartoes > 0 && (
@@ -86,7 +86,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
           </div>
           <div className="space-y-1 sm:space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-blue-700">Saldo</p>
-            <p className={`text-lg sm:text-2xl lg:text-3xl font-bold break-words ${
+            <p className={`text-base sm:text-xl xl:text-2xl font-bold leading-tight ${
               saldo >= 0 ? 'text-blue-600' : 'text-red-600'
             }`}>
               {resumo ? formatCurrency(saldo) : 'R$ 0,00'}
@@ -106,10 +106,10 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
           </div>
           <div className="space-y-1 sm:space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-purple-700">Economia</p>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-purple-600 break-words">
+            <p className="text-base sm:text-xl xl:text-2xl font-bold text-purple-600 leading-tight">
               -22.2%
             </p>
-            <p className="text-xs text-purple-500 break-words">{resumo ? formatCurrency(Math.abs(saldo)) : 'R$ 0,00'}</p>
+            <p className="text-xs text-purple-500 leading-tight">{resumo ? formatCurrency(Math.abs(saldo)) : 'R$ 0,00'}</p>
           </div>
         </CardContent>
       </Card>

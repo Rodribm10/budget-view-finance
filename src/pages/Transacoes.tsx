@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
 import { TransactionSummaryCards } from '@/components/transacoes/TransactionSummaryCards';
@@ -7,9 +7,15 @@ import { TransactionDialogs } from '@/components/transacoes/TransactionDialogs';
 import { TransactionHeader } from '@/components/transacoes/TransactionHeader';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { SimpleCard } from "@/components/ui/simple-card";
+import { MonthFilter } from "@/components/filters/MonthFilter";
 
 const Transacoes = () => {
   const location = useLocation();
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+
   const {
     transactions,
     isLoading,
@@ -31,7 +37,7 @@ const Transacoes = () => {
     handleOpenDialog,
     handleOpenCartaoCreditoDialog,
     loadTransactions
-  } = useTransactions();
+  } = useTransactions({ monthFilter: selectedMonth });
 
   // Aplicar filtro inicial se vier do dashboard
   useEffect(() => {
@@ -54,6 +60,14 @@ const Transacoes = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Transações</h1>
+        <MonthFilter 
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
+        />
+      </div>
+
       <TransactionHeader 
         onOpenDialog={handleOpenDialog}
         onOpenCartaoCreditoDialog={handleOpenCartaoCreditoDialog}

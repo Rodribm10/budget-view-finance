@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { CategorySummary, MonthlyData, ResumoFinanceiro } from "@/types/financialTypes";
 import { getUserEmail, getUserGroups } from "./baseService";
@@ -164,37 +165,38 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       return [];
     }
 
-    console.log(`📋 [getCategorySummary] Dados recebidos:`, data.map(d => ({ categoria: d.categoria, valor: d.valor, tipo: d.tipo })));
+    console.log(`📋 [getCategorySummary] Dados recebidos (${data.length} registros):`, data.slice(0, 5));
 
     // Group by category and sum values
     const categoryMap: { [key: string]: number } = {};
     let total = 0;
 
     data.forEach((transaction) => {
-      // Usar a categoria exata ou 'Outros' se for null/undefined/vazia
-      const categoria = transaction.categoria && transaction.categoria.trim() !== '' 
-        ? transaction.categoria.trim() 
-        : 'Outros';
+      // Tratar categorias vazias, nulas ou indefinidas
+      let categoria = 'Outros';
+      
+      if (transaction.categoria && typeof transaction.categoria === 'string') {
+        const cleanCategory = transaction.categoria.trim();
+        if (cleanCategory.length > 0) {
+          categoria = cleanCategory;
+        }
+      }
       
       const valor = Math.abs(Number(transaction.valor || 0));
       
-      console.log(`📋 [getCategorySummary] Processando: categoria='${categoria}', valor=${valor}`);
-      
-      categoryMap[categoria] = (categoryMap[categoria] || 0) + valor;
-      total += valor;
+      if (valor > 0) {
+        categoryMap[categoria] = (categoryMap[categoria] || 0) + valor;
+        total += valor;
+      }
     });
 
-    console.log(`📋 [getCategorySummary] Mapeamento final de categorias:`, categoryMap);
+    console.log(`📋 [getCategorySummary] Categorias encontradas:`, Object.keys(categoryMap));
     console.log(`📋 [getCategorySummary] Total geral: ${total}`);
 
     // Enhanced color palette with more distinct colors - avoiding white/light colors
     const colors = [
       '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', 
-      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
-      '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2',
-      '#A3E4D7', '#FAD7A0', '#D5A6BD', '#AED6F1', '#A9DFBF',
-      '#FF8A80', '#80CBC4', '#81C784', '#FFB74D', '#F48FB1',
-      '#CE93D8', '#90CAF9', '#A5D6A7', '#FFCC02', '#FFAB40'
+      '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
     ];
 
     // Convert to CategorySummary array with colors
@@ -207,7 +209,7 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       }))
       .sort((a, b) => b.valor - a.valor);
 
-    console.log(`📋 [getCategorySummary] ${categoryArray.length} categorias processadas:`, categoryArray);
+    console.log(`📋 [getCategorySummary] Resultado final:`, categoryArray);
     return categoryArray;
   } catch (error) {
     console.error('💥 [getCategorySummary] Erro geral:', error);
