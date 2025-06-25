@@ -237,8 +237,8 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
     let total = 0;
 
     data.forEach((transaction) => {
-      // Tratar categorias vazias, nulas ou indefinidas
-      let categoria = 'Outros';
+      // Tratar categorias vazias, nulas ou indefinidas de forma mais específica
+      let categoria = 'Despesas Sem Categoria';
       
       if (transaction.categoria && typeof transaction.categoria === 'string') {
         const cleanCategory = transaction.categoria.trim();
@@ -258,6 +258,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
 
     console.log(`📋 [getCategorySummary] Categorias encontradas:`, Object.keys(categoryMap));
     console.log(`📋 [getCategorySummary] Total calculado: ${total}`);
+    console.log(`📋 [getCategorySummary] Despesas sem categoria: ${categoryMap['Despesas Sem Categoria'] || 0}`);
 
     // Enhanced color palette with more distinct colors - avoiding white/light colors
     const colors = [
