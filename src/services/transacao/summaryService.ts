@@ -164,17 +164,28 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       return [];
     }
 
+    console.log(`📋 [getCategorySummary] Dados recebidos:`, data.map(d => ({ categoria: d.categoria, valor: d.valor, tipo: d.tipo })));
+
     // Group by category and sum values
     const categoryMap: { [key: string]: number } = {};
     let total = 0;
 
     data.forEach((transaction) => {
-      const categoria = transaction.categoria || 'Outros';
+      // Usar a categoria exata ou 'Outros' se for null/undefined/vazia
+      const categoria = transaction.categoria && transaction.categoria.trim() !== '' 
+        ? transaction.categoria.trim() 
+        : 'Outros';
+      
       const valor = Math.abs(Number(transaction.valor || 0));
+      
+      console.log(`📋 [getCategorySummary] Processando: categoria='${categoria}', valor=${valor}`);
       
       categoryMap[categoria] = (categoryMap[categoria] || 0) + valor;
       total += valor;
     });
+
+    console.log(`📋 [getCategorySummary] Mapeamento final de categorias:`, categoryMap);
+    console.log(`📋 [getCategorySummary] Total geral: ${total}`);
 
     // Enhanced color palette with more distinct colors - avoiding white/light colors
     const colors = [
@@ -196,7 +207,7 @@ export async function getCategorySummary(tipo: string = 'despesa'): Promise<Cate
       }))
       .sort((a, b) => b.valor - a.valor);
 
-    console.log(`📋 [getCategorySummary] ${categoryArray.length} categorias processadas`);
+    console.log(`📋 [getCategorySummary] ${categoryArray.length} categorias processadas:`, categoryArray);
     return categoryArray;
   } catch (error) {
     console.error('💥 [getCategorySummary] Erro geral:', error);
