@@ -2,41 +2,44 @@
 import { makeRequest } from './apiHelpers';
 
 /**
- * Cria um webhook na Evolution API para o usuário
+ * Envia o email do usuário para o N8N configurar o webhook
  */
 export const createEvolutionWebhook = async (userEmail: string): Promise<any> => {
   try {
-    console.log(`Criando webhook para o usuário: ${userEmail}`);
+    console.log(`Enviando email do usuário para N8N configurar webhook: ${userEmail}`);
     
-    // URL do endpoint - mantém o @ normal no email
-    const endpoint = `/webhook/set/${userEmail}`;
+    const webhookUrl = 'https://webhookn8n.innova1001.com.br/webhook/hook';
     
-    // Agora mantemos o email original com @ também na URL do webhook
     const webhookBody = {
-      webhook: {
-        enabled: true,
-        url: `https://webhookn8n.innova1001.com.br/webhook/${userEmail}`,
-        webhookByEvents: true,
-        webhookBase64: true,
-        events: [
-          "MESSAGES_UPSERT"
-        ]
-      }
+      email: userEmail
     };
     
-    console.log('Dados do webhook:', {
-      endpoint,
-      emailOriginal: userEmail,
-      webhookUrl: webhookBody.webhook.url
+    console.log('Enviando dados para N8N:', {
+      webhookUrl,
+      email: userEmail
     });
     
-    const response = await makeRequest(endpoint, 'POST', webhookBody);
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(webhookBody)
+    });
     
-    console.log(`✅ Webhook criado com sucesso para ${userEmail}:`, response);
-    return response;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Erro ao enviar webhook para N8N: ${response.status} - ${errorText}`);
+      throw new Error(`Erro ao notificar N8N: ${response.status} - ${errorText}`);
+    }
+    
+    const responseData = await response.text();
+    console.log('✅ Email enviado com sucesso para N8N:', responseData);
+    
+    return { success: true, message: 'Email enviado para N8N configurar webhook' };
     
   } catch (error) {
-    console.error(`❌ Erro ao criar webhook for ${userEmail}:`, error);
+    console.error('❌ Erro ao enviar email para N8N:', error);
     throw error;
   }
 };
