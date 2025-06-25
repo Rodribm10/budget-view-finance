@@ -200,9 +200,10 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       query = query.eq('login', normalizedEmail);
     }
 
-    // Apply type filter if not 'all'
+    // Apply type filter CORRECTLY - only if not 'all'
     if (tipo !== 'all') {
       query = query.eq('tipo', tipo);
+      console.log(`📋 [getCategorySummary] Filtro de tipo aplicado: ${tipo}`);
     }
 
     // Apply EXACT same month filter as getResumoFinanceiro
@@ -231,15 +232,15 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       return [];
     }
 
-    console.log(`📋 [getCategorySummary] Dados recebidos (${data.length} registros):`, data.slice(0, 5));
+    console.log(`📋 [getCategorySummary] Dados brutos recebidos (${data.length} registros):`, data.slice(0, 5));
 
-    // Group by category and sum values - use ABSOLUTE values like in getResumoFinanceiro
+    // Group by category and sum values - handle NULL categories properly
     const categoryMap: { [key: string]: number } = {};
     let total = 0;
 
     data.forEach((transaction) => {
-      // Tratar categorias vazias, nulas ou indefinidas de forma mais específica
-      let categoria = 'Despesas Sem Categoria';
+      // Handle NULL categories properly - use "Sem Categoria" for NULL/empty values
+      let categoria = 'Sem Categoria';
       
       if (transaction.categoria && typeof transaction.categoria === 'string') {
         const cleanCategory = transaction.categoria.trim();
@@ -248,7 +249,7 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
         }
       }
       
-      // Use the EXACT same calculation as getResumoFinanceiro - absolute values
+      // Use absolute values to match getResumoFinanceiro calculation
       const valor = Math.abs(Number(transaction.valor || 0));
       
       if (valor > 0) {
@@ -257,9 +258,9 @@ export async function getCategorySummary(tipo: string = 'despesa', monthFilter?:
       }
     });
 
-    console.log(`📋 [getCategorySummary] Categorias encontradas:`, Object.keys(categoryMap));
+    console.log(`📋 [getCategorySummary] Categorias processadas:`, Object.keys(categoryMap));
     console.log(`📋 [getCategorySummary] Total calculado: ${total}`);
-    console.log(`📋 [getCategorySummary] Despesas sem categoria: ${categoryMap['Despesas Sem Categoria'] || 0}`);
+    console.log(`📋 [getCategorySummary] Sem Categoria: ${categoryMap['Sem Categoria'] || 0}`);
 
     // Enhanced color palette with more distinct colors - avoiding white/light colors
     const colors = [
