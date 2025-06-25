@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { createWhatsAppGroup, updateGroupRemoteJid } from '@/services/whatsAppGroupCreationService';
-import { activateUserWorkflow } from '@/services/whatsAppInstance/workflowOperations';
+import { createEvolutionWebhook } from '@/services/whatsApp/webhookService';
 
 export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
   const { toast } = useToast();
@@ -58,17 +58,17 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         if (groupResponse.id) {
           await updateGroupRemoteJid(grupo.id, groupResponse.id);
           
-          // 4. Enviar webhook para ativar workflow no n8n
+          // 4. Enviar webhook para N8N configurar webhook da Evolution API
           try {
-            console.log(`🔔 Enviando webhook para ativar workflow para o usuário: ${userEmail}`);
-            await activateUserWorkflow(userEmail);
-            console.log('✅ Webhook de ativação de workflow enviado com sucesso');
+            console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
+            await createEvolutionWebhook(userEmail);
+            console.log('✅ Email enviado com sucesso para N8N');
           } catch (webhookError) {
-            console.error('❌ Erro ao enviar webhook de ativação:', webhookError);
+            console.error('❌ Erro ao enviar email para N8N:', webhookError);
             // Não falha o processo todo se o webhook falhar
             toast({
               title: 'Atenção',
-              description: 'Grupo criado com sucesso, mas houve um problema ao ativar a automação. Entre em contato com o suporte.',
+              description: 'Grupo criado com sucesso, mas houve um problema ao configurar a automação. Entre em contato com o suporte.',
               variant: 'destructive',
             });
           }

@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { verificarInstanciaWhatsApp } from '@/services/gruposWhatsAppService';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { createWorkflowInN8n } from '@/services/n8nWorkflowService';
-import { activateUserWorkflow } from '@/services/whatsAppInstance/workflowOperations';
+import { createEvolutionWebhook } from '@/services/whatsApp/webhookService';
 
 interface CreateGroupFormProps {
   userEmail: string;
@@ -68,15 +68,15 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       
       await createWorkflowInN8n(userEmail);
 
-      // Enviar webhook para ativar workflow
-      setMensagemStatus({ tipo: 'info', texto: 'Ativando automação...' });
+      // Enviar webhook para N8N configurar webhook da Evolution API
+      setMensagemStatus({ tipo: 'info', texto: 'Configurando webhook...' });
       
       try {
-        console.log(`🔔 Enviando webhook para ativar workflow para o usuário: ${userEmail}`);
-        await activateUserWorkflow(userEmail);
-        console.log('✅ Webhook de ativação de workflow enviado com sucesso');
+        console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
+        await createEvolutionWebhook(userEmail);
+        console.log('✅ Email enviado com sucesso para N8N');
       } catch (webhookError) {
-        console.error('❌ Erro ao enviar webhook de ativação:', webhookError);
+        console.error('❌ Erro ao enviar email para N8N:', webhookError);
         // Continua mesmo se o webhook falhar
       }
 
