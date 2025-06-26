@@ -647,6 +647,50 @@ export type Database = {
           },
         ]
       }
+      status_pagamento_mensal: {
+        Row: {
+          ano: number
+          conta_id: string | null
+          created_at: string | null
+          data_pagamento: string | null
+          id: string
+          login: string | null
+          mes: number
+          status: string | null
+          valor_pago: number | null
+        }
+        Insert: {
+          ano: number
+          conta_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          id?: string
+          login?: string | null
+          mes: number
+          status?: string | null
+          valor_pago?: number | null
+        }
+        Update: {
+          ano?: number
+          conta_id?: string | null
+          created_at?: string | null
+          data_pagamento?: string | null
+          id?: string
+          login?: string | null
+          mes?: number
+          status?: string | null
+          valor_pago?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "status_pagamento_mensal_conta_id_fkey"
+            columns: ["conta_id"]
+            isOneToOne: false
+            referencedRelation: "contas_recorrentes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transacoes: {
         Row: {
           categoria: string | null
