@@ -11,12 +11,27 @@
     <meta property="og:title" content="Finance Home" />
     <meta property="og:description" content="Dashboard para gerenciamento de finanças pessoais" />
     <meta property="og:type" content="website" />
-   
+
+    <style>
+      /* Hide Lovable badge completely */
+      a[href*="lovable.dev"],
+      iframe[src*="lovable.dev"],
+      div[style*="Edit with Lovable"],
+      .lovable-badge {
+        display: none !important;
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        position: absolute !important;
+        z-index: -9999 !important;
+      }
+    </style>
+  </head>
 
   <body>
     <div id="root"></div>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    ##<script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
