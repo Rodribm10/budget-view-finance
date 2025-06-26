@@ -204,6 +204,7 @@ export type Database = {
         Row: {
           ativo: boolean
           created_at: string
+          data_pagamento: string | null
           descricao: string | null
           dia_vencimento: number
           dias_antecedencia: number
@@ -211,14 +212,17 @@ export type Database = {
           hora_aviso: string
           id: string
           nome_conta: string
+          status: string | null
           updated_at: string
           user_id: string
           valor: number | null
+          valor_pago: number | null
           whatsapp_usuario: string | null
         }
         Insert: {
           ativo?: boolean
           created_at?: string
+          data_pagamento?: string | null
           descricao?: string | null
           dia_vencimento: number
           dias_antecedencia?: number
@@ -226,14 +230,17 @@ export type Database = {
           hora_aviso?: string
           id?: string
           nome_conta: string
+          status?: string | null
           updated_at?: string
           user_id: string
           valor?: number | null
+          valor_pago?: number | null
           whatsapp_usuario?: string | null
         }
         Update: {
           ativo?: boolean
           created_at?: string
+          data_pagamento?: string | null
           descricao?: string | null
           dia_vencimento?: number
           dias_antecedencia?: number
@@ -241,9 +248,11 @@ export type Database = {
           hora_aviso?: string
           id?: string
           nome_conta?: string
+          status?: string | null
           updated_at?: string
           user_id?: string
           valor?: number | null
+          valor_pago?: number | null
           whatsapp_usuario?: string | null
         }
         Relationships: []
