@@ -9,11 +9,11 @@ import StatusTags from './StatusTags';
 
 interface ContaRecorrente {
   id: string;
-  nome: string;
+  nome_conta: string;
   valor: number;
   dia_vencimento: number;
   email_usuario: string;
-  ativa: boolean;
+  ativo: boolean;
   created_at: string;
 }
 
@@ -63,8 +63,8 @@ const ContasRecorrentesList = () => {
         .from('contas_recorrentes')
         .select('*')
         .eq('email_usuario', user.email)
-        .eq('ativa', true)
-        .order('nome');
+        .eq('ativo', true)
+        .order('nome_conta');
 
       if (contasError) {
         console.error('Erro ao buscar contas:', contasError);
@@ -151,7 +151,7 @@ const ContasRecorrentesList = () => {
             <Card key={conta.id} className="relative">
               <CardHeader>
                 <CardTitle className="flex justify-between items-start">
-                  <span>{conta.nome}</span>
+                  <span>{conta.nome_conta}</span>
                   <Badge variant="outline" className="ml-2">
                     Dia {conta.dia_vencimento}
                   </Badge>
