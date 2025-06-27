@@ -1,4 +1,3 @@
-
 import { Menu, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -65,10 +64,10 @@ export default function Header({ onMenuToggle }: HeaderProps) {
         <Button
           variant="outline"
           size="icon"
-          className="shrink-0 md:hidden"
+          className="shrink-0 md:hidden h-12 w-12 p-3"
           onClick={onMenuToggle}
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-6 w-6" />
           <span className="sr-only">Toggle navigation menu</span>
         </Button>
       )}
