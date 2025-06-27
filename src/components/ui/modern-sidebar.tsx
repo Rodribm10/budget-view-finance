@@ -132,7 +132,7 @@ export const MobileSidebar = ({
         </div>
         <div className="flex justify-end z-20">
           <Menu
-            className="text-neutral-800 dark:text-neutral-200 h-8 w-8 cursor-pointer p-1 hover:bg-gray-100 rounded-md transition-colors"
+            className="text-neutral-800 dark:text-neutral-200 h-6 w-6 cursor-pointer"
             onClick={() => setOpen(!open)}
           />
         </div>
@@ -152,7 +152,7 @@ export const MobileSidebar = ({
               )}
             >
               <div
-                className="absolute right-6 top-6 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer p-2 hover:bg-gray-100 rounded-md transition-colors"
+                className="absolute right-6 top-6 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer"
                 onClick={() => setOpen(!open)}
               >
                 <X className="h-6 w-6" />
