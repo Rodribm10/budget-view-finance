@@ -131,10 +131,12 @@ export const MobileSidebar = ({
           <span className="text-lg font-semibold text-blue-700">Finance Home</span>
         </div>
         <div className="flex justify-end z-20">
-          <Menu
-            className="text-neutral-800 dark:text-neutral-200 h-6 w-6 cursor-pointer"
+          <div 
+            className="p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer"
             onClick={() => setOpen(!open)}
-          />
+          >
+            <Menu className="text-neutral-800 dark:text-neutral-200 h-14 w-14" />
+          </div>
         </div>
         <AnimatePresence>
           {open && (
@@ -152,10 +154,10 @@ export const MobileSidebar = ({
               )}
             >
               <div
-                className="absolute right-6 top-6 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer"
+                className="absolute right-6 top-6 z-50 text-neutral-800 dark:text-neutral-200 cursor-pointer p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
                 onClick={() => setOpen(!open)}
               >
-                <X className="h-6 w-6" />
+                <X className="h-8 w-8" />
               </div>
               <div className="mt-12">
                 {children}
