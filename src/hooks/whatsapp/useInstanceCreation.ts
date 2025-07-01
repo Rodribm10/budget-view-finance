@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { createWhatsAppInstance } from '@/services/whatsAppService';
 import { updateUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
-import { activateUserWorkflow } from '@/services/whatsAppInstance/workflowOperations';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 
 export const useInstanceCreation = (
@@ -75,22 +74,10 @@ export const useInstanceCreation = (
       });
       console.log('✅ [INSTÂNCIA] Instância registrada no banco de dados com status "conectado"');
 
-      // 3. Ativar o workflow do usuário no n8n - CORRIGINDO AQUI
-      console.log('🔄 [INSTÂNCIA] Passo 3: Ativando workflow do usuário no n8n...');
-      try {
-        console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
-        await activateUserWorkflow(userEmail);
-        console.log('✅ [INSTÂNCIA] Webhook ativarworkflow enviado com sucesso');
-      } catch (workflowError) {
-        console.error('⚠️ [INSTÂNCIA] Erro ao enviar webhook ativarworkflow:', workflowError);
-        toast({
-          title: "Aviso",
-          description: "Instância criada, mas houve um problema ao ativar a automação. Entre em contato com o suporte.",
-          variant: "destructive",
-        });
-      }
+      // REMOVIDO: Envio de webhooks foi movido para o momento de "cadastrar grupo"
+      console.log('ℹ️ [INSTÂNCIA] Webhooks serão enviados apenas no momento de cadastrar grupos');
 
-      // 4. Criar objeto da instância
+      // 3. Criar objeto da instância
       const newInstance: WhatsAppInstance = {
         instanceName,
         instanceId: instanceName,
@@ -103,23 +90,23 @@ export const useInstanceCreation = (
       
       console.log('✅ [INSTÂNCIA] Nova instância criada:', newInstance);
       
-      // 5. Atualizar estado para evitar nova criação
+      // 4. Atualizar estado para evitar nova criação
       setHasExistingInstance(true);
       setExistingInstanceData({
         instancia_zap: instanceName,
         status_instancia: 'conectado'
       });
       
-      // 6. Notificar componente pai
+      // 5. Notificar componente pai
       onInstanceCreated(newInstance);
       
-      // 7. Forçar um pequeno delay para garantir que o banco foi atualizado
+      // 6. Forçar um pequeno delay para garantir que o banco foi atualizado
       console.log('⏳ [INSTÂNCIA] Aguardando propagação das mudanças no banco...');
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       toast({
         title: "Sucesso!",
-        description: "Instância do WhatsApp criada e ativada com sucesso! Agora você pode criar grupos.",
+        description: "Instância do WhatsApp criada com sucesso! Agora você pode criar grupos.",
         duration: 5000
       });
       
