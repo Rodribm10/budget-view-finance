@@ -58,20 +58,8 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         if (groupResponse.id) {
           await updateGroupRemoteJid(grupo.id, groupResponse.id);
           
-          // 4. Enviar webhook para N8N configurar webhook da Evolution API
-          try {
-            console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
-            await createEvolutionWebhook(userEmail);
-            console.log('✅ Email enviado com sucesso para N8N');
-          } catch (webhookError) {
-            console.error('❌ Erro ao enviar email para N8N:', webhookError);
-            // Não falha o processo todo se o webhook falhar
-            toast({
-              title: 'Atenção',
-              description: 'Grupo criado com sucesso, mas houve um problema ao configurar a automação. Entre em contato com o suporte.',
-              variant: 'destructive',
-            });
-          }
+          // 4. Enviar webhook para N8N APENAS UMA VEZ - removido daqui para evitar loop
+          // O webhook será enviado apenas no CreateGroupFormSimple.tsx
           
           toast({
             title: 'Sucesso!',

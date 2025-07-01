@@ -21,6 +21,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
   const { toast } = useToast();
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [carregando, setCarregando] = useState(false);
+  const [webhookEnviado, setWebhookEnviado] = useState(false);
   const [mensagemStatus, setMensagemStatus] = useState<{
     tipo: 'info' | 'success' | 'error';
     texto: string;
@@ -40,6 +41,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
 
     setCarregando(true);
     setMensagemStatus(null);
+    setWebhookEnviado(false);
 
     try {
       // Verificar se o usuário tem instância WhatsApp
@@ -68,16 +70,19 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       
       await createWorkflowInN8n(userEmail);
 
-      // Enviar webhook para N8N configurar webhook da Evolution API
-      setMensagemStatus({ tipo: 'info', texto: 'Configurando webhook...' });
-      
-      try {
-        console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
-        await createEvolutionWebhook(userEmail);
-        console.log('✅ Email enviado com sucesso para N8N');
-      } catch (webhookError) {
-        console.error('❌ Erro ao enviar email para N8N:', webhookError);
-        // Continua mesmo se o webhook falhar
+      // Enviar webhook para N8N configurar webhook da Evolution API APENAS UMA VEZ
+      if (!webhookEnviado) {
+        setMensagemStatus({ tipo: 'info', texto: 'Configurando webhook...' });
+        
+        try {
+          console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
+          await createEvolutionWebhook(userEmail);
+          setWebhookEnviado(true);
+          console.log('✅ Email enviado com sucesso para N8N');
+        } catch (webhookError) {
+          console.error('❌ Erro ao enviar email para N8N:', webhookError);
+          // Continua mesmo se o webhook falhar
+        }
       }
 
       setMensagemStatus({ 
