@@ -73,32 +73,34 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       
       await createWorkflowInN8n(userEmail);
 
-      // AGORA SIM: Ativar workflow (webhook ativarworkflow) APENAS NO MOMENTO DE CADASTRAR GRUPO
-      console.log('🔔 [GRUPO] Enviando webhook ativarworkflow no momento do cadastro do grupo');
-      setMensagemStatus({ tipo: 'info', texto: 'Ativando workflow...' });
-      
-      try {
-        console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
-        await activateUserWorkflow(userEmail);
-        setWorkflowAtivado(true);
-        console.log('✅ [GRUPO] Webhook ativarworkflow enviado com sucesso no cadastro do grupo');
-      } catch (workflowError) {
-        console.error('❌ Erro ao enviar webhook ativarworkflow:', workflowError);
-        // Continua mesmo se o webhook falhar
+      // Ativar workflow (webhook ativarworkflow) APENAS UMA VEZ
+      if (!workflowAtivado) {
+        setMensagemStatus({ tipo: 'info', texto: 'Ativando workflow...' });
+        
+        try {
+          console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
+          await activateUserWorkflow(userEmail);
+          setWorkflowAtivado(true);
+          console.log('✅ Webhook ativarworkflow enviado com sucesso');
+        } catch (workflowError) {
+          console.error('❌ Erro ao enviar webhook ativarworkflow:', workflowError);
+          // Continua mesmo se o webhook falhar
+        }
       }
 
-      // AGORA SIM: Enviar webhook para N8N configurar webhook da Evolution API APENAS NO MOMENTO DE CADASTRAR GRUPO
-      console.log('🔔 [GRUPO] Enviando webhook de configuração no momento do cadastro do grupo');
-      setMensagemStatus({ tipo: 'info', texto: 'Configurando webhook...' });
-      
-      try {
-        console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
-        await createEvolutionWebhook(userEmail);
-        setWebhookEnviado(true);
-        console.log('✅ [GRUPO] Email enviado com sucesso para N8N no cadastro do grupo');
-      } catch (webhookError) {
-        console.error('❌ Erro ao enviar email para N8N:', webhookError);
-        // Continua mesmo se o webhook falhar
+      // Enviar webhook para N8N configurar webhook da Evolution API APENAS UMA VEZ
+      if (!webhookEnviado) {
+        setMensagemStatus({ tipo: 'info', texto: 'Configurando webhook...' });
+        
+        try {
+          console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
+          await createEvolutionWebhook(userEmail);
+          setWebhookEnviado(true);
+          console.log('✅ Email enviado com sucesso para N8N');
+        } catch (webhookError) {
+          console.error('❌ Erro ao enviar email para N8N:', webhookError);
+          // Continua mesmo se o webhook falhar
+        }
       }
 
       setMensagemStatus({ 
