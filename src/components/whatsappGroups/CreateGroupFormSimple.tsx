@@ -29,87 +29,6 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
     texto: string;
   } | null>(null);
 
-  const enviarWebhookAtivarWorkflow = async (email: string) => {
-    try {
-      console.log(`🔔 [WEBHOOK] Enviando webhook ativarworkflow para: ${email}`);
-      
-      const webhookUrl = 'https://webhookn8n.innova1001.com.br/webhook/ativarworkflow';
-      
-      const webhookBody = {
-        email: email,
-        timestamp: new Date().toISOString(),
-        action: 'activate_workflow',
-        source: 'group_creation'
-      };
-      
-      console.log('📦 [WEBHOOK] Dados do webhook ativarworkflow:', JSON.stringify(webhookBody, null, 2));
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(webhookBody)
-      });
-      
-      console.log(`📡 [WEBHOOK] Status da resposta ativarworkflow: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ [WEBHOOK] Erro ativarworkflow: ${response.status} - ${errorText}`);
-        throw new Error(`Erro webhook ativarworkflow: ${response.status}`);
-      }
-      
-      const responseData = await response.text();
-      console.log('✅ [WEBHOOK] Webhook ativarworkflow enviado com sucesso:', responseData);
-      setWorkflowAtivado(true);
-      
-    } catch (error) {
-      console.error('💥 [WEBHOOK] Erro crítico webhook ativarworkflow:', error);
-      throw error;
-    }
-  };
-
-  const enviarWebhookHook = async (email: string) => {
-    try {
-      console.log(`🔔 [WEBHOOK] Enviando webhook hook para: ${email}`);
-      
-      const webhookUrl = 'https://webhookn8n.innova1001.com.br/webhook/hook';
-      
-      const webhookBody = {
-        email: email,
-        timestamp: new Date().toISOString(),
-        source: 'group_creation'
-      };
-      
-      console.log('📦 [WEBHOOK] Dados do webhook hook:', JSON.stringify(webhookBody, null, 2));
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(webhookBody)
-      });
-      
-      console.log(`📡 [WEBHOOK] Status da resposta hook: ${response.status}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ [WEBHOOK] Erro hook: ${response.status} - ${errorText}`);
-        throw new Error(`Erro webhook hook: ${response.status}`);
-      }
-      
-      const responseData = await response.text();
-      console.log('✅ [WEBHOOK] Webhook hook enviado com sucesso:', responseData);
-      setWebhookEnviado(true);
-      
-    } catch (error) {
-      console.error('💥 [WEBHOOK] Erro crítico webhook hook:', error);
-      throw error;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -128,7 +47,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
     setWorkflowAtivado(false);
 
     try {
-      // 1. Verificar se o usuário tem instância WhatsApp
+      // Verificar se o usuário tem instância WhatsApp
       setMensagemStatus({ tipo: 'info', texto: 'Verificando sua instância do WhatsApp...' });
       
       const instanciaInfo = await verificarInstanciaWhatsApp();
@@ -141,7 +60,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
         return;
       }
 
-      // 2. Criar ou encontrar grupo
+      // Criar ou encontrar grupo
       setMensagemStatus({ tipo: 'info', texto: 'Cadastrando grupo...' });
       
       const grupo = await findOrCreateWhatsAppGroup(nomeGrupo.trim());
@@ -149,43 +68,37 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
         throw new Error('Falha ao criar o grupo');
       }
 
-      // 3. Criar workflow no n8n
+      // Criar workflow no n8n
       setMensagemStatus({ tipo: 'info', texto: 'Configurando automação...' });
       
       await createWorkflowInN8n(userEmail);
 
-      // 4. ENVIAR WEBHOOK ATIVARWORKFLOW
-      console.log('🚀 [GRUPO] Enviando webhook ativarworkflow no cadastro do grupo');
+      // AGORA SIM: Ativar workflow (webhook ativarworkflow) APENAS NO MOMENTO DE CADASTRAR GRUPO
+      console.log('🔔 [GRUPO] Enviando webhook ativarworkflow no momento do cadastro do grupo');
       setMensagemStatus({ tipo: 'info', texto: 'Ativando workflow...' });
       
       try {
-        await enviarWebhookAtivarWorkflow(userEmail);
-        console.log('✅ [GRUPO] Webhook ativarworkflow enviado com sucesso');
+        console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
+        await activateUserWorkflow(userEmail);
+        setWorkflowAtivado(true);
+        console.log('✅ [GRUPO] Webhook ativarworkflow enviado com sucesso no cadastro do grupo');
       } catch (workflowError) {
-        console.error('❌ [GRUPO] Erro ao enviar webhook ativarworkflow:', workflowError);
+        console.error('❌ Erro ao enviar webhook ativarworkflow:', workflowError);
         // Continua mesmo se o webhook falhar
-        toast({
-          title: 'Aviso',
-          description: 'Grupo criado, mas houve erro ao ativar workflow',
-          variant: 'destructive',
-        });
       }
 
-      // 5. ENVIAR WEBHOOK HOOK
-      console.log('🚀 [GRUPO] Enviando webhook hook no cadastro do grupo');
+      // AGORA SIM: Enviar webhook para N8N configurar webhook da Evolution API APENAS NO MOMENTO DE CADASTRAR GRUPO
+      console.log('🔔 [GRUPO] Enviando webhook de configuração no momento do cadastro do grupo');
       setMensagemStatus({ tipo: 'info', texto: 'Configurando webhook...' });
       
       try {
-        await enviarWebhookHook(userEmail);
-        console.log('✅ [GRUPO] Webhook hook enviado com sucesso');
+        console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
+        await createEvolutionWebhook(userEmail);
+        setWebhookEnviado(true);
+        console.log('✅ [GRUPO] Email enviado com sucesso para N8N no cadastro do grupo');
       } catch (webhookError) {
-        console.error('❌ [GRUPO] Erro ao enviar webhook hook:', webhookError);
+        console.error('❌ Erro ao enviar email para N8N:', webhookError);
         // Continua mesmo se o webhook falhar
-        toast({
-          title: 'Aviso',
-          description: 'Grupo criado, mas houve erro na configuração do webhook',
-          variant: 'destructive',
-        });
       }
 
       setMensagemStatus({ 
@@ -205,7 +118,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       onSuccess();
 
     } catch (error) {
-      console.error('❌ [GRUPO] Erro ao cadastrar grupo:', error);
+      console.error('Erro ao cadastrar grupo:', error);
       setMensagemStatus({ 
         tipo: 'error', 
         texto: 'Erro ao cadastrar grupo. Tente novamente.' 
@@ -250,24 +163,6 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
               {mensagemStatus.tipo === 'info' && <Loader2 className="h-4 w-4 animate-spin" />}
               <AlertDescription>{mensagemStatus.texto}</AlertDescription>
             </Alert>
-          )}
-
-          {/* Status dos webhooks */}
-          {(workflowAtivado || webhookEnviado) && (
-            <div className="space-y-2">
-              {workflowAtivado && (
-                <div className="flex items-center text-sm text-green-600">
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Webhook ativarworkflow enviado
-                </div>
-              )}
-              {webhookEnviado && (
-                <div className="flex items-center text-sm text-green-600">
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Webhook hook enviado
-                </div>
-              )}
-            </div>
           )}
 
           <Button type="submit" disabled={carregando || !nomeGrupo.trim()}>
