@@ -35,16 +35,19 @@ const QrCodeDialog = ({
   const [qrError, setQrError] = useState<string | null>(null);
   const [isCheckingConnection, setIsCheckingConnection] = useState(false);
   const [connectionCheckInterval, setConnectionCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const [webhookConfigured, setWebhookConfigured] = useState(false);
 
   // Auto-fetch QR code when dialog opens with an active instance
   useEffect(() => {
     if (open && activeInstance) {
       handleRefreshQrCode();
       startConnectionCheck();
+      setWebhookConfigured(false); // Reset webhook status quando abre o dialog
     } else {
       // Clear QR code data when dialog closes
       setQrCodeData(null);
       setQrError(null);
+      setWebhookConfigured(false);
       stopConnectionCheck();
     }
 
@@ -64,13 +67,16 @@ const QrCodeDialog = ({
         const connectionState = await fetchConnectionState(activeInstance.instanceName);
         console.log(`Estado da conexão para ${activeInstance.instanceName}:`, connectionState);
 
-        if (connectionState === 'open') {
+        if (connectionState === 'open' && !webhookConfigured) {
           console.log('🎉 Conexão estabelecida com sucesso!');
+          
+          // Marcar webhook como configurado ANTES de tentar configurar
+          setWebhookConfigured(true);
           
           // Parar a verificação
           stopConnectionCheck();
           
-          // Configurar webhook
+          // Configurar webhook apenas uma vez
           const userEmail = localStorage.getItem('userEmail');
           if (userEmail) {
             await setupWebhookAfterConnection(userEmail);
@@ -89,7 +95,7 @@ const QrCodeDialog = ({
       } catch (error) {
         console.error('Erro ao verificar estado da conexão:', error);
       }
-    }, 3000); // Verifica a cada 3 segundos
+    }, 5000); // Aumentar intervalo para 5 segundos para reduzir frequência
 
     setConnectionCheckInterval(interval);
   };
