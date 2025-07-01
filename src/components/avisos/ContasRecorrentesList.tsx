@@ -36,7 +36,7 @@ interface AvisoEnviado {
 }
 
 const ContasRecorrentesList = () => {
-  const { user, session } = useAuthStore();
+  const { session } = useAuthStore();
   const queryClient = useQueryClient();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
@@ -49,7 +49,7 @@ const ContasRecorrentesList = () => {
   });
 
   // Buscar email do usuário logado
-  const userEmail = session?.user?.email || user?.email;
+  const userEmail = session?.user?.email;
 
   const { data: contas, isLoading } = useQuery({
     queryKey: ['contas-recorrentes', userEmail],
