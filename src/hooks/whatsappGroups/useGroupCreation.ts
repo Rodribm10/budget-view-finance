@@ -25,14 +25,14 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       return;
     }
 
-    if (!userInstance || !userInstance.instancia_zap || userInstance.status_instancia !== 'conectado') {
-      toast({
-        title: 'Erro',
-        description: 'Instância WhatsApp não está conectada',
-        variant: 'destructive',
-      });
-      return;
-    }
+    //if (!userInstance || !userInstance.instancia_zap || userInstance.status_instancia !== 'conectado') {
+    //  toast({
+    //    title: 'Erro',
+    //    description: 'Instância WhatsApp não está conectada',
+    //    variant: 'destructive',
+    //  });
+    //  return;
+    //}
 
     setCadastrando(true);
     try {
