@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { createWhatsAppInstance } from '@/services/whatsAppService';
-import { updateUserWhatsAppInstance, activateUserWorkflow } from '@/services/whatsAppInstanceService';
+import { updateUserWhatsAppInstance } from '@/services/whatsAppInstanceService';
+import { activateUserWorkflow } from '@/services/whatsAppInstance/workflowOperations';
 import { WhatsAppInstance } from '@/types/whatsAppTypes';
 
 export const useInstanceCreation = (
@@ -74,13 +75,14 @@ export const useInstanceCreation = (
       });
       console.log('✅ [INSTÂNCIA] Instância registrada no banco de dados com status "conectado"');
 
-      // 3. Ativar o workflow do usuário no n8n
+      // 3. Ativar o workflow do usuário no n8n - CORRIGINDO AQUI
       console.log('🔄 [INSTÂNCIA] Passo 3: Ativando workflow do usuário no n8n...');
       try {
+        console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
         await activateUserWorkflow(userEmail);
-        console.log('✅ [INSTÂNCIA] Workflow ativado com sucesso no n8n');
+        console.log('✅ [INSTÂNCIA] Webhook ativarworkflow enviado com sucesso');
       } catch (workflowError) {
-        console.error('⚠️ [INSTÂNCIA] Erro ao ativar workflow, mas instância foi criada:', workflowError);
+        console.error('⚠️ [INSTÂNCIA] Erro ao enviar webhook ativarworkflow:', workflowError);
         toast({
           title: "Aviso",
           description: "Instância criada, mas houve um problema ao ativar a automação. Entre em contato com o suporte.",

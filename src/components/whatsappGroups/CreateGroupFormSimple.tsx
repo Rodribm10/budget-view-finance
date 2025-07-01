@@ -11,6 +11,7 @@ import { verificarInstanciaWhatsApp } from '@/services/gruposWhatsAppService';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { createWorkflowInN8n } from '@/services/n8nWorkflowService';
 import { createEvolutionWebhook } from '@/services/whatsApp/webhookService';
+import { activateUserWorkflow } from '@/services/whatsAppInstance/workflowOperations';
 
 interface CreateGroupFormProps {
   userEmail: string;
@@ -22,6 +23,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
   const [nomeGrupo, setNomeGrupo] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [webhookEnviado, setWebhookEnviado] = useState(false);
+  const [workflowAtivado, setWorkflowAtivado] = useState(false);
   const [mensagemStatus, setMensagemStatus] = useState<{
     tipo: 'info' | 'success' | 'error';
     texto: string;
@@ -42,6 +44,7 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
     setCarregando(true);
     setMensagemStatus(null);
     setWebhookEnviado(false);
+    setWorkflowAtivado(false);
 
     try {
       // Verificar se o usuário tem instância WhatsApp
@@ -69,6 +72,21 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       setMensagemStatus({ tipo: 'info', texto: 'Configurando automação...' });
       
       await createWorkflowInN8n(userEmail);
+
+      // Ativar workflow (webhook ativarworkflow) APENAS UMA VEZ
+      if (!workflowAtivado) {
+        setMensagemStatus({ tipo: 'info', texto: 'Ativando workflow...' });
+        
+        try {
+          console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
+          await activateUserWorkflow(userEmail);
+          setWorkflowAtivado(true);
+          console.log('✅ Webhook ativarworkflow enviado com sucesso');
+        } catch (workflowError) {
+          console.error('❌ Erro ao enviar webhook ativarworkflow:', workflowError);
+          // Continua mesmo se o webhook falhar
+        }
+      }
 
       // Enviar webhook para N8N configurar webhook da Evolution API APENAS UMA VEZ
       if (!webhookEnviado) {

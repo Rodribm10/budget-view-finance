@@ -12,12 +12,14 @@ export async function activateUserWorkflow(userEmail: string): Promise<void> {
   try {
     console.log(`🔔 Enviando webhook para ativar workflow do usuário: ${userEmail}`);
     
-    // Nova lógica: webhook simples para o n8n
+    // URL do webhook para ativar workflow
     const webhookUrl = 'https://webhookn8n.innova1001.com.br/webhook/ativarworkflow';
     console.log(`🔗 URL do webhook: ${webhookUrl}`);
     
     const webhookBody = {
-      email: userEmail
+      email: userEmail,
+      timestamp: new Date().toISOString(),
+      action: 'activate_workflow'
     };
     
     console.log('📦 Dados do webhook:', JSON.stringify(webhookBody, null, 2));
@@ -39,7 +41,7 @@ export async function activateUserWorkflow(userEmail: string): Promise<void> {
     }
     
     const responseData = await response.text();
-    console.log('✅ Webhook enviado com sucesso:', responseData);
+    console.log('✅ Webhook ativarworkflow enviado com sucesso:', responseData);
     
   } catch (error) {
     console.error('💥 Erro crítico ao enviar webhook de ativação:', error);
