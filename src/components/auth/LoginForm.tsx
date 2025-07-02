@@ -53,7 +53,7 @@ const LoginForm = ({ isLoading, setIsLoading, onForgotPassword }: LoginFormProps
         });
 
         // Redirecionar para dashboard
-        navigate('/');
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Erro inesperado no login:', error);

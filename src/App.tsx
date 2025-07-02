@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import { useAuthStore } from "@/stores/authStore";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Layout from "@/components/layout/Layout";
 import ResetPassword from '@/pages/ResetPassword';
+import AuthReset from '@/pages/AuthReset';
 
 // Pages
 import Index from "./pages/Index";
@@ -60,6 +62,7 @@ function App() {
             {/* Rotas públicas */}
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/reset" element={<AuthReset />} />
             <Route path="/email-confirmation" element={<EmailConfirmation />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
