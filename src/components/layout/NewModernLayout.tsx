@@ -59,9 +59,8 @@ const Logo = () => {
   );
 };
 
-const SidebarContent = () => {
+const AppSidebar = () => {
   const location = useLocation();
-  const { toggleSidebar } = useSidebar();
   
   const mainItems = [
     {
@@ -124,7 +123,7 @@ const SidebarContent = () => {
   ];
 
   return (
-    <>
+    <Sidebar>
       <SidebarHeader>
         <Logo />
       </SidebarHeader>
@@ -195,7 +194,7 @@ const SidebarContent = () => {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarFooter>
-    </>
+    </Sidebar>
   );
 };
 
@@ -242,9 +241,7 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex w-full">
       <SidebarProvider defaultOpen={false}>
-        <Sidebar>
-          <SidebarContent />
-        </Sidebar>
+        <AppSidebar />
 
         <SidebarInset className="flex-1">
           <HeaderContent />
