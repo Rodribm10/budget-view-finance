@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
   const { toast } = useToast();
@@ -28,15 +29,35 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
     setCadastrando(true);
     
     try {
+      // Buscar o número de WhatsApp do usuário na tabela usuarios
+      console.log('🔍 Buscando WhatsApp do usuário na tabela usuarios...');
+      const { data: userData, error: userError } = await supabase
+        .from('usuarios')
+        .select('whatsapp')
+        .eq('email', userEmail.toLowerCase().trim())
+        .single();
+
+      if (userError) {
+        console.error('❌ Erro ao buscar dados do usuário:', userError);
+        throw new Error('Erro ao buscar dados do usuário');
+      }
+
+      if (!userData?.whatsapp) {
+        console.error('❌ WhatsApp não encontrado para o usuário');
+        throw new Error('Número de WhatsApp não encontrado. Verifique seu cadastro.');
+      }
+
+      console.log('✅ WhatsApp encontrado:', userData.whatsapp);
+
       // 1. Webhook para criar grupo via N8N
       console.log("🔔 [GRUPO] Enviando webhook para criar grupo via N8N");
       
       const webhookCriarGrupo = 'https://webhookn8n.innova1001.com.br/webhook/criargrupofinance';
       const webhookData = {
         email: userEmail,
-        whatsapp: userInstance?.whatsapp || '',
+        whatsapp: userData.whatsapp, // Usar o WhatsApp da tabela usuarios
         nomeGrupo: nomeGrupo.trim(),
-        instancia: userInstance?.instancia_zap || '',
+        instancia: userData.whatsapp, // Usar o WhatsApp como instância também
         timestamp: new Date().toISOString()
       };
       
