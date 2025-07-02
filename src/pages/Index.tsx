@@ -94,7 +94,8 @@ const Dashboard = () => {
       
       <DashboardSummaryCards 
         resumo={resumo} 
-        formatCurrency={formatCurrency} 
+        formatCurrency={formatCurrency}
+        selectedMonth={selectedMonth}
       />
 
       <DashboardCharts 

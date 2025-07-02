@@ -15,6 +15,7 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { 
   Home, 
@@ -24,17 +25,14 @@ import {
   Target,
   Calendar,
   Crown,
-  MessageSquareText,
   Users,
   Settings,
-  Bell,
-  Shield
+  Bell
 } from 'lucide-react';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
 import UserProfileButton from '@/components/dashboard/UserProfileButton';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
-import { useAdminSettings } from '@/hooks/useAdminSettings';
 import {
   Tooltip,
   TooltipContent,
@@ -63,7 +61,7 @@ const Logo = () => {
 
 export default function NewModernLayout({ children }: NewModernLayoutProps) {
   const location = useLocation();
-  const { isAdmin, hideWhatsAppButton } = useAdminSettings();
+  const { toggleSidebar } = useSidebar();
   
   const {
     isOpen: tourOpen,
@@ -117,11 +115,6 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
   ];
 
   const whatsappItems = [
-    ...(hideWhatsAppButton ? [] : [{
-      title: "Conectar WhatsApp",
-      url: "/whatsapp",
-      icon: MessageSquareText,
-    }]),
     {
       title: "Grupos",
       url: "/grupos-whatsapp",
@@ -137,14 +130,6 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
       icon: Settings,
     }
   ];
-
-  const adminItems = isAdmin ? [
-    {
-      title: "Admin",
-      url: "/admin",
-      icon: Shield,
-    }
-  ] : [];
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -198,30 +183,6 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
-
-            {adminItems.length > 0 && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Administração</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {adminItems.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton 
-                          asChild 
-                          tooltip={item.title}
-                          isActive={location.pathname === item.url}
-                        >
-                          <Link to={item.url}>
-                            <item.icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
           </SidebarContent>
 
           <SidebarFooter>
@@ -259,7 +220,12 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <span className="text-sm font-medium text-gray-600">Menu</span>
+              <span 
+                className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={toggleSidebar}
+              >
+                Menu
+              </span>
             </div>
             
             <div className="ml-auto">
