@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { createWhatsAppGroup } from '@/services/whatsAppGroupCreationService';
 
 export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
   const { toast } = useToast();
@@ -28,8 +29,14 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
     setCadastrando(true);
     
     try {
-      // 1. Webhook para criar grupo via N8N
-      console.log("🔔 [GRUPO] Enviando webhook para criar grupo via N8N");
+      // 1. Primeiro criar o grupo via Evolution API para obter o remote_jid e dados completos
+      console.log("🔔 [GRUPO] Criando grupo via Evolution API");
+      
+      const grupoEvolutionData = await createWhatsAppGroup(userEmail, nomeGrupo.trim());
+      console.log('✅ [GRUPO] Grupo criado via Evolution API:', grupoEvolutionData);
+
+      // 2. Webhook para enviar dados completos do grupo criado para N8N
+      console.log("🔔 [GRUPO] Enviando webhook para N8N com dados completos do grupo");
       
       const webhookCriarGrupo = 'https://webhookn8n.innova1001.com.br/webhook/criargrupofinance';
       const webhookData = {
@@ -37,10 +44,17 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         whatsapp: userInstance?.whatsapp || '',
         nomeGrupo: nomeGrupo.trim(),
         instancia: userInstance?.instancia_zap || '',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        // Dados completos do grupo criado via Evolution API
+        grupoEvolution: grupoEvolutionData,
+        remote_jid: grupoEvolutionData.id || null,
+        group_id: grupoEvolutionData.id || null,
+        subject: grupoEvolutionData.subject || nomeGrupo.trim(),
+        description: grupoEvolutionData.description || null,
+        participants: grupoEvolutionData.participants || []
       };
       
-      console.log('🔔 Enviando dados para webhook criar grupo:', webhookData);
+      console.log('🔔 Enviando dados completos para webhook criar grupo:', webhookData);
       
       const responseCriar = await fetch(webhookCriarGrupo, {
         method: 'POST',
@@ -53,12 +67,12 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       if (!responseCriar.ok) {
         const errorText = await responseCriar.text();
         console.error(`❌ Erro ao enviar webhook criar grupo: ${responseCriar.status} - ${errorText}`);
-        throw new Error(`Erro ao criar grupo via N8N: ${responseCriar.status}`);
+        throw new Error(`Erro ao enviar dados do grupo para N8N: ${responseCriar.status}`);
       }
       
       console.log('✅ [GRUPO] Webhook criar grupo enviado com sucesso');
 
-      // 2. Webhook para ativar workflow
+      // 3. Webhook para ativar workflow
       console.log("🔔 [GRUPO] Enviando webhook ativar workflow");
       
       const webhookAtivarWorkflow = 'https://webhookn8n.innova1001.com.br/webhook/ativarworkflow';
@@ -89,7 +103,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         console.error('❌ Erro ao enviar webhook ativar workflow:', error);
       }
 
-      // 3. Webhook para configurar hook da Evolution API
+      // 4. Webhook para configurar hook da Evolution API
       console.log("🔔 [GRUPO] Enviando webhook configurar hook");
       
       const webhookHook = 'https://webhookn8n.innova1001.com.br/webhook/hook';
@@ -121,7 +135,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       
       toast({
         title: 'Sucesso!',
-        description: `Solicitação para criar grupo "${nomeGrupo}" enviada com sucesso!`,
+        description: `Grupo "${nomeGrupo}" criado e configurado com sucesso!`,
         variant: 'default',
       });
       
@@ -137,7 +151,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       
       toast({
         title: 'Erro',
-        description: `Não foi possível solicitar criação do grupo: ${errorMsg}`,
+        description: `Não foi possível criar o grupo: ${errorMsg}`,
         variant: 'destructive',
       });
     } finally {
