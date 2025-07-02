@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { CartaoCredito } from '@/types/cartaoTypes';
-import { criarDespesa } from '@/services/cartao/despesas'; // Updated import path
+import { criarDespesa } from '@/services/cartao/despesas';
+import { buscarCartaoPorReferencia, gerarCodigoCartao } from '@/services/cartao/cartaoCodigoUtils';
 import { format } from 'date-fns';
 
 const despesaCartaoSchema = z.object({
@@ -42,6 +43,7 @@ export function useDespesaCartaoForm({ cartoes, onSuccess, onCancel }: UseDespes
   const handleCartaoChange = (cartaoId: string) => {
     const cartao = cartoes.find(c => c.id === cartaoId);
     setSelectedCartao(cartao || null);
+    console.log('🔄 Cartão selecionado:', cartao?.nome);
   };
 
   const formatCartaoLabel = (cartao: CartaoCredito) => {
@@ -66,12 +68,26 @@ export function useDespesaCartaoForm({ cartoes, onSuccess, onCancel }: UseDespes
     try {
       const formattedDate = format(data.data_despesa, 'yyyy-MM-dd');
       
-      // Garantir que temos um cartao_codigo, mesmo que seja gerado na hora
-      const cartaoCodigo = selectedCartao.cartao_codigo || selectedCartao.nome;
+      // Usar busca inteligente para encontrar cartão por referência
+      let cartaoEncontrado = buscarCartaoPorReferencia(cartoes, selectedCartao.nome);
       
-      console.log('Enviando dados para criar despesa:', {
-        cartao_id: data.cartao_id,
-        cartao_nome: selectedCartao.nome,
+      if (!cartaoEncontrado) {
+        cartaoEncontrado = selectedCartao;
+        console.log('⚠️ Usando cartão selecionado diretamente:', selectedCartao.nome);
+      } else {
+        console.log('✅ Cartão encontrado via busca inteligente:', cartaoEncontrado.nome);
+      }
+      
+      // Garantir que temos um cartao_codigo, gerando se necessário
+      let cartaoCodigo = cartaoEncontrado.cartao_codigo;
+      if (!cartaoCodigo) {
+        cartaoCodigo = gerarCodigoCartao(cartaoEncontrado.nome, cartaoEncontrado.banco);
+        console.log('🔧 Código gerado para o cartão:', cartaoCodigo);
+      }
+      
+      console.log('📝 Enviando dados para criar despesa:', {
+        cartao_id: cartaoEncontrado.id,
+        cartao_nome: cartaoEncontrado.nome,
         cartao_codigo: cartaoCodigo,
         valor: data.valor,
         data_despesa: formattedDate,
@@ -79,7 +95,7 @@ export function useDespesaCartaoForm({ cartoes, onSuccess, onCancel }: UseDespes
       });
       
       const resultado = await criarDespesa(
-        data.cartao_id,
+        cartaoEncontrado.id,
         cartaoCodigo,
         data.valor,
         formattedDate, 
@@ -100,7 +116,7 @@ export function useDespesaCartaoForm({ cartoes, onSuccess, onCancel }: UseDespes
         });
       }
     } catch (error) {
-      console.error('Erro ao processar formulário:', error);
+      console.error('❌ Erro ao processar formulário:', error);
       toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao processar sua solicitação",

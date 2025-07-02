@@ -125,8 +125,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
   
-  // Se tem sessão mas perfil não está completo, redirecionar para completar perfil
-  if (session && !isProfileComplete) {
+  // Se tem sessão mas perfil não está completo E não está na página de completar perfil, redirecionar
+  if (session && !isProfileComplete && location.pathname !== '/complete-profile') {
     console.log('🚨 [PROTECTED_ROUTE] Redirecionando para complete-profile - perfil incompleto');
     return <Navigate to="/complete-profile" replace />;
   }
