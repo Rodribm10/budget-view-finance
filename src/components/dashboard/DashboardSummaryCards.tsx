@@ -14,6 +14,15 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
   const { navigateToTransactions } = useNavigateWithFilter();
   
   const saldo = resumo ? resumo.totalReceitas - resumo.totalDespesas - (resumo.totalCartoes || 0) : 0;
+  const totalGastos = resumo ? resumo.totalDespesas + (resumo.totalCartoes || 0) : 0;
+  
+  // Calcular economia baseada nas transações do mês
+  // Se há receitas, calcular quanto foi economizado (receitas - gastos totais)
+  // Se não há receitas, mostrar 0% de economia
+  const economiaValor = resumo?.totalReceitas ? saldo : 0;
+  const economiaPercentual = resumo?.totalReceitas && resumo.totalReceitas > 0 
+    ? ((economiaValor / resumo.totalReceitas) * 100)
+    : 0;
 
   return (
     <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
@@ -106,10 +115,14 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({ resumo, f
           </div>
           <div className="space-y-1 sm:space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-purple-700">Economia</p>
-            <p className="text-base sm:text-xl xl:text-2xl font-bold text-purple-600 leading-tight">
-              -22.2%
+            <p className={`text-base sm:text-xl xl:text-2xl font-bold leading-tight ${
+              economiaPercentual >= 0 ? 'text-purple-600' : 'text-red-600'
+            }`}>
+              {economiaPercentual.toFixed(1)}%
             </p>
-            <p className="text-xs text-purple-500 leading-tight">{resumo ? formatCurrency(Math.abs(saldo)) : 'R$ 0,00'}</p>
+            <p className="text-xs text-purple-500 leading-tight">
+              {formatCurrency(Math.abs(economiaValor))}
+            </p>
           </div>
         </CardContent>
       </Card>
