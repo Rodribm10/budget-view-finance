@@ -31,9 +31,9 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   }
 
   // A lógica agora é a mesma da outra página: `hasExistingInstance`
-  if (!hasExistingInstance) {
-    return <NoInstanceState userInstance={existingInstanceData} />;
-  }
+  //if (!hasExistingInstance) {
+  //  return <NoInstanceState userInstance={existingInstanceData} />;
+  //}
 
   const handleSubmit = (nomeGrupo: string) => {
     handleCadastrarGrupo(nomeGrupo, existingInstanceData);
