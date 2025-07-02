@@ -1,14 +1,12 @@
 
 import { useEffect, useState } from 'react';
-import { useExistingInstanceCheck } from '@/hooks/whatsapp/useExistingInstanceCheck';
-import { useGroupCreation } from '@/hooks/whatsappGroups/useGroupCreation';
 import { listarGruposWhatsApp } from '@/services/gruposWhatsAppService';
 import LoadingState from './LoadingState';
-import NoInstanceState from './NoInstanceState';
 import GroupCreationForm from './GroupCreationForm';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Info, Loader2 } from 'lucide-react';
+import { Info } from 'lucide-react';
+import { useGroupCreation } from '@/hooks/whatsappGroups/useGroupCreation';
 
 interface CreateGroupFormProps {
   userEmail: string;
@@ -19,13 +17,6 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   const [verificandoGrupos, setVerificandoGrupos] = useState(true);
   const [jaTemGrupo, setJaTemGrupo] = useState(false);
   const [grupoExistente, setGrupoExistente] = useState<any>(null);
-  
-  const { 
-    hasExistingInstance, 
-    checkingExistingInstance, 
-    existingInstanceData,
-    recheckInstance 
-  } = useExistingInstanceCheck(userEmail);
   
   const { cadastrando, handleCadastrarGrupo } = useGroupCreation(userEmail, onSuccess);
 
@@ -56,12 +47,11 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
   };
 
   useEffect(() => {
-    recheckInstance();
     verificarGruposExistentes();
   }, [userEmail]);
 
-  if (checkingExistingInstance || verificandoGrupos) {
-    return <LoadingState message="Verificando instância WhatsApp e grupos existentes..." />;
+  if (verificandoGrupos) {
+    return <LoadingState message="Verificando grupos existentes..." />;
   }
 
   // Se já tem grupo, mostrar informação
@@ -93,18 +83,14 @@ const CreateGroupForm = ({ userEmail, onSuccess }: CreateGroupFormProps) => {
     );
   }
 
-  // Se não tem instância conectada, mostrar estado de sem instância
-  if (!hasExistingInstance) {
-    return <NoInstanceState userInstance={existingInstanceData} />;
-  }
-
   const handleSubmit = (nomeGrupo: string) => {
-    handleCadastrarGrupo(nomeGrupo, existingInstanceData);
+    // Agora pode criar grupo sem verificar instância
+    handleCadastrarGrupo(nomeGrupo, { whatsapp: userEmail });
   };
 
   return (
     <GroupCreationForm
-      userInstance={existingInstanceData!}
+      userInstance={{ instancia_zap: userEmail, status_instancia: 'ativo', whatsapp: userEmail }}
       userEmail={userEmail}
       cadastrando={cadastrando}
       onSubmit={handleSubmit}

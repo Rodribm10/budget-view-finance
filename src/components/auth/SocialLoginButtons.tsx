@@ -14,22 +14,22 @@ const SocialLoginButtons = () => {
       console.log('🔐 Iniciando login com Google...');
       console.log('🌐 URL atual:', window.location.origin);
       
-      // Determinar a URL de redirecionamento correta baseada no hostname - SEMPRE para /dashboard
+      // Determinar a URL de redirecionamento correta baseada no hostname
       let redirectUrl;
       const hostname = window.location.hostname;
       
       if (hostname === 'localhost') {
-        redirectUrl = 'http://localhost:3000/dashboard';
+        redirectUrl = 'http://localhost:3000/';
       } else if (hostname.includes('financehome.innova1001.com.br')) {
-        redirectUrl = 'https://financehome.innova1001.com.br/dashboard';
+        redirectUrl = 'https://financehome.innova1001.com.br/';
       } else if (hostname.includes('lovableproject.com')) {
-        redirectUrl = `${window.location.origin}/dashboard`;
+        redirectUrl = `${window.location.origin}/`;
       } else {
-        // Fallback para qualquer outro domínio - sempre para dashboard
-        redirectUrl = `${window.location.origin}/dashboard`;
+        // Fallback para qualquer outro domínio
+        redirectUrl = `${window.location.origin}/`;
       }
       
-      console.log('🔗 URL de redirecionamento (DASHBOARD):', redirectUrl);
+      console.log('🔗 URL de redirecionamento:', redirectUrl);
       
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -37,7 +37,7 @@ const SocialLoginButtons = () => {
           redirectTo: redirectUrl,
           queryParams: {
             access_type: 'offline',
-            prompt: 'consent',
+            prompt: 'select_account',
           }
         }
       });
@@ -51,6 +51,7 @@ const SocialLoginButtons = () => {
         });
       } else {
         console.log('✅ Redirecionamento iniciado...');
+        // Não fazer nada aqui, deixar o redirecionamento acontecer naturalmente
       }
     } catch (error) {
       console.error('❌ Erro geral no login com Google:', error);

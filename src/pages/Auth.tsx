@@ -6,16 +6,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Boxes } from "@/components/ui/background-boxes";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
 import LoginForm from '@/components/auth/LoginForm';
 import RegisterForm from '@/components/auth/RegisterForm';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
 import AuthSecurityFeatures from '@/components/auth/AuthSecurityFeatures';
+import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 import { toast } from "sonner";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const location = useLocation();
 
   // Show success message when redirected from registration or email confirmation
@@ -31,6 +32,35 @@ const Auth = () => {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
+
+  const handleForgotPassword = () => {
+    setShowForgotPassword(true);
+  };
+
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    setActiveTab("login");
+  };
+
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen relative w-full overflow-hidden bg-slate-900 flex items-center justify-center px-4">
+        <div className="absolute inset-0 w-full h-full bg-slate-900 z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
+        <Boxes />
+        
+        <Link to="/" className="absolute top-4 left-4 z-30">
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </Link>
+        
+        <div className="relative z-20 bg-white/95 backdrop-blur-sm border-white/20 rounded-lg">
+          <ForgotPasswordForm onBackToLogin={handleBackToLogin} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative w-full overflow-hidden bg-slate-900 flex items-center justify-center px-4">
@@ -66,7 +96,11 @@ const Auth = () => {
             </TabsList>
             
             <TabsContent value="login" className="space-y-4">
-              <LoginForm isLoading={isLoading} setIsLoading={setIsLoading} />
+              <LoginForm 
+                isLoading={isLoading} 
+                setIsLoading={setIsLoading} 
+                onForgotPassword={handleForgotPassword}
+              />
               <SocialLoginButtons />
             </TabsContent>
             

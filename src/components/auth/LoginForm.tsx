@@ -1,73 +1,117 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { supabase } from "@/integrations/supabase/client";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginFormProps {
   isLoading: boolean;
-  setIsLoading: (isLoading: boolean) => void;
+  setIsLoading: (loading: boolean) => void;
+  onForgotPassword: () => void;
 }
 
-const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
+const LoginForm = ({ isLoading, setIsLoading, onForgotPassword }: LoginFormProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginSenha, setLoginSenha] = useState('');
-  
-  const handleLogin = async (e: React.FormEvent) => {
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password: loginSenha,
-    });
-
-    setIsLoading(false);
-
-    if (error) {
-      toast.error("Erro no login", {
-        description: "Email ou senha incorretos. Verifique seus dados."
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: password,
       });
-    } else {
-      toast.success("Login realizado com sucesso", {
-        description: "Bem-vindo de volta!"
-      });
-      // Redirecionar para o dashboard após login bem-sucedido
-      navigate('/dashboard');
+
+      if (error) {
+        console.error('Erro no login:', error);
+        
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Email ou senha incorretos. Verifique suas credenciais.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Email não confirmado. Verifique sua caixa de entrada.');
+        } else {
+          setError(error.message);
+        }
+        return;
+      }
+
+      if (data.user) {
+        console.log('✅ Login realizado com sucesso:', data.user.email);
+        
+        toast.success("Login realizado com sucesso!", {
+          description: `Bem-vindo, ${data.user.email}!`,
+        });
+
+        // Redirecionar para dashboard
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Erro inesperado no login:', error);
+      setError('Erro inesperado. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
         <Input
-          id="login-email"
-          placeholder="Email"
+          id="email"
           type="email"
-          value={loginEmail}
-          onChange={(e) => setLoginEmail(e.target.value)}
-          disabled={isLoading}
+          placeholder="seu@email.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           required
+          disabled={isLoading}
         />
       </div>
+      
       <div className="space-y-2">
+        <Label htmlFor="password">Senha</Label>
         <Input
-          id="login-senha"
-          placeholder="Senha"
+          id="password"
           type="password"
-          value={loginSenha}
-          onChange={(e) => setLoginSenha(e.target.value)}
-          disabled={isLoading}
+          placeholder="Sua senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           required
+          disabled={isLoading}
         />
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <Button type="submit" className="w-full" disabled={isLoading}>
         {isLoading ? "Entrando..." : "Entrar"}
       </Button>
+
+      <div className="text-center">
+        <Button
+          type="button"
+          variant="link"
+          onClick={onForgotPassword}
+          className="text-sm text-muted-foreground hover:text-primary"
+        >
+          Esqueceu sua senha?
+        </Button>
+      </div>
     </form>
   );
 };

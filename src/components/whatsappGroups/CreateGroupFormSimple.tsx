@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { verificarInstanciaWhatsApp, listarGruposWhatsApp } from '@/services/gruposWhatsAppService';
+import { listarGruposWhatsApp } from '@/services/gruposWhatsAppService';
 import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
 import { createWorkflowInN8n } from '@/services/n8nWorkflowService';
 import { createEvolutionWebhook } from '@/services/whatsApp/webhookService';
@@ -25,8 +25,6 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
   const [verificandoGrupos, setVerificandoGrupos] = useState(true);
   const [jaTemGrupo, setJaTemGrupo] = useState(false);
   const [grupoExistente, setGrupoExistente] = useState<any>(null);
-  const [webhookEnviado, setWebhookEnviado] = useState(false);
-  const [workflowAtivado, setWorkflowAtivado] = useState(false);
   const [mensagemStatus, setMensagemStatus] = useState<{
     tipo: 'info' | 'success' | 'error';
     texto: string;
@@ -85,23 +83,8 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
 
     setCarregando(true);
     setMensagemStatus(null);
-    setWebhookEnviado(false);
-    setWorkflowAtivado(false);
 
     try {
-      // Verificar se o usuário tem instância WhatsApp
-      setMensagemStatus({ tipo: 'info', texto: 'Verificando sua instância do WhatsApp...' });
-      
-      const instanciaInfo = await verificarInstanciaWhatsApp();
-      
-      if (!instanciaInfo.hasInstance) {
-        setMensagemStatus({ 
-          tipo: 'error', 
-          texto: 'Você precisa ter uma instância do WhatsApp conectada. Acesse o menu "WhatsApp" primeiro.' 
-        });
-        return;
-      }
-
       // Criar ou encontrar grupo
       setMensagemStatus({ tipo: 'info', texto: 'Cadastrando grupo...' });
       
@@ -122,7 +105,6 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       try {
         console.log(`🔔 Enviando webhook ativarworkflow para usuário: ${userEmail}`);
         await activateUserWorkflow(userEmail);
-        setWorkflowAtivado(true);
         console.log('✅ [GRUPO] Webhook ativarworkflow enviado com sucesso no cadastro do grupo');
       } catch (workflowError) {
         console.error('❌ Erro ao enviar webhook ativarworkflow:', workflowError);
@@ -136,7 +118,6 @@ const CreateGroupFormSimple = ({ userEmail, onSuccess }: CreateGroupFormProps) =
       try {
         console.log(`🔔 Enviando email para N8N configurar webhook: ${userEmail}`);
         await createEvolutionWebhook(userEmail);
-        setWebhookEnviado(true);
         console.log('✅ [GRUPO] Email enviado com sucesso para N8N no cadastro do grupo');
       } catch (webhookError) {
         console.error('❌ Erro ao enviar email para N8N:', webhookError);
