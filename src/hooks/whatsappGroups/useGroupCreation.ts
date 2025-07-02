@@ -1,9 +1,6 @@
 
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { createWhatsAppGroup } from '@/services/whatsAppGroupCreationService';
-import { findOrCreateWhatsAppGroup } from '@/services/whatsAppGroupsService';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
   const { toast } = useToast();
@@ -31,50 +28,8 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
     setCadastrando(true);
     
     try {
-      // 1. Criar grupo via Evolution API
-      console.log("🚀 Criando grupo via Evolution API");
-      const grupoEvolution = await createWhatsAppGroup(userEmail, nomeGrupo.trim());
-      console.log('✅ Grupo criado via Evolution:', grupoEvolution);
-
-      // 2. Salvar/atualizar dados na tabela grupos_whatsapp
-      console.log("💾 Salvando grupo na tabela grupos_whatsapp");
-      
-      // Primeiro, criar ou encontrar o registro do grupo
-      const grupo = await findOrCreateWhatsAppGroup(nomeGrupo.trim());
-      
-      if (grupo) {
-        // Atualizar o registro com o remote_jid retornado pela Evolution
-        const { error: updateGrupoError } = await supabase
-          .from('grupos_whatsapp')
-          .update({ 
-            remote_jid: grupoEvolution.id || '',
-            status: 'ativo',
-            nome_grupo: nomeGrupo.trim()
-          })
-          .eq('id', grupo.id);
-
-        if (updateGrupoError) {
-          console.error('❌ Erro ao atualizar grupo:', updateGrupoError);
-        } else {
-          console.log('✅ Grupo atualizado na tabela grupos_whatsapp');
-        }
-      }
-
-      // 3. Atualizar remote_jid na tabela usuarios
-      console.log("💾 Atualizando remote_jid na tabela usuarios");
-      const { error: updateUsuarioError } = await supabase
-        .from('usuarios')
-        .update({ remote_jid: grupoEvolution.id || '' })
-        .eq('email', userEmail.trim().toLowerCase());
-
-      if (updateUsuarioError) {
-        console.error('❌ Erro ao atualizar remote_jid do usuário:', updateUsuarioError);
-      } else {
-        console.log('✅ Remote JID atualizado na tabela usuarios');
-      }
-
-      // 4. Webhook para N8N com todos os dados
-      console.log("🔔 [GRUPO] Enviando webhook para N8N com dados completos");
+      // 1. Webhook para criar grupo via N8N
+      console.log("🔔 [GRUPO] Enviando webhook para criar grupo via N8N");
       
       const webhookCriarGrupo = 'https://webhookn8n.innova1001.com.br/webhook/criargrupofinance';
       const webhookData = {
@@ -82,12 +37,10 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         whatsapp: userInstance?.whatsapp || '',
         nomeGrupo: nomeGrupo.trim(),
         instancia: userInstance?.instancia_zap || '',
-        timestamp: new Date().toISOString(),
-        // Dados retornados pela Evolution API
-        evolutionData: grupoEvolution
+        timestamp: new Date().toISOString()
       };
       
-      console.log('🔔 Enviando dados completos para webhook:', webhookData);
+      console.log('🔔 Enviando dados para webhook criar grupo:', webhookData);
       
       const responseCriar = await fetch(webhookCriarGrupo, {
         method: 'POST',
@@ -105,7 +58,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       
       console.log('✅ [GRUPO] Webhook criar grupo enviado com sucesso');
 
-      // 5. Webhook para ativar workflow
+      // 2. Webhook para ativar workflow
       console.log("🔔 [GRUPO] Enviando webhook ativar workflow");
       
       const webhookAtivarWorkflow = 'https://webhookn8n.innova1001.com.br/webhook/ativarworkflow';
@@ -136,7 +89,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         console.error('❌ Erro ao enviar webhook ativar workflow:', error);
       }
 
-      // 6. Webhook para configurar hook da Evolution API
+      // 3. Webhook para configurar hook da Evolution API
       console.log("🔔 [GRUPO] Enviando webhook configurar hook");
       
       const webhookHook = 'https://webhookn8n.innova1001.com.br/webhook/hook';
@@ -168,7 +121,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       
       toast({
         title: 'Sucesso!',
-        description: `Grupo "${nomeGrupo}" criado e configurado com sucesso!`,
+        description: `Solicitação para criar grupo "${nomeGrupo}" enviada com sucesso!`,
         variant: 'default',
       });
       
@@ -184,7 +137,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       
       toast({
         title: 'Erro',
-        description: `Não foi possível criar o grupo: ${errorMsg}`,
+        description: `Não foi possível solicitar criação do grupo: ${errorMsg}`,
         variant: 'destructive',
       });
     } finally {
