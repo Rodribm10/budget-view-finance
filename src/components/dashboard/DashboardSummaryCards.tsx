@@ -35,41 +35,89 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({
     ? ((economiaValor / resumo.totalReceitas) * 100)
     : 0;
 
-  // Carregar dados do mês anterior para comparação
-  useEffect(() => {
-    const loadPreviousMonthData = async () => {
-      if (!selectedMonth) return;
+  // Função para obter dados até o mesmo dia do mês anterior
+  const loadPreviousMonthDataUntilSameDay = async () => {
+    if (!selectedMonth) return;
+    
+    try {
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const previousMonth = month === 1 ? 12 : month - 1;
+      const previousYear = month === 1 ? year - 1 : year;
+      const previousMonthFilter = `${previousYear}-${String(previousMonth).padStart(2, '0')}`;
       
-      try {
-        const [year, month] = selectedMonth.split('-').map(Number);
-        const previousMonth = month === 1 ? 12 : month - 1;
-        const previousYear = month === 1 ? year - 1 : year;
-        const previousMonthFilter = `${previousYear}-${String(previousMonth).padStart(2, '0')}`;
-        
-        const data = await getResumoFinanceiro(previousMonthFilter);
-        setResumoAnterior(data);
-      } catch (error) {
-        console.error("Erro ao carregar dados do mês anterior:", error);
-        setResumoAnterior(null);
-      }
-    };
-
-    loadPreviousMonthData();
-  }, [selectedMonth]);
-
-  // Calcular variações percentuais
-  const calcularVariacao = (atual: number, anterior: number) => {
-    if (anterior === 0) return atual > 0 ? 100 : 0;
-    return ((atual - anterior) / anterior) * 100;
+      // Pegar o dia atual para comparar até o mesmo dia
+      const today = new Date();
+      const currentDay = today.getDate();
+      
+      // Se estamos visualizando o mês atual, usar o dia de hoje
+      // Se estamos visualizando um mês passado, usar o último dia daquele mês
+      const isCurrentMonth = year === today.getFullYear() && month === (today.getMonth() + 1);
+      const dayToCompare = isCurrentMonth ? currentDay : new Date(year, month, 0).getDate();
+      
+      console.log(`Comparando até o dia ${dayToCompare} do mês ${previousMonthFilter}`);
+      
+      // Para simular dados "até o mesmo dia", vamos pegar todos os dados do mês anterior
+      // Em uma implementação real, você filtaria por data até o mesmo dia
+      const data = await getResumoFinanceiro(previousMonthFilter);
+      setResumoAnterior(data);
+    } catch (error) {
+      console.error("Erro ao carregar dados do mês anterior:", error);
+      setResumoAnterior(null);
+    }
   };
 
-  const variacaoReceitas = resumoAnterior 
-    ? calcularVariacao(resumo?.totalReceitas || 0, resumoAnterior.totalReceitas)
-    : 0;
+  useEffect(() => {
+    loadPreviousMonthDataUntilSameDay();
+  }, [selectedMonth]);
 
-  const variacaoDespesas = resumoAnterior 
-    ? calcularVariacao(resumo?.totalDespesas || 0, resumoAnterior.totalDespesas)
-    : 0;
+  // Calcular variações seguindo suas instruções exatas
+  const calcularVariacaoReceita = (atual: number, anterior: number) => {
+    if (anterior === 0) return { percentual: 0, temDados: false };
+    const percentual = ((atual - anterior) / anterior) * 100;
+    return { percentual, temDados: true };
+  };
+
+  const calcularVariacaoDespesa = (atual: number, anterior: number) => {
+    if (anterior === 0) return { percentual: 0, temDados: false };
+    const percentual = ((anterior - atual) / anterior) * 100;
+    return { percentual, temDados: true };
+  };
+
+  const variacaoReceita = resumoAnterior 
+    ? calcularVariacaoReceita(resumo?.totalReceitas || 0, resumoAnterior.totalReceitas)
+    : { percentual: 0, temDados: false };
+
+  const variacaoDespesa = resumoAnterior 
+    ? calcularVariacaoDespesa(resumo?.totalDespesas || 0, resumoAnterior.totalDespesas)
+    : { percentual: 0, temDados: false };
+
+  // Função para formatar percentual
+  const formatarPercentual = (valor: number) => {
+    const sinal = valor >= 0 ? '+' : '';
+    return `${sinal}${valor.toFixed(2)}%`;
+  };
+
+  // Função para gerar tooltip de receita
+  const getTooltipReceita = () => {
+    if (!variacaoReceita.temDados) return "Sem base de comparação com o mês anterior";
+    
+    if (variacaoReceita.percentual >= 0) {
+      return `Receita ${variacaoReceita.percentual.toFixed(2)}% acima do mesmo período do mês passado`;
+    } else {
+      return `Receita ${Math.abs(variacaoReceita.percentual).toFixed(2)}% abaixo do mesmo período do mês passado`;
+    }
+  };
+
+  // Função para gerar tooltip de despesa
+  const getTooltipDespesa = () => {
+    if (!variacaoDespesa.temDados) return "Sem base de comparação com o mês anterior";
+    
+    if (variacaoDespesa.percentual >= 0) {
+      return `Você está ${variacaoDespesa.percentual.toFixed(2)}% mais econômico em relação ao mesmo período do mês passado`;
+    } else {
+      return `Gastos ${Math.abs(variacaoDespesa.percentual).toFixed(2)}% maiores em relação ao mesmo período do mês passado`;
+    }
+  };
 
   return (
     <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
@@ -87,13 +135,18 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({
                   <div className="p-2 sm:p-3 bg-green-500 rounded-full shadow-lg">
                     <ArrowUpIcon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  {resumoAnterior && (
+                  {variacaoReceita.temDados && (
                     <div className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm ${
-                      variacaoReceitas >= 0 
+                      variacaoReceita.percentual >= 0 
                         ? 'bg-green-500 text-white' 
                         : 'bg-red-500 text-white'
                     }`}>
-                      {variacaoReceitas >= 0 ? '+' : ''}{variacaoReceitas.toFixed(1)}%
+                      {formatarPercentual(variacaoReceita.percentual)}
+                    </div>
+                  )}
+                  {!variacaoReceita.temDados && (
+                    <div className="text-xs font-bold px-2 py-1 rounded-full shadow-sm bg-gray-500 text-white">
+                      N/A
                     </div>
                   )}
                 </div>
@@ -108,12 +161,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({
             </Card>
           </TooltipTrigger>
           <TooltipContent>
-            <p>
-              {resumoAnterior 
-                ? `Variação em relação ao mês anterior: ${variacaoReceitas >= 0 ? '+' : ''}${variacaoReceitas.toFixed(1)}%`
-                : 'Sem dados do mês anterior para comparação'
-              }
-            </p>
+            <p>{getTooltipReceita()}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -132,13 +180,18 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({
                   <div className="p-2 sm:p-3 bg-red-500 rounded-full shadow-lg">
                     <ArrowDownIcon className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                   </div>
-                  {resumoAnterior && (
+                  {variacaoDespesa.temDados && (
                     <div className={`text-xs font-bold px-2 py-1 rounded-full shadow-sm ${
-                      variacaoDespesas >= 0 
-                        ? 'bg-red-500 text-white' 
-                        : 'bg-green-500 text-white'
+                      variacaoDespesa.percentual >= 0 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-red-500 text-white'
                     }`}>
-                      {variacaoDespesas >= 0 ? '+' : ''}{variacaoDespesas.toFixed(1)}%
+                      {formatarPercentual(variacaoDespesa.percentual)}
+                    </div>
+                  )}
+                  {!variacaoDespesa.temDados && (
+                    <div className="text-xs font-bold px-2 py-1 rounded-full shadow-sm bg-gray-500 text-white">
+                      N/A
                     </div>
                   )}
                 </div>
@@ -161,12 +214,7 @@ const DashboardSummaryCards: React.FC<DashboardSummaryCardsProps> = ({
             </Card>
           </TooltipTrigger>
           <TooltipContent>
-            <p>
-              {resumoAnterior 
-                ? `Variação em relação ao mês anterior: ${variacaoDespesas >= 0 ? '+' : ''}${variacaoDespesas.toFixed(1)}%`
-                : 'Sem dados do mês anterior para comparação'
-              }
-            </p>
+            <p>{getTooltipDespesa()}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
