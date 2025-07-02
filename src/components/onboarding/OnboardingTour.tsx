@@ -23,34 +23,34 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
 
   const steps = [
     {
-      title: "Passo 1 - Conecte seu WhatsApp",
+      title: "Bem-vindo ao Finance Home! 🎉",
       content: (
         <>
           <p className="mb-4">
-            Para que o app funcione, você precisa integrar seu WhatsApp com nossa plataforma.
+            Olá! Este é o Finance Home, sua ferramenta para controle financeiro automático.
           </p>
           <p className="mb-4">
-            Isso permitirá que suas transações feitas no WhatsApp apareçam automaticamente aqui no Finance Home.
+            Vamos te ensinar como navegar pelo sistema e usar suas principais funcionalidades.
           </p>
           <p className="font-semibold text-blue-600">
-            👉 Clique em "Conectar WhatsApp", digite o código da cidade + seu número de WhatsApp e depois clique em "Criar Instância".
+            👉 Use o botão do menu (☰) no canto superior esquerdo para abrir e retrair o menu lateral.
           </p>
         </>
       ),
-      spotlight: 'whatsapp-menu'
+      spotlight: null
     },
     {
-      title: "Passo 2 - Crie seu Grupo com a IA",
+      title: "Passo 1 - Crie seu Grupo com a IA",
       content: (
         <>
           <p className="mb-4">
-            Agora você precisa criar um grupo no WhatsApp com o nosso bot de IA chamado Angelina.
+            Para começar, você precisa criar um grupo no WhatsApp com o nosso bot de IA chamado Angelina.
           </p>
           <p className="mb-4">
             Nele, você vai mandar mensagens, áudios ou comprovantes, e o sistema vai registrar automaticamente suas despesas e receitas.
           </p>
           <p className="font-semibold text-blue-600">
-            👉 Clique em "Grupos", escolha o nome do grupo e clique em "Cadastrar Grupo".
+            👉 Clique em "Grupos" no menu lateral, escolha o nome do grupo e clique em "Cadastrar Grupo".
           </p>
         </>
       ),
@@ -63,8 +63,11 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
           <p className="text-lg mb-4">
             Agora você pode começar a usar o Finance Home de forma automática.
           </p>
-          <p className="text-base">
+          <p className="text-base mb-4">
             Tudo que você enviar para o grupo vai ser registrado no app.
+          </p>
+          <p className="text-sm text-gray-600">
+            💡 Dica: Use o menu lateral para navegar entre as diferentes seções do sistema.
           </p>
         </>
       ),
@@ -87,7 +90,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     });
   };
 
-  // Aplicar highlight no elemento
   const highlightElementStyle = () => {
     const currentStepData = steps[currentStep];
     if (!currentStepData?.spotlight) return;
@@ -112,7 +114,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       return;
     }
 
-    // Limpar estilos anteriores
     removeHighlightStyle();
 
     const currentStepData = steps[currentStep];
@@ -134,7 +135,6 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
     };
   }, [isOpen, currentStep]);
 
-  // Cleanup quando o componente for desmontado
   useEffect(() => {
     return () => {
       removeHighlightStyle();

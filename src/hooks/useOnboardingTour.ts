@@ -27,7 +27,7 @@ export const useOnboardingTour = () => {
       console.log('🔍 [TOUR] Iniciando verificação de condições do tour...');
       
       // Só mostrar o tour na página inicial (dashboard)
-      if (location.pathname !== '/') {
+      if (location.pathname !== '/dashboard') {
         console.log('❌ [TOUR] Tour só aparece no dashboard, página atual:', location.pathname);
         setShouldShowTour(false);
         return;
@@ -108,7 +108,7 @@ export const useOnboardingTour = () => {
 
   // Verificar condições quando a localização mudar ou na inicialização
   useEffect(() => {
-    if (!tourCheckedRef.current && location.pathname === '/') {
+    if (!tourCheckedRef.current && location.pathname === '/dashboard') {
       console.log('🔄 [TOUR] useEffect disparado - verificando condições do tour');
       tourCheckedRef.current = true;
       const timer = setTimeout(() => {
@@ -123,7 +123,7 @@ export const useOnboardingTour = () => {
   useEffect(() => {
     const handleUserLoggedIn = (event: CustomEvent) => {
       console.log('🎉 [TOUR] Evento de login recebido:', event.detail);
-      if (location.pathname === '/') {
+      if (location.pathname === '/dashboard') {
         console.log('📧 [TOUR] Login detectado no dashboard, re-verificando condições do tour');
         tourCheckedRef.current = false;
         sessionStorage.removeItem(TOUR_SESSION_KEY);

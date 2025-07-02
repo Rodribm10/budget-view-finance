@@ -27,12 +27,14 @@ import {
   MessageSquareText,
   Users,
   Settings,
-  Bell
+  Bell,
+  Shield
 } from 'lucide-react';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
 import UserProfileButton from '@/components/dashboard/UserProfileButton';
 import { useOnboardingTour } from '@/hooks/useOnboardingTour';
+import { useAdminSettings } from '@/hooks/useAdminSettings';
 import {
   Tooltip,
   TooltipContent,
@@ -46,10 +48,7 @@ interface NewModernLayoutProps {
 
 const Logo = () => {
   return (
-    <Link
-      to="/"
-      className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black"
-    >
+    <div className="relative z-20 flex items-center space-x-2 py-1 text-sm font-normal text-black cursor-default">
       <img 
         src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
         alt="Finance Home Logo" 
@@ -58,12 +57,13 @@ const Logo = () => {
       <span className="font-medium whitespace-pre text-blue-700 dark:text-white">
         Finance Home
       </span>
-    </Link>
+    </div>
   );
 };
 
 export default function NewModernLayout({ children }: NewModernLayoutProps) {
   const location = useLocation();
+  const { isAdmin, hideWhatsAppButton } = useAdminSettings();
   
   const {
     isOpen: tourOpen,
@@ -117,15 +117,16 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
   ];
 
   const whatsappItems = [
-    {
+    ...(hideWhatsAppButton ? [] : [{
       title: "Conectar WhatsApp",
       url: "/whatsapp",
       icon: MessageSquareText,
-    },
+    }]),
     {
       title: "Grupos",
       url: "/grupos-whatsapp",
       icon: Users,
+      'data-tour': 'grupos-menu'
     }
   ];
 
@@ -136,6 +137,14 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
       icon: Settings,
     }
   ];
+
+  const adminItems = isAdmin ? [
+    {
+      title: "Admin",
+      url: "/admin",
+      icon: Shield,
+    }
+  ] : [];
 
   return (
     <div className="min-h-screen bg-background flex w-full">
@@ -179,7 +188,7 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
                         tooltip={item.title}
                         isActive={location.pathname === item.url}
                       >
-                        <Link to={item.url}>
+                        <Link to={item.url} data-tour={item['data-tour']}>
                           <item.icon />
                           <span>{item.title}</span>
                         </Link>
@@ -189,6 +198,30 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
+
+            {adminItems.length > 0 && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Administração</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {adminItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton 
+                          asChild 
+                          tooltip={item.title}
+                          isActive={location.pathname === item.url}
+                        >
+                          <Link to={item.url}>
+                            <item.icon />
+                            <span>{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
           </SidebarContent>
 
           <SidebarFooter>

@@ -27,6 +27,7 @@ import Categorias from "./pages/Categorias";
 import AdminFAQ from "./pages/AdminFAQ";
 import Assinatura from "./pages/Assinatura";
 import AvisosContas from "./pages/AvisosContas";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ function App() {
               <Route path="/complete-profile" element={<CompleteProfile />} />
               <Route path="/categorias" element={<Categorias />} />
               <Route path="/admin/faq" element={<AdminFAQ />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="/assinatura" element={<Assinatura />} />
               <Route path="/avisos-contas" element={<AvisosContas />} />
             </Route>
