@@ -59,18 +59,10 @@ const Logo = () => {
   );
 };
 
-export default function NewModernLayout({ children }: NewModernLayoutProps) {
+const SidebarContent = () => {
   const location = useLocation();
   const { toggleSidebar } = useSidebar();
   
-  const {
-    isOpen: tourOpen,
-    currentStep,
-    nextStep,
-    skipTour,
-    closeTour
-  } = useOnboardingTour();
-
   const mainItems = [
     {
       title: "Dashboard",
@@ -132,106 +124,130 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
   ];
 
   return (
+    <>
+      <SidebarHeader>
+        <Logo />
+      </SidebarHeader>
+      
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Principal</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {mainItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={item.title}
+                    isActive={location.pathname === item.url}
+                  >
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>WhatsApp</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {whatsappItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={item.title}
+                    isActive={location.pathname === item.url}
+                  >
+                    <Link to={item.url} data-tour={item['data-tour']}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <SidebarGroup>
+          <SidebarMenu>
+            {configItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild 
+                  tooltip={item.title}
+                  isActive={location.pathname === item.url}
+                >
+                  <Link to={item.url}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarFooter>
+    </>
+  );
+};
+
+const HeaderContent = () => {
+  const { toggleSidebar } = useSidebar();
+
+  return (
+    <div className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div className="flex items-center gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarTrigger className="-ml-1 hover:bg-blue-50 rounded-lg p-2" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Abrir/Fechar Menu</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <span 
+          className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+          onClick={toggleSidebar}
+        >
+          Menu
+        </span>
+      </div>
+      
+      <div className="ml-auto">
+        <UserProfileButton />
+      </div>
+    </div>
+  );
+};
+
+export default function NewModernLayout({ children }: NewModernLayoutProps) {
+  const {
+    isOpen: tourOpen,
+    currentStep,
+    nextStep,
+    skipTour,
+    closeTour
+  } = useOnboardingTour();
+
+  return (
     <div className="min-h-screen bg-background flex w-full">
       <SidebarProvider defaultOpen={false}>
         <Sidebar>
-          <SidebarHeader>
-            <Logo />
-          </SidebarHeader>
-          
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Principal</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {mainItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        tooltip={item.title}
-                        isActive={location.pathname === item.url}
-                      >
-                        <Link to={item.url}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            <SidebarGroup>
-              <SidebarGroupLabel>WhatsApp</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {whatsappItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        tooltip={item.title}
-                        isActive={location.pathname === item.url}
-                      >
-                        <Link to={item.url} data-tour={item['data-tour']}>
-                          <item.icon />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-
-          <SidebarFooter>
-            <SidebarGroup>
-              <SidebarMenu>
-                {configItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
-                      tooltip={item.title}
-                      isActive={location.pathname === item.url}
-                    >
-                      <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroup>
-          </SidebarFooter>
+          <SidebarContent />
         </Sidebar>
 
         <SidebarInset className="flex-1">
-          <div className="sticky top-0 z-50 flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-            <div className="flex items-center gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <SidebarTrigger className="-ml-1 hover:bg-blue-50 rounded-lg p-2" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Abrir/Fechar Menu</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <span 
-                className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
-                onClick={toggleSidebar}
-              >
-                Menu
-              </span>
-            </div>
-            
-            <div className="ml-auto">
-              <UserProfileButton />
-            </div>
-          </div>
+          <HeaderContent />
           <main className="flex-1 overflow-y-auto">
             <div className="container mx-auto px-4 py-6">
               {children}
