@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   const setLoggedIn = useAuthStore((state) => state.setLoggedIn);
   const setUser = useAuthStore((state) => state.setUser);
-  const setSession = useAuthStore((state) => state.setSession);
+  const setAuthSession = useAuthStore((state) => state.setSession);
   const isProfileComplete = useAuthStore((state) => state.isProfileComplete);
   
   // Hook para verificar completude do perfil
@@ -41,6 +41,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
           setSession(session);
           setLoggedIn(!!session);
           setUser(session?.user ? { id: session.user.id } : null);
+          setAuthSession(session);
           
           if (session?.user?.email) {
             localStorage.setItem('userEmail', session.user.email);
@@ -80,6 +81,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
             setSession(session);
             setLoggedIn(!!session);
             setUser(session?.user ? { id: session.user.id } : null);
+            setAuthSession(session);
             
             if (session?.user?.email) {
               localStorage.setItem('userEmail', session.user.email);
@@ -107,7 +109,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
-  }, [setLoggedIn, setUser, setSession]);
+  }, [setLoggedIn, setUser, setAuthSession]);
 
   // Mostrar loading enquanto verifica auth ou perfil
   if (isLoading || isChecking) {
