@@ -25,33 +25,24 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       return;
     }
 
-    //if (!userInstance || !userInstance.instancia_zap || userInstance.status_instancia !== 'conectado') {
-    //  toast({
-    //    title: 'Erro',
-    //    description: 'Instância WhatsApp não está conectada',
-    //    variant: 'destructive',
-    //  });
-    //  return;
-    //}
-
     setCadastrando(true);
+    
     try {
+      // 1. Webhook para criar grupo via N8N
       console.log("🔔 [GRUPO] Enviando webhook para criar grupo via N8N");
       
-      // Enviar webhook para N8N criar o grupo
-      const webhookUrl = 'https://webhookn8n.innova1001.com.br/webhook/criargrupofinance';
-      
+      const webhookCriarGrupo = 'https://webhookn8n.innova1001.com.br/webhook/criargrupofinance';
       const webhookData = {
         email: userEmail,
-        whatsapp: userInstance.whatsapp || '',
+        whatsapp: userInstance?.whatsapp || '',
         nomeGrupo: nomeGrupo.trim(),
-        instancia: userInstance.instancia_zap,
+        instancia: userInstance?.instancia_zap || '',
         timestamp: new Date().toISOString()
       };
       
       console.log('🔔 Enviando dados para webhook criar grupo:', webhookData);
       
-      const response = await fetch(webhookUrl, {
+      const responseCriar = await fetch(webhookCriarGrupo, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -59,13 +50,74 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
         body: JSON.stringify(webhookData)
       });
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`❌ Erro ao enviar webhook criar grupo: ${response.status} - ${errorText}`);
-        throw new Error(`Erro ao criar grupo via N8N: ${response.status}`);
+      if (!responseCriar.ok) {
+        const errorText = await responseCriar.text();
+        console.error(`❌ Erro ao enviar webhook criar grupo: ${responseCriar.status} - ${errorText}`);
+        throw new Error(`Erro ao criar grupo via N8N: ${responseCriar.status}`);
       }
       
-      console.log('✅ [GRUPO] Webhook enviado com sucesso para N8N criar grupo');
+      console.log('✅ [GRUPO] Webhook criar grupo enviado com sucesso');
+
+      // 2. Webhook para ativar workflow
+      console.log("🔔 [GRUPO] Enviando webhook ativar workflow");
+      
+      const webhookAtivarWorkflow = 'https://webhookn8n.innova1001.com.br/webhook/ativarworkflow';
+      const webhookAtivarData = {
+        email: userEmail,
+        timestamp: new Date().toISOString(),
+        action: 'activate_workflow'
+      };
+      
+      console.log('🔔 Enviando dados para webhook ativar workflow:', webhookAtivarData);
+      
+      try {
+        const responseAtivar = await fetch(webhookAtivarWorkflow, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookAtivarData)
+        });
+        
+        if (!responseAtivar.ok) {
+          const errorText = await responseAtivar.text();
+          console.error(`❌ Erro ao enviar webhook ativar workflow: ${responseAtivar.status} - ${errorText}`);
+        } else {
+          console.log('✅ [GRUPO] Webhook ativar workflow enviado com sucesso');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao enviar webhook ativar workflow:', error);
+      }
+
+      // 3. Webhook para configurar hook da Evolution API
+      console.log("🔔 [GRUPO] Enviando webhook configurar hook");
+      
+      const webhookHook = 'https://webhookn8n.innova1001.com.br/webhook/hook';
+      const webhookHookData = {
+        email: userEmail,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('🔔 Enviando dados para webhook hook:', webhookHookData);
+      
+      try {
+        const responseHook = await fetch(webhookHook, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookHookData)
+        });
+        
+        if (!responseHook.ok) {
+          const errorText = await responseHook.text();
+          console.error(`❌ Erro ao enviar webhook hook: ${responseHook.status} - ${errorText}`);
+        } else {
+          console.log('✅ [GRUPO] Webhook hook enviado com sucesso');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao enviar webhook hook:', error);
+      }
       
       toast({
         title: 'Sucesso!',
@@ -77,7 +129,7 @@ export const useGroupCreation = (userEmail: string, onSuccess: () => void) => {
       onSuccess();
       
     } catch (error) {
-      console.error('❌ Erro ao enviar webhook para criar grupo:', error);
+      console.error('❌ Erro ao processar cadastro do grupo:', error);
       let errorMsg = 'Erro desconhecido';
       if (error instanceof Error) {
         errorMsg = error.message;
