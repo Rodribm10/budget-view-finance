@@ -6,7 +6,7 @@ import * as z from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { CartaoCredito } from '@/types/cartaoTypes';
 import { criarDespesa } from '@/services/cartao/despesas';
-import { buscarCartaoPorReferencia, gerarCodigoCartao } from '@/services/cartao/cartaoCodigoUtils';
+import { buscarCartaoPorReferencia, gerarCartaoCodigo } from '@/services/cartao/cartaoCodigoUtils';
 import { format } from 'date-fns';
 
 const despesaCartaoSchema = z.object({
@@ -81,7 +81,7 @@ export function useDespesaCartaoForm({ cartoes, onSuccess, onCancel }: UseDespes
       // Garantir que temos um cartao_codigo, gerando se necessário
       let cartaoCodigo = cartaoEncontrado.cartao_codigo;
       if (!cartaoCodigo) {
-        cartaoCodigo = gerarCodigoCartao(cartaoEncontrado.nome, cartaoEncontrado.banco);
+        cartaoCodigo = gerarCartaoCodigo(cartaoEncontrado.nome, cartaoEncontrado.banco);
         console.log('🔧 Código gerado para o cartão:', cartaoCodigo);
       }
       

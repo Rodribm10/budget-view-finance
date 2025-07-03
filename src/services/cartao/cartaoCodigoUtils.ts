@@ -96,7 +96,7 @@ function calcularSimilaridade(str1: string, str2: string): number {
 /**
  * Gera um código de cartão baseado no nome
  */
-export const gerarCodigoCartao = (nome: string, banco?: string): string => {
+export const gerarCartaoCodigo = (nome: string, banco?: string): string => {
   const nomeSimplificado = nome
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, '')
