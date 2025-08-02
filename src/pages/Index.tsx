@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { getResumoFinanceiro, getCategorySummary, getMonthlyData } from "@/services/transacao";
-import { ResumoFinanceiro, CategorySummary, MonthlyData } from "@/types/financialTypes";
+import { getCategorySummary, getMonthlyData } from "@/services/transacao";
+import { CategorySummary, MonthlyData } from "@/types/financialTypes";
 import { useTransactions } from "@/hooks/useTransactions";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState";
@@ -12,7 +12,6 @@ import DashboardRecentTransactions from "@/components/dashboard/DashboardRecentT
 import { MonthFilter } from "@/components/filters/MonthFilter";
 
 const Dashboard = () => {
-  const [resumo, setResumo] = useState<ResumoFinanceiro | null>(null);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -26,11 +25,23 @@ const Dashboard = () => {
     return selectedMonth;
   };
 
+  // Usar o mesmo hook que a página de transações para garantir cálculos consistentes
   const {
     transactions,
     isLoading: transactionsLoading,
+    totalReceitas,
+    totalDespesas,
+    totalCartoes,
     formatCurrency
   } = useTransactions({ monthFilter: getCurrentMonth() });
+
+  // Criar resumo compatível com DashboardSummaryCards usando os mesmos cálculos
+  const resumo = {
+    totalReceitas,
+    totalDespesas,
+    totalCartoes,
+    saldo: totalReceitas - totalDespesas - totalCartoes
+  };
 
   useEffect(() => {
     const storedUserId = localStorage.getItem('userId');
@@ -44,13 +55,10 @@ const Dashboard = () => {
     }
   }, []);
 
-  const loadResumo = async () => {
+  const loadDashboardData = async () => {
     try {
       setIsLoading(true);
-      console.log("🔍 [Dashboard] Carregando resumo financeiro com filtro:", selectedMonth);
-      const data = await getResumoFinanceiro(selectedMonth);
-      console.log("✅ [Dashboard] Resumo carregado:", data);
-      setResumo(data);
+      console.log("🔍 [Dashboard] Carregando dados do dashboard com filtro:", selectedMonth);
       
       // Load categories for chart with month filter
       const categoriesData = await getCategorySummary('despesa', selectedMonth);
@@ -59,10 +67,12 @@ const Dashboard = () => {
       // Load monthly data for chart
       const monthlyDataResult = await getMonthlyData();
       setMonthlyData(monthlyDataResult);
+      
+      console.log("✅ [Dashboard] Dados carregados - Receitas:", totalReceitas, "Despesas:", totalDespesas, "Cartões:", totalCartoes);
     } catch (error) {
-      console.error("❌ [Dashboard] Erro ao carregar resumo:", error);
+      console.error("❌ [Dashboard] Erro ao carregar dados:", error);
       toast({
-        title: "Erro ao carregar resumo",
+        title: "Erro ao carregar dados",
         description: "Não foi possível obter os dados do Supabase",
         variant: "destructive"
       });
@@ -72,10 +82,10 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    loadResumo();
-  }, [toast, selectedMonth]);
+    loadDashboardData();
+  }, [toast, selectedMonth, totalReceitas, totalDespesas, totalCartoes]);
 
-  if (isLoading) {
+  if (isLoading || transactionsLoading) {
     return <DashboardLoadingState />;
   }
 
