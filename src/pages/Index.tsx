@@ -47,9 +47,9 @@ const Dashboard = () => {
   const loadResumo = async () => {
     try {
       setIsLoading(true);
-      console.log("Carregando resumo financeiro com filtro:", selectedMonth);
+      console.log("🔍 [Dashboard] Carregando resumo financeiro com filtro:", selectedMonth);
       const data = await getResumoFinanceiro(selectedMonth);
-      console.log("Resumo carregado:", data);
+      console.log("✅ [Dashboard] Resumo carregado:", data);
       setResumo(data);
       
       // Load categories for chart with month filter
@@ -60,7 +60,7 @@ const Dashboard = () => {
       const monthlyDataResult = await getMonthlyData();
       setMonthlyData(monthlyDataResult);
     } catch (error) {
-      console.error("Erro ao carregar resumo:", error);
+      console.error("❌ [Dashboard] Erro ao carregar resumo:", error);
       toast({
         title: "Erro ao carregar resumo",
         description: "Não foi possível obter os dados do Supabase",
