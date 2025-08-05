@@ -70,18 +70,21 @@ const CompleteProfile = () => {
       console.log('📝 Salvando dados complementares do perfil...');
       const whatsappOnly = whatsapp.replace(/\D/g, '');
       
-      // Atualizar dados do usuário no Supabase
-      const { error: updateError } = await supabase
+      // Criar/atualizar dados do usuário no Supabase usando UPSERT
+      const { error: upsertError } = await supabase
         .from('usuarios')
-        .update({
+        .upsert({
+          id: userId, // Usar o ID do auth.users
+          email: userEmail.toLowerCase().trim(),
           nome: nome.trim(),
           empresa: empresa.trim() || null,
           whatsapp: whatsappOnly
-        })
-        .eq('email', userEmail.toLowerCase().trim());
+        }, {
+          onConflict: 'email' // Se já existir, atualizar baseado no email
+        });
 
-      if (updateError) {
-        console.error('❌ Erro ao atualizar usuário:', updateError);
+      if (upsertError) {
+        console.error('❌ Erro ao salvar usuário:', upsertError);
         throw new Error('Erro ao salvar dados do perfil');
       }
 
