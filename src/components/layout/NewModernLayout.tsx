@@ -52,7 +52,7 @@ const Logo = () => {
         alt="Finance Home Logo" 
         className="h-8 w-8 shrink-0"
       />
-      <span className="font-medium whitespace-pre text-blue-700 dark:text-white">
+      <span className="font-medium whitespace-pre text-primary dark:text-white">
         Finance Home
       </span>
     </div>
@@ -207,7 +207,7 @@ const HeaderContent = () => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <SidebarTrigger className="-ml-1 hover:bg-blue-50 rounded-lg p-2" />
+              <SidebarTrigger className="-ml-1 hover:bg-primary/10 rounded-lg p-2" />
             </TooltipTrigger>
             <TooltipContent>
               <p>Abrir/Fechar Menu</p>
@@ -215,7 +215,7 @@ const HeaderContent = () => {
           </Tooltip>
         </TooltipProvider>
         <span 
-          className="text-sm font-medium text-gray-600 cursor-pointer hover:text-blue-600 transition-colors"
+          className="text-sm font-medium text-muted-foreground cursor-pointer hover:text-primary transition-colors"
           onClick={toggleSidebar}
         >
           Menu

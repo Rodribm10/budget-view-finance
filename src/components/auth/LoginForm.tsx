@@ -98,7 +98,7 @@ const LoginForm = ({ isLoading, setIsLoading, onForgotPassword }: LoginFormProps
         </Alert>
       )}
 
-      <Button type="submit" className="w-full" disabled={isLoading}>
+      <Button type="submit" className="w-full btn-gradient" disabled={isLoading}>
         {isLoading ? "Entrando..." : "Entrar"}
       </Button>
 

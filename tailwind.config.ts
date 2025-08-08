@@ -95,6 +95,9 @@ const config: Config = {
         "accordion-up": "accordion-up 0.2s ease-out",
         "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
+      fontFamily: {
+        jakarta: ["Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],

@@ -128,7 +128,7 @@ export const MobileSidebar = ({
             alt="Finance Home Logo" 
             className="h-8 w-8 shrink-0"
           />
-          <span className="text-lg font-semibold text-blue-700">Finance Home</span>
+          <span className="text-lg font-semibold text-primary">Finance Home</span>
         </div>
         <div className="flex justify-end z-20">
           <div 

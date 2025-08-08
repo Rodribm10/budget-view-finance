@@ -33,6 +33,11 @@ const Auth = () => {
     }
   }, [location.state]);
 
+  // SEO
+  useEffect(() => {
+    document.title = "Login | Finance Home";
+  }, []);
+
   const handleForgotPassword = () => {
     setShowForgotPassword(true);
   };
@@ -44,18 +49,18 @@ const Auth = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen relative w-full overflow-hidden bg-slate-900 flex items-center justify-center px-4">
-        <div className="absolute inset-0 w-full h-full bg-slate-900 z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
+      <div className="min-h-screen relative w-full overflow-hidden bg-gradient-primary flex items-center justify-center px-4">
+        <div className="absolute inset-0 w-full h-full bg-background z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
         <Boxes />
         
         <Link to="/" className="absolute top-4 left-4 z-30">
-          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
         </Link>
         
-        <div className="relative z-20 bg-white/95 backdrop-blur-sm border-white/20 rounded-lg">
+        <div className="relative z-20 glass-card rounded-lg">
           <ForgotPasswordForm onBackToLogin={handleBackToLogin} />
         </div>
       </div>
@@ -63,20 +68,20 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen relative w-full overflow-hidden bg-slate-900 flex items-center justify-center px-4">
-      <div className="absolute inset-0 w-full h-full bg-slate-900 z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
+    <div className="min-h-screen relative w-full overflow-hidden bg-gradient-primary flex items-center justify-center px-4">
+      <div className="absolute inset-0 w-full h-full bg-background z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
       
       <Boxes />
       
       {/* Botão para voltar à landing page */}
       <Link to="/" className="absolute top-4 left-4 z-30">
-        <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+        <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
       </Link>
       
-      <Card className="w-full max-w-md relative z-20 bg-white/95 backdrop-blur-sm border-white/20">
+      <Card className="w-full max-w-md relative z-20 glass-card">
         <CardHeader className="space-y-1 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <img 
@@ -84,7 +89,7 @@ const Auth = () => {
               alt="Finance Home Logo" 
               className="h-10 w-10"
             />
-            <CardTitle className="text-2xl font-bold text-blue-700">Finance Home</CardTitle>
+            <CardTitle className="text-2xl font-extrabold brand-text">Finance Home</CardTitle>
           </div>
           <CardDescription>Gerencie suas finanças de forma simples e eficiente</CardDescription>
         </CardHeader>
