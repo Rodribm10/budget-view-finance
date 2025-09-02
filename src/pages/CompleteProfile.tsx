@@ -114,7 +114,7 @@ const CompleteProfile = () => {
       setProfileComplete(true);
 
       // Redirecionar para dashboard
-      navigate('/');
+      navigate('/dashboard');
 
     } catch (error) {
       console.error('❌ Erro ao completar perfil:', error);
