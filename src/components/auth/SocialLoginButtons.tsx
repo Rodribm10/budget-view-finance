@@ -15,18 +15,19 @@ const SocialLoginButtons = () => {
       console.log('🌐 URL atual:', window.location.origin);
       
       // Determinar a URL de redirecionamento correta baseada no hostname
+      // Para login com Google, sempre redirecionar para complete-profile
       let redirectUrl;
       const hostname = window.location.hostname;
       
       if (hostname === 'localhost') {
-        redirectUrl = 'http://localhost:3000/';
+        redirectUrl = 'http://localhost:3000/complete-profile';
       } else if (hostname.includes('financehome.innova1001.com.br')) {
-        redirectUrl = 'https://financehome.innova1001.com.br/';
+        redirectUrl = 'https://financehome.innova1001.com.br/complete-profile';
       } else if (hostname.includes('lovableproject.com')) {
-        redirectUrl = `${window.location.origin}/`;
+        redirectUrl = `${window.location.origin}/complete-profile`;
       } else {
         // Fallback para qualquer outro domínio
-        redirectUrl = `${window.location.origin}/`;
+        redirectUrl = `${window.location.origin}/complete-profile`;
       }
       
       console.log('🔗 URL de redirecionamento:', redirectUrl);
