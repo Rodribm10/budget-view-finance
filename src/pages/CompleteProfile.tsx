@@ -131,70 +131,87 @@ const CompleteProfile = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Complete seu Perfil</CardTitle>
-          <CardDescription>
-            Para continuar, precisamos de algumas informações obrigatórias para configurar sua conta
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome Completo *</Label>
-              <Input
-                id="nome"
-                type="text"
-                placeholder="Seu nome completo"
-                value={nome}
-                onChange={(e) => setNome(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/10 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="glass-card border-white/10 backdrop-blur-xl bg-white/80 dark:bg-gray-900/80 shadow-2xl">
+          <CardHeader className="space-y-2 text-center pb-6">
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Complete seu Perfil
+            </CardTitle>
+            <CardDescription className="text-muted-foreground/80">
+              Para continuar, precisamos de algumas informações obrigatórias para configurar sua conta
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="nome" className="text-sm font-medium text-foreground/90">
+                  Nome Completo *
+                </Label>
+                <Input
+                  id="nome"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={nome}
+                  onChange={(e) => setNome(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="glass-input border-white/20 bg-white/50 backdrop-blur-sm focus:border-primary/50 focus:ring-primary/20"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="empresa">Empresa (Opcional)</Label>
-              <Input
-                id="empresa"
-                type="text"
-                placeholder="Nome da sua empresa"
-                value={empresa}
-                onChange={(e) => setEmpresa(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="empresa" className="text-sm font-medium text-foreground/90">
+                  Empresa (Opcional)
+                </Label>
+                <Input
+                  id="empresa"
+                  type="text"
+                  placeholder="Nome da sua empresa"
+                  value={empresa}
+                  onChange={(e) => setEmpresa(e.target.value)}
+                  disabled={isLoading}
+                  className="glass-input border-white/20 bg-white/50 backdrop-blur-sm focus:border-primary/50 focus:ring-primary/20"
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">WhatsApp *</Label>
-              <Input
-                id="whatsapp"
-                type="tel"
-                placeholder="(11) 99999-9999"
-                value={whatsapp}
-                onChange={(e) => handleWhatsappChange(e.target.value)}
-                required
+              <div className="space-y-2">
+                <Label htmlFor="whatsapp" className="text-sm font-medium text-foreground/90">
+                  WhatsApp *
+                </Label>
+                <Input
+                  id="whatsapp"
+                  type="tel"
+                  placeholder="(11) 99999-9999"
+                  value={whatsapp}
+                  onChange={(e) => handleWhatsappChange(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className="glass-input border-white/20 bg-white/50 backdrop-blur-sm focus:border-primary/50 focus:ring-primary/20"
+                />
+                <p className="text-xs text-muted-foreground/70">
+                  Necessário para integração com WhatsApp e notificações
+                </p>
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full glass-button bg-gradient-to-r from-primary to-accent hover:shadow-lg hover:shadow-primary/25 transition-all duration-300" 
                 disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground">
-                Necessário para integração com WhatsApp e notificações
+              >
+                {isLoading ? "Salvando..." : "Completar Perfil"}
+              </Button>
+            </form>
+            
+            <div className="glass-card p-4 border-primary/10 bg-primary/5">
+              <p className="text-sm text-primary/90">
+                <strong className="text-primary">Por que estes dados?</strong><br />
+                Nome e WhatsApp são necessários para configurar automaticamente seu workspace e integrações personalizadas.
               </p>
             </div>
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Salvando..." : "Completar Perfil"}
-            </Button>
-          </form>
-          
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              <strong>Por que estes dados?</strong><br />
-              Nome e WhatsApp são necessários para configurar automaticamente seu workspace e integrações personalizadas.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
