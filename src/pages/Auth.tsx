@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Boxes } from "@/components/ui/background-boxes";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import LoginForm from '@/components/auth/LoginForm';
@@ -49,12 +48,10 @@ const Auth = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen relative w-full overflow-hidden bg-gradient-primary flex items-center justify-center px-4">
-        <div className="absolute inset-0 w-full h-full bg-background z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
-        <Boxes />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-4">
         
         <Link to="/" className="absolute top-4 left-4 z-30">
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+          <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
@@ -68,20 +65,17 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen relative w-full overflow-hidden bg-gradient-primary flex items-center justify-center px-4">
-      <div className="absolute inset-0 w-full h-full bg-background z-10 [mask-image:radial-gradient(transparent,white)] pointer-events-none" />
-      
-      <Boxes />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center px-4">
       
       {/* Botão para voltar à landing page */}
       <Link to="/" className="absolute top-4 left-4 z-30">
-        <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10">
+        <Button variant="ghost" size="sm" className="text-primary hover:bg-primary/10">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
       </Link>
       
-      <Card className="w-full max-w-md relative z-20 glass-card">
+      <Card className="w-full max-w-md glass-card bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
         <CardHeader className="space-y-1 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <img 

@@ -1,6 +1,8 @@
 
+import { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from '@/components/ui/label';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface RegisterFormFieldsProps {
   nome: string;
@@ -33,6 +35,9 @@ const RegisterFormFields = ({
   setConfirmaSenha,
   isLoading
 }: RegisterFormFieldsProps) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   return (
     <>
       <div className="space-y-2">
@@ -82,27 +87,55 @@ const RegisterFormFields = ({
       </div>
       <div className="space-y-2">
         <Label htmlFor="senha">Senha</Label>
-        <Input
-          id="senha"
-          placeholder="Senha"
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          disabled={isLoading}
-          required
-        />
+        <div className="relative">
+          <Input
+            id="senha"
+            placeholder="Senha"
+            type={showPassword ? "text" : "password"}
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            disabled={isLoading}
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4 text-gray-400" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-400" />
+            )}
+          </button>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="confirma-senha">Confirme a senha</Label>
-        <Input
-          id="confirma-senha"
-          placeholder="Confirme a senha"
-          type="password"
-          value={confirmaSenha}
-          onChange={(e) => setConfirmaSenha(e.target.value)}
-          disabled={isLoading}
-          required
-        />
+        <div className="relative">
+          <Input
+            id="confirma-senha"
+            placeholder="Confirme a senha"
+            type={showConfirmPassword ? "text" : "password"}
+            value={confirmaSenha}
+            onChange={(e) => setConfirmaSenha(e.target.value)}
+            disabled={isLoading}
+            required
+            className="pr-10"
+          />
+          <button
+            type="button"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? (
+              <EyeOff className="h-4 w-4 text-gray-400" />
+            ) : (
+              <Eye className="h-4 w-4 text-gray-400" />
+            )}
+          </button>
+        </div>
       </div>
     </>
   );
