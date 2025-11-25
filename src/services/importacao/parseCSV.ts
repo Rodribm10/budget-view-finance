@@ -12,6 +12,7 @@ export async function parseCSV(file: File, contaBancariaId?: string): Promise<Tr
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
+      delimiter: ';', // Suporta CSV com ponto e vírgula
       complete: (results) => {
         try {
           const transacoes: TransacaoImportada[] = [];
@@ -25,8 +26,8 @@ export async function parseCSV(file: File, contaBancariaId?: string): Promise<Tr
           const primeiraLinha = data[0];
           const colunas = Object.keys(primeiraLinha);
 
-          // Encontrar colunas relevantes
-          const colunaData = detectarColuna(colunas, ['data', 'date', 'quando', 'dt']);
+          // Encontrar colunas relevantes (suporta nomes com acentos e espaços)
+          const colunaData = detectarColuna(colunas, ['data', 'date', 'quando', 'dt', 'lancamento']);
           const colunaDescricao = detectarColuna(colunas, ['descricao', 'description', 'historico', 'memo', 'estabelecimento']);
           const colunaValor = detectarColuna(colunas, ['valor', 'value', 'amount', 'quantia']);
           const colunaTipo = detectarColuna(colunas, ['tipo', 'type', 'natureza', 'credito', 'debito']);
@@ -114,11 +115,20 @@ function parseData(dataStr: string): string | null {
 }
 
 function parseValor(valorStr: string): number {
-  // Remove símbolos de moeda, espaços e converte vírgula em ponto
-  const valorLimpo = valorStr
-    .replace(/[R$\s€£¥]/g, '')
-    .replace(/\./g, '')
-    .replace(',', '.');
+  // Remove símbolos de moeda e espaços
+  let valorLimpo = valorStr.replace(/[R$\s€£¥]/g, '').trim();
+  
+  // Detecta formato brasileiro (usa vírgula como decimal)
+  // Ex: 1.234,56 ou -2.390,22
+  if (valorLimpo.includes(',')) {
+    valorLimpo = valorLimpo.replace(/\./g, '').replace(',', '.');
+  }
+  // Senão, assume formato americano (ponto como decimal)
+  // Ex: 1234.56 ou 1,234.56
+  else if (valorLimpo.includes('.')) {
+    // Remove vírgulas de milhares se existirem
+    valorLimpo = valorLimpo.replace(/,/g, '');
+  }
   
   return parseFloat(valorLimpo);
 }
