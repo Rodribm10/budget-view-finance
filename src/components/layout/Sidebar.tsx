@@ -14,12 +14,14 @@ import {
   BarChart3,
   Bell,
   HelpCircle,
-  Crown
+  Crown,
+  FileUp
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Transações', href: '/transacoes', icon: Receipt },
+  { name: 'Importar Extrato', href: '/importar-extrato', icon: FileUp },
   { name: 'Cartões de Crédito', href: '/cartoes', icon: CreditCard },
   { name: 'Metas', href: '/metas', icon: Target },
   { name: 'Calendário', href: '/calendario', icon: Calendar },

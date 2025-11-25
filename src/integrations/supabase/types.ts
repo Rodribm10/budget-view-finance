@@ -859,6 +859,45 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_bancarias: {
+        Row: {
+          ativo: boolean | null
+          banco: string | null
+          created_at: string | null
+          id: string
+          login: string | null
+          nome: string
+          saldo_inicial: number | null
+          tipo: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean | null
+          banco?: string | null
+          created_at?: string | null
+          id?: string
+          login?: string | null
+          nome: string
+          saldo_inicial?: number | null
+          tipo?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean | null
+          banco?: string | null
+          created_at?: string | null
+          id?: string
+          login?: string | null
+          nome?: string
+          saldo_inicial?: number | null
+          tipo?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contas_recorrentes: {
         Row: {
           ativo: boolean
@@ -1505,6 +1544,65 @@ export type Database = {
           },
         ]
       }
+      logs_importacao: {
+        Row: {
+          conta_bancaria_id: string | null
+          created_at: string | null
+          detalhes_erro: string | null
+          duplicados: number | null
+          erros: number | null
+          id: string
+          importados: number | null
+          login: string | null
+          nome_arquivo: string
+          status: string
+          tipo_arquivo: string
+          total_registros: number | null
+          user_id: string
+          valor_total: number | null
+        }
+        Insert: {
+          conta_bancaria_id?: string | null
+          created_at?: string | null
+          detalhes_erro?: string | null
+          duplicados?: number | null
+          erros?: number | null
+          id?: string
+          importados?: number | null
+          login?: string | null
+          nome_arquivo: string
+          status?: string
+          tipo_arquivo: string
+          total_registros?: number | null
+          user_id: string
+          valor_total?: number | null
+        }
+        Update: {
+          conta_bancaria_id?: string | null
+          created_at?: string | null
+          detalhes_erro?: string | null
+          duplicados?: number | null
+          erros?: number | null
+          id?: string
+          importados?: number | null
+          login?: string | null
+          nome_arquivo?: string
+          status?: string
+          tipo_arquivo?: string
+          total_registros?: number | null
+          user_id?: string
+          valor_total?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logs_importacao_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metas: {
         Row: {
           ano: number
@@ -2061,12 +2159,15 @@ export type Database = {
       transacoes: {
         Row: {
           categoria: string | null
+          conta_bancaria_id: string | null
           created_at: string
           detalhes: string | null
           estabelecimento: string | null
           grupo_id: string | null
+          hash_unico: string | null
           id: number
           login: string | null
+          origem: string | null
           quando: string | null
           tipo: string | null
           user: string | null
@@ -2074,12 +2175,15 @@ export type Database = {
         }
         Insert: {
           categoria?: string | null
+          conta_bancaria_id?: string | null
           created_at?: string
           detalhes?: string | null
           estabelecimento?: string | null
           grupo_id?: string | null
+          hash_unico?: string | null
           id?: number
           login?: string | null
+          origem?: string | null
           quando?: string | null
           tipo?: string | null
           user?: string | null
@@ -2087,18 +2191,29 @@ export type Database = {
         }
         Update: {
           categoria?: string | null
+          conta_bancaria_id?: string | null
           created_at?: string
           detalhes?: string | null
           estabelecimento?: string | null
           grupo_id?: string | null
+          hash_unico?: string | null
           id?: number
           login?: string | null
+          origem?: string | null
           quando?: string | null
           tipo?: string | null
           user?: string | null
           valor?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transacoes_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "contas_bancarias"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       units: {
         Row: {

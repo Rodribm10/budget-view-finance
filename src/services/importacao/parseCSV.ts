@@ -1,0 +1,124 @@
+import Papa from 'papaparse';
+import { TransacaoImportada } from '@/types/importacaoTypes';
+import { gerarHashTransacao } from '@/utils/hashGenerator';
+import { limparDescricao } from '@/utils/categorizacaoAutomatica';
+
+/**
+ * Parse de arquivos CSV
+ * Tenta detectar automaticamente as colunas
+ */
+export async function parseCSV(file: File, contaBancariaId?: string): Promise<TransacaoImportada[]> {
+  return new Promise((resolve, reject) => {
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        try {
+          const transacoes: TransacaoImportada[] = [];
+          const data = results.data as any[];
+
+          if (data.length === 0) {
+            throw new Error('Arquivo CSV vazio');
+          }
+
+          // Tentar detectar colunas automaticamente
+          const primeiraLinha = data[0];
+          const colunas = Object.keys(primeiraLinha);
+
+          // Encontrar colunas relevantes
+          const colunaData = detectarColuna(colunas, ['data', 'date', 'quando', 'dt']);
+          const colunaDescricao = detectarColuna(colunas, ['descricao', 'description', 'historico', 'memo', 'estabelecimento']);
+          const colunaValor = detectarColuna(colunas, ['valor', 'value', 'amount', 'quantia']);
+          const colunaTipo = detectarColuna(colunas, ['tipo', 'type', 'natureza', 'credito', 'debito']);
+
+          if (!colunaData || !colunaDescricao || !colunaValor) {
+            throw new Error('Não foi possível identificar as colunas necessárias (Data, Descrição, Valor)');
+          }
+
+          for (const linha of data) {
+            const dataStr = linha[colunaData];
+            const descricao = limparDescricao(String(linha[colunaDescricao] || ''));
+            const valorStr = String(linha[colunaValor] || '0');
+
+            // Parse de data (tenta vários formatos)
+            const data = parseData(dataStr);
+            if (!data) continue;
+
+            // Parse de valor (remove símbolos de moeda e converte)
+            const valor = parseValor(valorStr);
+            if (isNaN(valor)) continue;
+
+            // Determinar tipo
+            let tipo: 'entrada' | 'saida';
+            if (colunaTipo) {
+              const tipoStr = String(linha[colunaTipo]).toLowerCase();
+              tipo = tipoStr.includes('credit') || tipoStr.includes('entrada') || tipoStr.includes('receita') ? 'entrada' : 'saida';
+            } else {
+              tipo = valor >= 0 ? 'entrada' : 'saida';
+            }
+
+            transacoes.push({
+              data,
+              descricao,
+              valor: Math.abs(valor),
+              tipo,
+              hash_unico: gerarHashTransacao(data, descricao, valor, contaBancariaId)
+            });
+          }
+
+          resolve(transacoes);
+        } catch (error) {
+          reject(error);
+        }
+      },
+      error: (error) => {
+        reject(new Error(`Erro ao processar CSV: ${error.message}`));
+      }
+    });
+  });
+}
+
+function detectarColuna(colunas: string[], possibilidades: string[]): string | null {
+  for (const coluna of colunas) {
+    const colunaLower = coluna.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    for (const possibilidade of possibilidades) {
+      if (colunaLower.includes(possibilidade)) {
+        return coluna;
+      }
+    }
+  }
+  return null;
+}
+
+function parseData(dataStr: string): string | null {
+  if (!dataStr) return null;
+
+  // Formato ISO (YYYY-MM-DD)
+  if (/^\d{4}-\d{2}-\d{2}/.test(dataStr)) {
+    return dataStr.substring(0, 10);
+  }
+
+  // Formato BR (DD/MM/YYYY)
+  const matchBR = dataStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (matchBR) {
+    return `${matchBR[3]}-${matchBR[2]}-${matchBR[1]}`;
+  }
+
+  // Formato US (MM/DD/YYYY)
+  const matchUS = dataStr.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (matchUS) {
+    return `${matchUS[3]}-${matchUS[1]}-${matchUS[2]}`;
+  }
+
+  return null;
+}
+
+function parseValor(valorStr: string): number {
+  // Remove símbolos de moeda, espaços e converte vírgula em ponto
+  const valorLimpo = valorStr
+    .replace(/[R$\s€£¥]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
+  
+  return parseFloat(valorLimpo);
+}
