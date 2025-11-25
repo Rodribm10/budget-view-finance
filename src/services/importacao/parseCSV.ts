@@ -16,15 +16,34 @@ export async function parseCSV(file: File, contaBancariaId?: string): Promise<Tr
       complete: (results) => {
         try {
           const transacoes: TransacaoImportada[] = [];
-          const data = results.data as any[];
+          const linhas = results.data as any[][]; // matriz de linhas
 
-          if (data.length === 0) {
+          if (!linhas || linhas.length === 0) {
             throw new Error('Arquivo CSV vazio');
           }
 
-          // Tentar detectar colunas automaticamente
-          const primeiraLinha = data[0];
-          const colunas = Object.keys(primeiraLinha);
+          // Encontrar linha de cabeçalho real (que contém "Data" e "Valor" etc.)
+          let headerIndex = -1;
+          for (let i = 0; i < linhas.length; i++) {
+            const row = linhas[i];
+            if (!row || row.length === 0) continue;
+
+            const primeiraColuna = String(row[0] ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const segundaColuna = String(row[1] ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+            // Ex: "Data Lançamento" | "Histórico" | "Descrição" | "Valor" | "Saldo"
+            if (primeiraColuna.includes('data') && (segundaColuna.includes('historico') || segundaColuna.includes('descricao'))) {
+              headerIndex = i;
+              break;
+            }
+          }
+
+          if (headerIndex === -1) {
+            throw new Error('Não foi possível identificar o cabeçalho do arquivo (linha com Data/Histórico/Valor)');
+          }
+
+          const headerRow = linhas[headerIndex];
+          const colunas = headerRow.map((c) => String(c ?? ''));
 
           // Encontrar colunas relevantes (suporta nomes com acentos e espaços)
           const colunaData = detectarColuna(colunas, ['data', 'date', 'quando', 'dt', 'lancamento']);
@@ -36,10 +55,19 @@ export async function parseCSV(file: File, contaBancariaId?: string): Promise<Tr
             throw new Error('Não foi possível identificar as colunas necessárias (Data, Descrição, Valor)');
           }
 
-          for (const linha of data) {
-            const dataStr = linha[colunaData];
-            const descricao = limparDescricao(String(linha[colunaDescricao] || ''));
-            const valorStr = String(linha[colunaValor] || '0');
+          // Processar linhas de dados após o cabeçalho
+          for (let i = headerIndex + 1; i < linhas.length; i++) {
+            const linha = linhas[i];
+            if (!linha || linha.length === 0) continue;
+
+            const rowObj: Record<string, any> = {};
+            colunas.forEach((col, idx) => {
+              rowObj[col] = linha[idx];
+            });
+
+            const dataStr = rowObj[colunaData];
+            const descricao = limparDescricao(String(rowObj[colunaDescricao] || ''));
+            const valorStr = String(rowObj[colunaValor] || '0');
 
             // Parse de data (tenta vários formatos)
             const data = parseData(dataStr);
@@ -51,9 +79,11 @@ export async function parseCSV(file: File, contaBancariaId?: string): Promise<Tr
 
             // Determinar tipo
             let tipo: 'entrada' | 'saida';
-            if (colunaTipo) {
-              const tipoStr = String(linha[colunaTipo]).toLowerCase();
-              tipo = tipoStr.includes('credit') || tipoStr.includes('entrada') || tipoStr.includes('receita') ? 'entrada' : 'saida';
+            if (colunaTipo && rowObj[colunaTipo] !== undefined && rowObj[colunaTipo] !== null) {
+              const tipoStr = String(rowObj[colunaTipo]).toLowerCase();
+              tipo = tipoStr.includes('credit') || tipoStr.includes('entrada') || tipoStr.includes('recebido') || tipoStr.includes('receita')
+                ? 'entrada'
+                : 'saida';
             } else {
               tipo = valor >= 0 ? 'entrada' : 'saida';
             }
