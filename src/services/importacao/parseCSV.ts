@@ -10,7 +10,7 @@ import { limparDescricao } from '@/utils/categorizacaoAutomatica';
 export async function parseCSV(file: File, contaBancariaId?: string): Promise<TransacaoImportada[]> {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
-      header: true,
+      header: false, // tratamos manualmente o cabeçalho
       skipEmptyLines: true,
       delimiter: ';', // Suporta CSV com ponto e vírgula
       complete: (results) => {
