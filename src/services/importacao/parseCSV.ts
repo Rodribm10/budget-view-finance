@@ -110,9 +110,10 @@ export async function parseCSV(file: File, contaBancariaId?: string): Promise<Tr
 }
 
 function detectarColuna(colunas: string[], possibilidades: string[]): string | null {
-  for (const coluna of colunas) {
-    const colunaLower = coluna.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    for (const possibilidade of possibilidades) {
+  // Percorre primeiro as possibilidades (mais específicas), depois as colunas
+  for (const possibilidade of possibilidades) {
+    for (const coluna of colunas) {
+      const colunaLower = coluna.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       if (colunaLower.includes(possibilidade)) {
         return coluna;
       }
