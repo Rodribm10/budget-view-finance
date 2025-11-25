@@ -47,6 +47,144 @@ export type Database = {
         }
         Relationships: []
       }
+      accounts_payable: {
+        Row: {
+          amount: number
+          bank_account_id: string | null
+          bank_category: string | null
+          bank_integration_id: string | null
+          bank_transaction_id: string | null
+          chart_of_account_id: number | null
+          created_at: string | null
+          description: string | null
+          document_number: string | null
+          due_date: string
+          id: string
+          imported_from_bank: boolean | null
+          issue_date: string
+          organization_id: string
+          paid_amount: number | null
+          payment_date: string | null
+          payment_method_id: string | null
+          person_id: string | null
+          reconciled: boolean | null
+          reconciliation_notes: string | null
+          status: string
+          suggested_chart_of_account_id: number | null
+          transaction_type: Database["public"]["Enums"]["transaction_type_enum"]
+          unit_id: string | null
+        }
+        Insert: {
+          amount: number
+          bank_account_id?: string | null
+          bank_category?: string | null
+          bank_integration_id?: string | null
+          bank_transaction_id?: string | null
+          chart_of_account_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          document_number?: string | null
+          due_date: string
+          id?: string
+          imported_from_bank?: boolean | null
+          issue_date: string
+          organization_id: string
+          paid_amount?: number | null
+          payment_date?: string | null
+          payment_method_id?: string | null
+          person_id?: string | null
+          reconciled?: boolean | null
+          reconciliation_notes?: string | null
+          status: string
+          suggested_chart_of_account_id?: number | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type_enum"]
+          unit_id?: string | null
+        }
+        Update: {
+          amount?: number
+          bank_account_id?: string | null
+          bank_category?: string | null
+          bank_integration_id?: string | null
+          bank_transaction_id?: string | null
+          chart_of_account_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          document_number?: string | null
+          due_date?: string
+          id?: string
+          imported_from_bank?: boolean | null
+          issue_date?: string
+          organization_id?: string
+          paid_amount?: number | null
+          payment_date?: string | null
+          payment_method_id?: string | null
+          person_id?: string | null
+          reconciled?: boolean | null
+          reconciliation_notes?: string | null
+          status?: string
+          suggested_chart_of_account_id?: number | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type_enum"]
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_payable_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_bank_integration_id_fkey"
+            columns: ["bank_integration_id"]
+            isOneToOne: false
+            referencedRelation: "bank_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_chart_of_account_id_fkey"
+            columns: ["chart_of_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_suggested_chart_of_account_id_fkey"
+            columns: ["suggested_chart_of_account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_payable_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Agenda_consulta_Seven: {
         Row: {
           created_at: string
@@ -115,6 +253,201 @@ export type Database = {
           },
         ]
       }
+      bank_accounts: {
+        Row: {
+          account_number: string | null
+          account_type: string | null
+          agency: string | null
+          balance: number | null
+          bank_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          organization_id: string
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_number?: string | null
+          account_type?: string | null
+          agency?: string | null
+          balance?: number | null
+          bank_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_number?: string | null
+          account_type?: string | null
+          agency?: string | null
+          balance?: number | null
+          bank_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          organization_id?: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_accounts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_accounts_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_integrations: {
+        Row: {
+          bank_name: string
+          bank_type: Database["public"]["Enums"]["bank_type"]
+          certificate_storage_path: string | null
+          created_at: string | null
+          encrypted_credentials: Json
+          id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          last_sync_message: string | null
+          last_sync_status: string | null
+          organization_id: string
+          unit_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bank_name: string
+          bank_type: Database["public"]["Enums"]["bank_type"]
+          certificate_storage_path?: string | null
+          created_at?: string | null
+          encrypted_credentials?: Json
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          last_sync_message?: string | null
+          last_sync_status?: string | null
+          organization_id: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bank_name?: string
+          bank_type?: Database["public"]["Enums"]["bank_type"]
+          certificate_storage_path?: string | null
+          created_at?: string | null
+          encrypted_credentials?: Json
+          id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          last_sync_message?: string | null
+          last_sync_status?: string | null
+          organization_id?: string
+          unit_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_integrations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_integrations_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_sync_logs: {
+        Row: {
+          bank_integration_id: string
+          completed_at: string | null
+          created_at: string | null
+          duration_seconds: number | null
+          error_details: Json | null
+          error_message: string | null
+          id: string
+          organization_id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["sync_status"]
+          sync_end_date: string | null
+          sync_start_date: string | null
+          sync_type: string
+          transactions_errors: number | null
+          transactions_found: number | null
+          transactions_imported: number | null
+          transactions_skipped: number | null
+        }
+        Insert: {
+          bank_integration_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          organization_id: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["sync_status"]
+          sync_end_date?: string | null
+          sync_start_date?: string | null
+          sync_type: string
+          transactions_errors?: number | null
+          transactions_found?: number | null
+          transactions_imported?: number | null
+          transactions_skipped?: number | null
+        }
+        Update: {
+          bank_integration_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          duration_seconds?: number | null
+          error_details?: Json | null
+          error_message?: string | null
+          id?: string
+          organization_id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["sync_status"]
+          sync_end_date?: string | null
+          sync_start_date?: string | null
+          sync_type?: string
+          transactions_errors?: number | null
+          transactions_found?: number | null
+          transactions_imported?: number | null
+          transactions_skipped?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_sync_logs_bank_integration_id_fkey"
+            columns: ["bank_integration_id"]
+            isOneToOne: false
+            referencedRelation: "bank_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_sync_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       Bloqueio_Rosana_Seven_zap: {
         Row: {
           acao: string | null
@@ -144,6 +477,84 @@ export type Database = {
           Telefone?: string | null
         }
         Relationships: []
+      }
+      budgets: {
+        Row: {
+          april: number | null
+          august: number | null
+          category_id: number
+          created_at: string | null
+          december: number | null
+          february: number | null
+          id: string
+          january: number | null
+          july: number | null
+          june: number | null
+          march: number | null
+          may: number | null
+          november: number | null
+          october: number | null
+          organization_id: string
+          september: number | null
+          unit_id: string | null
+          year: number
+        }
+        Insert: {
+          april?: number | null
+          august?: number | null
+          category_id: number
+          created_at?: string | null
+          december?: number | null
+          february?: number | null
+          id?: string
+          january?: number | null
+          july?: number | null
+          june?: number | null
+          march?: number | null
+          may?: number | null
+          november?: number | null
+          october?: number | null
+          organization_id: string
+          september?: number | null
+          unit_id?: string | null
+          year: number
+        }
+        Update: {
+          april?: number | null
+          august?: number | null
+          category_id?: number
+          created_at?: string | null
+          december?: number | null
+          february?: number | null
+          id?: string
+          january?: number | null
+          july?: number | null
+          june?: number | null
+          march?: number | null
+          may?: number | null
+          november?: number | null
+          october?: number | null
+          organization_id?: string
+          september?: number | null
+          unit_id?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budgets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cartoes_credito: {
         Row: {
@@ -181,6 +592,249 @@ export type Database = {
           melhor_dia_compra?: number | null
           nome?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      chart_of_account_categories: {
+        Row: {
+          code: number
+          created_at: string | null
+          description: string
+          dre_section: string | null
+          id: number
+          indicator: Database["public"]["Enums"]["indicator_enum"]
+          organization_id: string
+          section_id: string | null
+        }
+        Insert: {
+          code: number
+          created_at?: string | null
+          description: string
+          dre_section?: string | null
+          id?: number
+          indicator: Database["public"]["Enums"]["indicator_enum"]
+          organization_id: string
+          section_id?: string | null
+        }
+        Update: {
+          code?: number
+          created_at?: string | null
+          description?: string
+          dre_section?: string | null
+          id?: number
+          indicator?: Database["public"]["Enums"]["indicator_enum"]
+          organization_id?: string
+          section_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_account_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chart_of_account_categories_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "faixas_dre"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chart_of_accounts: {
+        Row: {
+          category_id: number
+          created_at: string | null
+          description: string
+          id: number
+          organization_id: string
+          structured_code: string
+        }
+        Insert: {
+          category_id: number
+          created_at?: string | null
+          description: string
+          id?: number
+          organization_id: string
+          structured_code: string
+        }
+        Update: {
+          category_id?: number
+          created_at?: string | null
+          description?: string
+          id?: number
+          organization_id?: string
+          structured_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_account_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chart_of_accounts_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages_dolceamore: {
+        Row: {
+          active: boolean | null
+          bot_message: string | null
+          created_at: string | null
+          id: number
+          message_type: string | null
+          nomewpp: string | null
+          phone: string | null
+          user_message: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          phone?: string | null
+          user_message?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          phone?: string | null
+          user_message?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages_instragram_prime: {
+        Row: {
+          active: boolean | null
+          bot_message: string | null
+          created_at: string | null
+          id: number
+          message_type: string | null
+          nomewpp: string | null
+          phone: string | null
+          user_message: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          phone?: string | null
+          user_message?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          phone?: string | null
+          user_message?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages_instragram_prime1001: {
+        Row: {
+          active: boolean | null
+          bot_message: string | null
+          created_at: string | null
+          id: number
+          message_type: string | null
+          nomewpp: string | null
+          user_message: string | null
+          usuario: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          user_message?: string | null
+          usuario?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          user_message?: string | null
+          usuario?: string | null
+        }
+        Relationships: []
+      }
+      chat_messages_primeal: {
+        Row: {
+          active: boolean | null
+          bot_message: string | null
+          created_at: string | null
+          id: number
+          message_type: string | null
+          nomewpp: string | null
+          phone: string | null
+          user_message: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          phone?: string | null
+          user_message?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          bot_message?: string | null
+          created_at?: string | null
+          id?: number
+          message_type?: string | null
+          nomewpp?: string | null
+          phone?: string | null
+          user_message?: string | null
+        }
+        Relationships: []
+      }
+      chats_dolceamore: {
+        Row: {
+          created_at: string | null
+          id: number
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          phone?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -328,6 +982,111 @@ export type Database = {
         }
         Relationships: []
       }
+      dados_cliente_dolceamore: {
+        Row: {
+          atendimento_ia: string | null
+          created_at: string | null
+          id: number
+          nomewpp: string | null
+          telefone: string | null
+        }
+        Insert: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      dados_cliente_instragram_prime1001: {
+        Row: {
+          atendimento_ia: string | null
+          created_at: string | null
+          id: number
+          nomewpp: string | null
+          setor: string | null
+          usuario: string | null
+        }
+        Insert: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          setor?: string | null
+          usuario?: string | null
+        }
+        Update: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          setor?: string | null
+          usuario?: string | null
+        }
+        Relationships: []
+      }
+      dados_cliente_primeade: {
+        Row: {
+          atendimento_ia: string | null
+          created_at: string | null
+          id: number
+          nomewpp: string | null
+          setor: string | null
+          telefone: string | null
+        }
+        Insert: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          setor?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          setor?: string | null
+          telefone?: string | null
+        }
+        Relationships: []
+      }
+      dados_cliente_primeal: {
+        Row: {
+          atendimento_ia: string | null
+          created_at: string | null
+          id: number
+          nomewpp: string | null
+          setor: string | null
+          telefone: string | null
+        }
+        Insert: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          setor?: string | null
+          telefone?: string | null
+        }
+        Update: {
+          atendimento_ia?: string | null
+          created_at?: string | null
+          id?: number
+          nomewpp?: string | null
+          setor?: string | null
+          telefone?: string | null
+        }
+        Relationships: []
+      }
       despesas_cartao: {
         Row: {
           ano_fatura: number | null
@@ -396,6 +1155,166 @@ export type Database = {
             columns: ["despesa_pai_id"]
             isOneToOne: false
             referencedRelation: "despesas_cartao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents_dolceamore: {
+        Row: {
+          content: string | null
+          embedding: string | null
+          id: number
+          metadata: Json | null
+        }
+        Insert: {
+          content?: string | null
+          embedding?: string | null
+          id?: number
+          metadata?: Json | null
+        }
+        Update: {
+          content?: string | null
+          embedding?: string | null
+          id?: number
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
+      dre_closures: {
+        Row: {
+          closed_at: string
+          closed_by: string
+          created_at: string | null
+          id: string
+          month: number
+          organization_id: string
+          unit_id: string | null
+          webhook_url: string | null
+          year: number
+        }
+        Insert: {
+          closed_at?: string
+          closed_by: string
+          created_at?: string | null
+          id?: string
+          month: number
+          organization_id: string
+          unit_id?: string | null
+          webhook_url?: string | null
+          year: number
+        }
+        Update: {
+          closed_at?: string
+          closed_by?: string
+          created_at?: string | null
+          id?: string
+          month?: number
+          organization_id?: string
+          unit_id?: string | null
+          webhook_url?: string | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dre_closures_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dre_closures_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dre_closures_config: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          updated_at: string | null
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          updated_at?: string | null
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dre_closures_config_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faixas_dre: {
+        Row: {
+          ativo: boolean | null
+          code: string | null
+          created_at: string | null
+          descricao: string
+          formula: Json | null
+          id: string
+          listar_no_dre: boolean | null
+          nome: string
+          operador: string
+          ordem: number
+          organization_id: string
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          code?: string | null
+          created_at?: string | null
+          descricao: string
+          formula?: Json | null
+          id?: string
+          listar_no_dre?: boolean | null
+          nome: string
+          operador?: string
+          ordem: number
+          organization_id: string
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          code?: string | null
+          created_at?: string | null
+          descricao?: string
+          formula?: Json | null
+          id?: string
+          listar_no_dre?: boolean | null
+          nome?: string
+          operador?: string
+          ordem?: number
+          organization_id?: string
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faixas_dre_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -539,6 +1458,53 @@ export type Database = {
         }
         Relationships: []
       }
+      invitations: {
+        Row: {
+          created_at: string | null
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          organization_id: string
+          role: string
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          organization_id: string
+          role: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          organization_id?: string
+          role?: string
+          status?: Database["public"]["Enums"]["invitation_status"]
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metas: {
         Row: {
           ano: number
@@ -567,24 +1533,6 @@ export type Database = {
         Relationships: []
       }
       n8n_chat_dolceamore: {
-        Row: {
-          id: number
-          message: Json
-          session_id: string
-        }
-        Insert: {
-          id?: number
-          message: Json
-          session_id: string
-        }
-        Update: {
-          id?: number
-          message?: Json
-          session_id?: string
-        }
-        Relationships: []
-      }
-      n8n_chat_dolceamoree: {
         Row: {
           id: number
           message: Json
@@ -635,6 +1583,24 @@ export type Database = {
           id?: number
           message?: Json
           session_id?: string
+        }
+        Relationships: []
+      }
+      n8n_chat_histories_primevl: {
+        Row: {
+          id: number
+          message: Json | null
+          session_id: string | null
+        }
+        Insert: {
+          id?: number
+          message?: Json | null
+          session_id?: string | null
+        }
+        Update: {
+          id?: number
+          message?: Json | null
+          session_id?: string | null
         }
         Relationships: []
       }
@@ -755,6 +1721,65 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: number
+          is_super_admin: boolean
+          organization_id: string
+          role: Database["public"]["Enums"]["organization_role"] | null
+          status: Database["public"]["Enums"]["member_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          is_super_admin?: boolean
+          organization_id: string
+          role?: Database["public"]["Enums"]["organization_role"] | null
+          status?: Database["public"]["Enums"]["member_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          is_super_admin?: boolean
+          organization_id?: string
+          role?: Database["public"]["Enums"]["organization_role"] | null
+          status?: Database["public"]["Enums"]["member_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
       pagamentos_mercadopago: {
         Row: {
           created_at: string
@@ -787,6 +1812,98 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_methods_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      people: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          organization_id: string
+          phone: string | null
+          type: string | null
+          unit_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          phone?: string | null
+          type?: string | null
+          unit_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          phone?: string | null
+          type?: string | null
+          unit_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "people_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "people_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       perfis_usuario: {
         Row: {
@@ -858,6 +1975,44 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      roles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          name: string
+          organization_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+          organization_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          organization_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roles_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       status_pagamento_mensal: {
         Row: {
@@ -945,6 +2100,109 @@ export type Database = {
         }
         Relationships: []
       }
+      units: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          id: string
+          name: string
+          organization_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_menu_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          menu_path: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_path: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_path?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_menu_permissions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_units: {
+        Row: {
+          created_at: string
+          id: string
+          organization_id: string
+          unit_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organization_id: string
+          unit_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organization_id?: string
+          unit_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_units_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_units_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios: {
         Row: {
           created_at: string
@@ -995,13 +2253,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_invitation: {
+        Args: { invitation_id: string; user_id: string }
+        Returns: Json
+      }
       autenticar_usuario: {
         Args: { email_login: string; senha_login: string }
         Returns: string
-      }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
       }
       conselheiraamore: {
         Args: { filter?: Json; match_count?: number; query_embedding: string }
@@ -1012,109 +2270,128 @@ export type Database = {
           similarity: number
         }[]
       }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
+      expire_old_invitations: { Args: never; Returns: undefined }
+      get_cash_flow_data_with_comparison: {
+        Args: { p_month: number; p_year: number }
+        Returns: {
+          budgeted_current: number
+          chart_of_account_id: number
+          realized_current: number
+          realized_previous: number
+        }[]
       }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
+      get_cash_flow_data_yearly: {
+        Args: { p_organization_id?: string; p_unit_id?: string; p_year: number }
+        Returns: {
+          chart_of_account_id: number
+          month: number
+          realized_total: number
+        }[]
       }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
+      get_dre_data_with_comparison: {
+        Args: { p_month: number; p_year: number }
+        Returns: {
+          budgeted_current: number
+          chart_of_account_id: number
+          realized_current: number
+          realized_previous: number
+        }[]
       }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
+      get_dre_data_yearly:
+        | {
+            Args: { p_year: number }
+            Returns: {
+              budgeted_total: number
+              chart_of_account_id: number
+              month: number
+              realized_total: number
+            }[]
+          }
+        | {
+            Args: {
+              p_organization_id?: string
+              p_unit_id?: string
+              p_year: number
+            }
+            Returns: {
+              budgeted_total: number
+              chart_of_account_id: number
+              month: number
+              realized_total: number
+            }[]
+          }
+      get_dre_yearly_v2: {
+        Args: { p_organization_id: string; p_unit_id?: string; p_year: number }
+        Returns: {
+          account_code: string
+          account_id: number
+          account_name: string
+          amount: number
+          category_id: number
+          category_name: string
+          month: number
+          section: string
+        }[]
+      }
+      get_initial_balance: {
+        Args: { p_organization_id?: string; p_unit_id?: string; p_year: number }
         Returns: number
       }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
+      get_invitation_by_token: {
+        Args: { invitation_token: string }
+        Returns: {
+          email: string
+          expires_at: string
+          id: string
+          organization_id: string
+          organization_name: string
+          role: string
+          status: Database["public"]["Enums"]["invitation_status"]
+          token: string
+        }[]
       }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
+      match_documents_dolceamore: {
+        Args: {
+          match_count?: number
+          metadata_filter?: Json
+          query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: number
+          metadata: Json
+          similarity: number
+        }[]
       }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
-      }
-      registrar_usuario: {
-        Args:
-          | { email: string; empresa: string; nome: string; senha: string }
-          | {
+      registrar_usuario:
+        | {
+            Args: {
               email: string
               empresa: string
               nome: string
               senha: string
               whatsapp: string
             }
-        Returns: string
-      }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
+            Returns: string
+          }
+        | {
+            Args: {
+              email: string
+              empresa: string
+              nome: string
+              senha: string
+            }
+            Returns: string
+          }
     }
     Enums: {
-      [_ in never]: never
+      bank_type: "banco_inter" | "stone"
+      indicator_enum: "Crédito" | "Débito"
+      invitation_status: "pending" | "accepted" | "cancelled" | "expired"
+      member_status: "pending" | "active" | "inactive"
+      organization_role: "CEO" | "Controller" | "Manager" | "Member"
+      sync_status: "pending" | "processing" | "success" | "error" | "partial"
+      transaction_type_enum: "income" | "expense"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1241,6 +2518,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      bank_type: ["banco_inter", "stone"],
+      indicator_enum: ["Crédito", "Débito"],
+      invitation_status: ["pending", "accepted", "cancelled", "expired"],
+      member_status: ["pending", "active", "inactive"],
+      organization_role: ["CEO", "Controller", "Manager", "Member"],
+      sync_status: ["pending", "processing", "success", "error", "partial"],
+      transaction_type_enum: ["income", "expense"],
+    },
   },
 } as const
