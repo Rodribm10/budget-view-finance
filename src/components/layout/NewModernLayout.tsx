@@ -27,7 +27,8 @@ import {
   Crown,
   Users,
   Settings,
-  Bell
+  Bell,
+  FileUp
 } from 'lucide-react';
 import OnboardingTour from '@/components/onboarding/OnboardingTour';
 import HelpIcon from '@/components/help/HelpIcon';
@@ -72,6 +73,11 @@ const AppSidebar = () => {
       title: "Transações",
       url: "/transacoes",
       icon: Receipt,
+    },
+    {
+      title: "Importar Extrato",
+      url: "/importar-extrato",
+      icon: FileUp,
     },
     {
       title: "Cartões de Crédito",
