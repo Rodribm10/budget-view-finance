@@ -49,7 +49,14 @@ export const useImportacaoExtrato = () => {
 
       // Verificar duplicatas
       const transacoesComDuplicatas = await verificarDuplicatas(transacoesParseadas);
-      setTransacoes(transacoesComDuplicatas);
+      
+      // Marcar todas as não duplicadas como selecionadas por padrão
+      const transacoesComSelecao = transacoesComDuplicatas.map(t => ({
+        ...t,
+        selecionada: !t.isDuplicada
+      }));
+      
+      setTransacoes(transacoesComSelecao);
 
       const duplicadas = transacoesComDuplicatas.filter(t => t.isDuplicada).length;
       const novas = transacoesComDuplicatas.length - duplicadas;
@@ -117,6 +124,24 @@ export const useImportacaoExtrato = () => {
     ));
   };
 
+  const atualizarSelecao = (hash: string, selecionada: boolean) => {
+    setTransacoes(transacoes.map(t => 
+      t.hash_unico === hash ? { ...t, selecionada } : t
+    ));
+  };
+
+  const selecionarTodas = () => {
+    setTransacoes(transacoes.map(t => 
+      t.isDuplicada ? t : { ...t, selecionada: true }
+    ));
+  };
+
+  const desselecionarTodas = () => {
+    setTransacoes(transacoes.map(t => 
+      t.isDuplicada ? t : { ...t, selecionada: false }
+    ));
+  };
+
   return {
     transacoes,
     isProcessing,
@@ -124,6 +149,9 @@ export const useImportacaoExtrato = () => {
     processarArquivo,
     importar,
     limpar,
-    atualizarCategoria
+    atualizarCategoria,
+    atualizarSelecao,
+    selecionarTodas,
+    desselecionarTodas
   };
 };
