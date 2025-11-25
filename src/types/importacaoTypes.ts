@@ -19,6 +19,7 @@ export interface TransacaoImportada {
   categoria?: string;
   hash_unico: string;
   isDuplicada?: boolean;
+  selecionada?: boolean;
 }
 
 export interface LogImportacao {

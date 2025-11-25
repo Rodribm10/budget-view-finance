@@ -22,7 +22,18 @@ const ImportarExtrato = () => {
   const [resultadoDialog, setResultadoDialog] = useState(false);
   const [logImportacao, setLogImportacao] = useState<LogImportacao | null>(null);
 
-  const { transacoes, isProcessing, isImporting, processarArquivo, importar, limpar, atualizarCategoria } = useImportacaoExtrato();
+  const { 
+    transacoes, 
+    isProcessing, 
+    isImporting, 
+    processarArquivo, 
+    importar, 
+    limpar, 
+    atualizarCategoria,
+    atualizarSelecao,
+    selecionarTodas,
+    desselecionarTodas
+  } = useImportacaoExtrato();
   const { contas, isLoading, criar, recarregar } = useContasBancarias();
 
   const handleFileSelect = async (file: File) => {
@@ -55,8 +66,15 @@ const ImportarExtrato = () => {
     const tipoArquivo = detectarTipoArquivo(arquivo.name);
     if (!tipoArquivo) return;
 
+    // Filtrar apenas transações selecionadas
+    const transacoesSelecionadas = transacoes.filter(t => t.selecionada && !t.isDuplicada);
+    
+    if (transacoesSelecionadas.length === 0) {
+      return;
+    }
+
     try {
-      const log = await importar(transacoes, contaSelecionada, arquivo.name, tipoArquivo);
+      const log = await importar(transacoesSelecionadas, contaSelecionada, arquivo.name, tipoArquivo);
       setLogImportacao(log);
       setResultadoDialog(true);
       
@@ -80,6 +98,7 @@ const ImportarExtrato = () => {
   };
 
   const novasTransacoes = transacoes.filter(t => !t.isDuplicada);
+  const transacoesSelecionadas = transacoes.filter(t => t.selecionada && !t.isDuplicada);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 p-6">
@@ -154,6 +173,9 @@ const ImportarExtrato = () => {
             <PreviewTransacoes
               transacoes={transacoes}
               onCategoriaChange={atualizarCategoria}
+              onSelectionChange={atualizarSelecao}
+              onSelectAll={selecionarTodas}
+              onDeselectAll={desselecionarTodas}
             />
 
             <Card className="p-6">
@@ -163,11 +185,11 @@ const ImportarExtrato = () => {
                 </Button>
                 <Button
                   onClick={handleImportar}
-                  disabled={isImporting || novasTransacoes.length === 0}
+                  disabled={isImporting || transacoesSelecionadas.length === 0}
                   size="lg"
                 >
                   <FileCheck className="w-5 h-5 mr-2" />
-                  {isImporting ? 'Importando...' : `Importar ${novasTransacoes.length} Transações`}
+                  {isImporting ? 'Importando...' : `Importar ${transacoesSelecionadas.length} Transações`}
                 </Button>
               </div>
             </Card>
