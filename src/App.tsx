@@ -29,6 +29,7 @@ import Categorias from "./pages/Categorias";
 import AdminFAQ from "./pages/AdminFAQ";
 import Assinatura from "./pages/Assinatura";
 import AvisosContas from "./pages/AvisosContas";
+import ImportarExtrato from "./pages/ImportarExtrato";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ function App() {
               <Route path="/admin/faq" element={<AdminFAQ />} />
               <Route path="/assinatura" element={<Assinatura />} />
               <Route path="/avisos-contas" element={<AvisosContas />} />
+              <Route path="/importar-extrato" element={<ImportarExtrato />} />
             </Route>
 
             {/* Rota 404 */}
