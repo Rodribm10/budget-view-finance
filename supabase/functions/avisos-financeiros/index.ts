@@ -91,11 +91,14 @@ serve(async (req) => {
       console.log(`Dias restantes: ${diasRestantes}`)
       console.log(`Hora atual: ${horaAtualBrasilia}, Hora aviso: ${conta.hora_aviso}`)
 
+      // Normalizar hora_aviso para comparação (pode vir como "09:00:00" do banco)
+      const horaAvisoNormalizada = conta.hora_aviso ? conta.hora_aviso.substring(0, 5) : ''
+      
       // Verificar se deve enviar aviso
       // Enviar aviso nos dias de antecedência E no dia do vencimento
       const deveEnviarAviso = (
         (diasRestantes <= conta.dias_antecedencia && diasRestantes >= 0) &&
-        horaAtualBrasilia === conta.hora_aviso
+        horaAtualBrasilia === horaAvisoNormalizada
       )
 
       console.log(`Deve enviar aviso: ${deveEnviarAviso}`)
