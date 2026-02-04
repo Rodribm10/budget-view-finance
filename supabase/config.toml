@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.update-register-function-sql]
 verify_jwt = false
+
+[functions.avisos-financeiros]
+verify_jwt = false
