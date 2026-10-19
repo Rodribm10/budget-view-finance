@@ -145,7 +145,8 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
       estabelecimento: item.estabelecimento || '',
       tipo: item.tipo?.toLowerCase() || 'despesa',
       categoria: item.categoria || 'Outros',
-      grupo_id: item.grupo_id || null
+      grupo_id: item.grupo_id || null,
+      revisar: item.revisar ?? false
     }));
 
     console.log("🔄 [getTransacoes] Dados transformados com sucesso");

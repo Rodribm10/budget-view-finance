@@ -49,7 +49,8 @@ export async function updateTransacao(transaction: Transaction): Promise<Transac
     detalhes: transaction.detalhes,
     estabelecimento: transaction.estabelecimento,
     tipo: transaction.tipo,
-    categoria: transaction.categoria
+    categoria: transaction.categoria,
+    revisar: false // editou no app = revisado
   };
   
   try {

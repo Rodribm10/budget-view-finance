@@ -8,9 +8,11 @@ import { TransactionHeader } from '@/components/transacoes/TransactionHeader';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { SimpleCard } from "@/components/ui/simple-card";
 import { MonthFilter } from "@/components/filters/MonthFilter";
+import { Button } from "@/components/ui/button";
 
 const Transacoes = () => {
   const location = useLocation();
+  const [soRevisar, setSoRevisar] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -50,11 +52,13 @@ const Transacoes = () => {
 
   // Filtrar transações baseado no filtro vindo do dashboard
   const getFilteredTransactions = () => {
+    if (soRevisar) return transactions.filter(t => t.revisar);
     if (location.state?.filter) {
       return transactions.filter(t => t.tipo === location.state.filter);
     }
     return transactions;
   };
+  const aRevisar = transactions.filter(t => t.revisar).length;
 
   const filteredTransactions = getFilteredTransactions();
 
@@ -62,10 +66,17 @@ const Transacoes = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Transações</h1>
-        <MonthFilter 
-          selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
-        />
+        <div className="flex items-center gap-2">
+          {aRevisar > 0 && (
+            <Button variant={soRevisar ? "default" : "outline"} size="sm" onClick={() => setSoRevisar(v => !v)}>
+              A revisar ({aRevisar})
+            </Button>
+          )}
+          <MonthFilter 
+            selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
+        </div>
       </div>
 
       <TransactionHeader 
@@ -81,7 +92,7 @@ const Transacoes = () => {
       />
 
       <SimpleCard 
-        title={`${location.state?.filter ? 
+        title={`${soRevisar ? 'A revisar — clique em editar para dar a descrição' : location.state?.filter ? 
           (location.state.filter === 'receita' ? 'Receitas' : 'Despesas') 
           : 'Todas as Transações'}`} 
         className="border-gray-200"
