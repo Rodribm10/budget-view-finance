@@ -126,9 +126,24 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
   
   // Se tem sessão mas perfil não está completo E não está na página de completar perfil, redirecionar
-  if (session && !isProfileComplete && location.pathname !== '/complete-profile') {
-    console.log('🚨 [PROTECTED_ROUTE] Redirecionando para complete-profile - perfil incompleto');
-    return <Navigate to="/complete-profile" replace />;
+  if (!isProfileComplete) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-6">
+        <div className="max-w-sm text-center">
+          <h1 className="text-lg font-semibold">Acesso não liberado</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            O Finance Home é de uso pessoal. A conta {session.user.email} não está na lista de acesso.
+          </p>
+          <button
+            type="button"
+            onClick={() => supabase.auth.signOut().then(() => window.location.assign('/auth'))}
+            className="mt-5 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-secondary"
+          >
+            Sair
+          </button>
+        </div>
+      </div>
+    );
   }
   
   // Se tudo ok, renderizar conteúdo protegido

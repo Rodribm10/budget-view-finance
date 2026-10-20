@@ -41,7 +41,7 @@ const transacoes = [
 
 const TABELAS: Record<string, unknown[]> = {
   transacoes,
-  usuarios: [{ id: 1, email: EMAIL, nome: "Rodrigo", whatsapp: "61999990000", status_assinatura: "ativa", created_at: mes(1) }],
+  usuarios: [{ id: 1, email: EMAIL, nome: "Rodrigo", whatsapp: "61999990000", status_assinatura: "ativa", liberado_permanente: true, created_at: mes(1) }],
   contas_bancarias: [
     { id: "c1", nome: "Inter PJ Hotel Rio's", banco: "Inter", tipo: "corrente", saldo_inicial: 22048.86, ativo: true, login: EMAIL },
     { id: "c2", nome: "Dinheiro", banco: "Espécie", tipo: "dinheiro", saldo_inicial: 350, ativo: true, login: EMAIL },

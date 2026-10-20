@@ -2,13 +2,10 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import LoginForm from '@/components/auth/LoginForm';
-import RegisterForm from '@/components/auth/RegisterForm';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
-import AuthSecurityFeatures from '@/components/auth/AuthSecurityFeatures';
 import ForgotPasswordForm from '@/components/auth/ForgotPasswordForm';
 import { toast } from "sonner";
 
@@ -88,27 +85,15 @@ const Auth = () => {
           <CardDescription>Gerencie suas finanças de forma simples e eficiente</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="cadastro">Cadastro</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="login" className="space-y-4">
-              <LoginForm 
-                isLoading={isLoading} 
-                setIsLoading={setIsLoading} 
-                onForgotPassword={handleForgotPassword}
-              />
-              <SocialLoginButtons />
-            </TabsContent>
-            
-            <TabsContent value="cadastro" className="space-y-4">
-              <RegisterForm isLoading={isLoading} setIsLoading={setIsLoading} />
-              <SocialLoginButtons />
-              <AuthSecurityFeatures />
-            </TabsContent>
-          </Tabs>
+          {/* Sem cadastro: uso pessoal. Acesso liberado em usuarios.liberado_permanente. */}
+          <div className="space-y-4">
+            <LoginForm 
+              isLoading={isLoading} 
+              setIsLoading={setIsLoading} 
+              onForgotPassword={handleForgotPassword}
+            />
+            <SocialLoginButtons />
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <p className="text-sm text-center text-muted-foreground">
