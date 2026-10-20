@@ -9,7 +9,7 @@ export const supabase = createClient(
 
 export const CATEGORIAS = [
   "Alimentação", "Supermercado", "Transporte", "Saúde", "Cuidados Pessoais", "Educação", "Lazer",
-  "Moradia", "Vestuário", "Serviços", "Pet", "Impostos", "Investimentos", "Receita Fixa",
+  "Moradia", "Vestuário", "Serviços", "Pet", "Impostos", "Investimentos", "Fatura de cartão", "Receita Fixa",
   "Transferência", "Outros",
 ];
 
@@ -259,7 +259,7 @@ export function lerCorrecao(linha: string, resumo: Record<string, number>): [str
 export async function categorizarLote(itens: Array<{ id: number; texto: string; tipo: string }>): Promise<Map<number, string>> {
   const resp = await perguntarIa(
     `Classifique cada lançamento financeiro pessoal numa categoria de ${JSON.stringify(CATEGORIAS)}.
-Regras: pagamento de fatura de cartão ou Pix entre contas do próprio dono = "Transferência"; pessoa física sem contexto = "Outros";
+Regras: pagamento de fatura/boleto de cartão a banco (Bradesco, Santander, Inter, Caixa, Nubank, Itaú) = "Fatura de cartão"; Pix entre contas do próprio dono = "Transferência"; pessoa física sem contexto = "Outros";
 receita de salário/pró-labore/aluguel recebido = "Receita Fixa". Responda SÓ um JSON: [{"id": número, "categoria": "..."}].`,
     JSON.stringify(itens),
   );

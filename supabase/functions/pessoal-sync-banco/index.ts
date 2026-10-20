@@ -2,6 +2,8 @@
 // lança em `transacoes` como "a revisar" e manda no grupo um resumo numerado para o Rodrigo
 // corrigir a descrição respondendo "1 - almoço com cliente".
 // Body opcional: { "dias": 3, "dry": true, "sem_resumo": true }
+// Histórico: { "de": "2026-03-01", "ate": "2026-09-30", "historico": true } → não marca "a revisar",
+// deixa sem categoria o que o mapa não reconhece (a IA preenche depois) e não manda resumo.
 import {
   brl, carregarConfig, acharGrupo, enviar, horaBrasilia, salvarConfig, supabase, transacoesBanco, type TxBanco,
 } from "../_shared/financas-pessoais.ts";
@@ -17,16 +19,27 @@ const MAPA: Array<[RegExp, string]> = [
   [/rent|housing|electricity|water|utilities|telecom|internet/i, "Moradia"],
   [/clothing|shopping/i, "Vestuário"],
   [/tax/i, "Impostos"],
-  [/invest/i, "Investimentos"],
   [/pet/i, "Pet"],
   [/services/i, "Serviços"],
 ];
 
 const nome = (p?: string | { name?: string }) => (typeof p === "string" ? p : p?.name) ?? "";
 
+// Fatura de cartão: pagamento a banco/emissor. O Pluggy às vezes rotula como "Investment", então vem antes do mapa.
+const FATURA_BANCO = /bradesco|santander|elite visa|\binter\b|nubank|nu pagamentos|ita[uú]|caixa econ|american express|amex/i;
+// Inclui fatura paga por Pix ao banco (Pluggy rotula "Investment"; em 2026 foram Pix ao Inter/Bradesco no vencimento).
+const ehFatura = (t: TxBanco) => FATURA_BANCO.test(`${t.description} ${nome(t.paymentData?.receiver)}`) &&
+  (/pagamento|fatura|boleto|cart/i.test(t.description ?? "") || /pix enviado/i.test(t.description ?? ""));
+// Pix pra corretora (BTG, XP…) = dinheiro mudando de lugar, como o CDB. Banco emissor de cartão fica como fatura.
+const ehInvestimento = (t: TxBanco) => /invest/i.test(t.category ?? "") && /pix enviado/i.test(t.description ?? "") && !ehFatura(t);
+
 // Saque e Pix para o próprio Rodrigo não são gasto: o dinheiro só muda de conta. Lançar como
 // despesa contaria duas vezes quando ele registrar no WhatsApp o que gastou com esse dinheiro.
 const ehSaque = (t: TxBanco) => /saque/i.test(`${t.description} ${t.operationType} ${t.category}`);
+// Dinheiro que só muda de lugar (decisão do Rodrigo, 20/10/2026): aplicação/resgate de CDB e o repasse
+// Editora Virtual Leitura → Exclusiva Empreendimentos. Entram como transferência, fora de receita e despesa.
+const MUDA_DE_LUGAR = /aplica[cç][aã]o|resgate|\bcdb\b|editora virtual leitura|exclusiva\s*-?\s*empreendimentos/i;
+const ehRepasse = (t: TxBanco) => MUDA_DE_LUGAR.test(`${t.description} ${nome(t.paymentData?.receiver)} ${nome(t.paymentData?.payer)}`);
 const ehProprio = (t: TxBanco) => /rodrigo\s+borba\s+machado/i.test(`${nome(t.paymentData?.receiver)} ${nome(t.paymentData?.payer)} ${t.description}`);
 
 Deno.serve(async (req) => {
@@ -36,18 +49,26 @@ Deno.serve(async (req) => {
     const cfg = await carregarConfig();
 
     const hoje = horaBrasilia(new Date().toISOString()).slice(0, 10);
-    const de = new Date(Date.parse(hoje) - dias * 86400_000).toISOString().slice(0, 10);
-    const txs = (await transacoesBanco(cfg.pluggy_account_id, de, hoje)).filter((t) => t.status === "POSTED");
+    const historico = !!body.historico;
+    const de = body.de ?? new Date(Date.parse(hoje) - dias * 86400_000).toISOString().slice(0, 10);
+    const ate = body.ate ?? hoje;
+    const txs = (await transacoesBanco(cfg.pluggy_account_id, de, ate)).filter((t) => t.status === "POSTED");
 
+    // Em blocos: centenas de valores num .in() estouram a URL e a consulta falha calada.
     const hashes = txs.map((t) => `pluggy:${t.id}`);
-    const { data: existentes } = await supabase.from("transacoes").select("hash_unico").in("hash_unico", hashes.length ? hashes : ["-"]);
-    const ja = new Set((existentes ?? []).map((e) => e.hash_unico));
+    const ja = new Set<string>();
+    for (let i = 0; i < hashes.length; i += 100) {
+      const { data, error } = await supabase.from("transacoes").select("hash_unico").in("hash_unico", hashes.slice(i, i + 100));
+      if (error) throw new Error(`checar duplicados: ${error.message}`);
+      for (const e of data ?? []) ja.add(e.hash_unico);
+    }
 
     const linhas: Record<string, unknown>[] = [];
     for (const t of txs) {
       if (ja.has(`pluggy:${t.id}`)) continue;
+      if (horaBrasilia(t.date).slice(0, 10) < de) continue; // fuso: 01/03 de madrugada UTC ainda é fevereiro
       const valor = Number(t.amount);
-      const transferencia = ehSaque(t) || ehProprio(t);
+      const transferencia = ehSaque(t) || ehProprio(t) || ehRepasse(t) || ehInvestimento(t);
       const contraparte = nome(valor < 0 ? t.paymentData?.receiver : t.paymentData?.payer);
       const base = {
         login: cfg.login, user: cfg.login, quando: horaBrasilia(t.date), valor, origem: "banco",
@@ -56,7 +77,7 @@ Deno.serve(async (req) => {
         detalhes: `Banco: ${t.description ?? ""} [${t.category ?? "sem categoria"}]`,
       };
       if (transferencia) {
-        linhas.push({ ...base, hash_unico: `pluggy:${t.id}`, tipo: "transferencia", categoria: "Transferência", revisar: false });
+        linhas.push({ ...base, hash_unico: `pluggy:${t.id}`, tipo: "transferencia", categoria: ehInvestimento(t) ? "Investimentos" : "Transferência", revisar: false });
         if (ehSaque(t) && valor < 0) {
           // Contrapartida: o saque entra na conta Dinheiro.
           linhas.push({ ...base, hash_unico: `pluggy:${t.id}:dinheiro`, valor: -valor, conta_bancaria_id: cfg.conta_dinheiro_id,
@@ -64,8 +85,9 @@ Deno.serve(async (req) => {
         }
         continue;
       }
-      const categoria = valor > 0 ? "Outros" : MAPA.find(([re]) => re.test(t.category ?? ""))?.[1] ?? "Outros";
-      linhas.push({ ...base, hash_unico: `pluggy:${t.id}`, tipo: valor > 0 ? "receita" : "despesa", categoria, revisar: true });
+      const mapeada = valor > 0 ? null : ehFatura(t) ? "Fatura de cartão" : MAPA.find(([re]) => re.test(t.category ?? ""))?.[1] ?? null;
+      const categoria = mapeada ?? (historico ? null : "Outros");
+      linhas.push({ ...base, hash_unico: `pluggy:${t.id}`, tipo: valor > 0 ? "receita" : "despesa", categoria, revisar: !historico });
     }
 
     if (body.dry) return Response.json({ ok: true, dry: true, banco: txs.length, novos: linhas });
@@ -76,7 +98,7 @@ Deno.serve(async (req) => {
     }
 
     let resumoEnviado = 0;
-    const jid = body.sem_resumo ? null : await acharGrupo(cfg);
+    const jid = body.sem_resumo || historico ? null : await acharGrupo(cfg);
     if (jid) {
       cfg.grupo_jid = jid;
       const { data: pendentes } = await supabase.from("transacoes")

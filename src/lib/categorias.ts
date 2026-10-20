@@ -1,5 +1,5 @@
 import {
-  ArrowLeftRight, BookOpen, Car, CircleDollarSign, Dog, Gamepad2, HeartPulse, Home, Landmark, PiggyBank,
+  ArrowLeftRight, BookOpen, CreditCard, Car, CircleDollarSign, Dog, Gamepad2, HeartPulse, Home, Landmark, PiggyBank,
   Scissors, Shirt, ShoppingCart, Utensils, Wrench, type LucideIcon,
 } from "lucide-react";
 
@@ -21,6 +21,7 @@ const MAPA: Record<string, { cor: string; icone: LucideIcon }> = {
   "investimentos": { cor: "oklch(0.55 0.12 175)", icone: PiggyBank },
   "receita fixa": { cor: "oklch(0.55 0.13 155)", icone: CircleDollarSign },
   "transferência": { cor: "oklch(0.6 0.02 260)", icone: ArrowLeftRight },
+  "fatura de cartão": { cor: "oklch(0.5 0.13 262)", icone: CreditCard },
 };
 
 const PADRAO = { cor: "oklch(0.6 0.02 260)", icone: CircleDollarSign };
