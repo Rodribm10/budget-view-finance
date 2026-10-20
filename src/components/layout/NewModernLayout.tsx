@@ -58,7 +58,7 @@ const ABAS: Item[] = [PRINCIPAL[0], PRINCIPAL[1], PRINCIPAL[2], PRINCIPAL[3]]; /
 const Marca = () => (
   <Link to="/dashboard" className="flex items-center gap-2.5 px-2 py-1.5">
     <img
-      src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png"
+      src="/logo.svg"
       alt=""
       className="h-7 w-7 shrink-0 rounded-md"
     />

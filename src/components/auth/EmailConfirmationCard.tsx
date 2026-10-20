@@ -29,7 +29,7 @@ const EmailConfirmationCard = ({ status, message }: EmailConfirmationCardProps) 
       <CardHeader className="space-y-1 text-center">
         <div className="flex items-center justify-center space-x-2 mb-4">
           <img 
-            src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
+            src="/logo.svg" 
             alt="Finance Home Logo" 
             className="h-8 w-8"
           />

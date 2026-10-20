@@ -72,17 +72,17 @@ const Auth = () => {
         </Button>
       </Link>
       
-      <Card className="w-full max-w-md glass-card bg-white/95 backdrop-blur-sm border-white/20 shadow-xl">
+      <Card className="w-full max-w-md rounded-2xl border bg-card shadow-none">
         <CardHeader className="space-y-1 text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
             <img 
-              src="/lovable-uploads/7149adf3-440a-491e-83c2-d964a3348cc9.png" 
+              src="/logo.svg" 
               alt="Finance Home Logo" 
-              className="h-10 w-10"
+              className="h-10 w-10 rounded-xl"
             />
-            <CardTitle className="text-2xl font-extrabold brand-text">Finance Home</CardTitle>
+            <CardTitle className="text-2xl font-semibold tracking-tight">Finance Home</CardTitle>
           </div>
-          <CardDescription>Gerencie suas finanças de forma simples e eficiente</CardDescription>
+          <CardDescription>Suas finanças da casa, em um lugar só</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Sem cadastro: uso pessoal. Acesso liberado em usuarios.liberado_permanente. */}
