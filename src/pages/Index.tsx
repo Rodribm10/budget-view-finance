@@ -4,12 +4,14 @@ import { useToast } from "@/hooks/use-toast";
 import { getCategorySummary, getMonthlyData } from "@/services/transacao";
 import { CategorySummary, MonthlyData } from "@/types/financialTypes";
 import { useTransactions } from "@/hooks/useTransactions";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import { Link } from "react-router-dom";
 import DashboardLoadingState from "@/components/dashboard/DashboardLoadingState";
-import DashboardSummaryCards from "@/components/dashboard/DashboardSummaryCards";
-import DashboardCharts from "@/components/dashboard/DashboardCharts";
-import DashboardRecentTransactions from "@/components/dashboard/DashboardRecentTransactions";
+import MonthlyChart from "@/components/dashboard/MonthlyChart";
 import { MonthFilter } from "@/components/filters/MonthFilter";
+import ResumoMes from "@/components/painel/ResumoMes";
+import ParaRevisar from "@/components/painel/ParaRevisar";
+import GastosPorCategoria from "@/components/painel/GastosPorCategoria";
+import ListaTransacoes from "@/components/painel/ListaTransacoes";
 
 const Dashboard = () => {
   const [categories, setCategories] = useState<CategorySummary[]>([]);
@@ -90,34 +92,34 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6" data-tour="dashboard-content">
-      <DashboardHeader />
-      
-      {/* Filtro de Mês/Ano */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Dashboard</h2>
-        <MonthFilter 
-          selectedMonth={selectedMonth}
-          onMonthChange={setSelectedMonth}
-        />
+    <div className="space-y-5" data-tour="dashboard-content">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold tracking-tight md:text-2xl">Visão geral</h1>
+        <MonthFilter selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       </div>
-      
-      <DashboardSummaryCards 
-        resumo={resumo} 
-        formatCurrency={formatCurrency}
-        selectedMonth={selectedMonth}
-      />
 
-      <DashboardCharts 
-        monthlyData={monthlyData}
-        categories={categories}
-        isLoading={isLoading}
-      />
+      <ResumoMes mes={selectedMonth} entradas={totalReceitas} despesas={totalDespesas} cartoes={totalCartoes} />
 
-      <DashboardRecentTransactions 
-        transactions={transactions}
-        transactionsLoading={transactionsLoading}
-      />
+      <ParaRevisar transacoes={transactions} />
+
+      <div className="grid gap-5 lg:grid-cols-5">
+        <section className="rounded-2xl border bg-card p-5 lg:col-span-3">
+          <h2 className="mb-4 text-sm font-semibold">Onde o dinheiro foi</h2>
+          <GastosPorCategoria categorias={categories} />
+        </section>
+        <section className="rounded-2xl border bg-card p-5 lg:col-span-2">
+          <h2 className="mb-4 text-sm font-semibold">Últimos 6 meses</h2>
+          <MonthlyChart data={monthlyData} isLoading={isLoading} />
+        </section>
+      </div>
+
+      <section className="overflow-hidden rounded-2xl border bg-card">
+        <div className="flex items-center justify-between px-5 py-4">
+          <h2 className="text-sm font-semibold">Últimos lançamentos</h2>
+          <Link to="/transacoes" className="text-sm font-medium text-primary hover:underline">Ver todos</Link>
+        </div>
+        <ListaTransacoes transacoes={transactions.slice(0, 8)} />
+      </section>
     </div>
   );
 };

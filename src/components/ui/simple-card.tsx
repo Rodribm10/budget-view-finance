@@ -17,10 +17,10 @@ export const SimpleCard: React.FC<SimpleCardProps> = ({
   headerClassName
 }) => {
   return (
-    <Card className={cn("border-2 shadow-sm hover:shadow-md transition-shadow", className)}>
+    <Card className={cn("rounded-2xl border shadow-none", className)}>
       {title && (
         <CardHeader className={cn("pb-3", headerClassName)}>
-          <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+          <CardTitle className="text-base font-semibold tracking-tight">{title}</CardTitle>
         </CardHeader>
       )}
       <CardContent className="pt-0">

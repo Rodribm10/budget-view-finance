@@ -20,11 +20,11 @@ const HelpIcon = () => {
       <Button
         variant="outline"
         size="icon"
-        className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg hover:shadow-xl transition-all z-50 bg-blue-600 text-white hover:bg-blue-700 border-0 flex flex-col items-center justify-center p-2"
+        aria-label="Ajuda"
+        className="fixed bottom-20 right-4 z-30 h-10 w-10 rounded-full border bg-card p-0 text-muted-foreground shadow-sm hover:bg-secondary hover:text-foreground md:bottom-6 md:right-6"
         onClick={() => setIsOpen(true)}
       >
-        <HelpCircle className="h-6 w-6 mb-1" />
-        <span className="text-xs font-medium">Ajuda</span>
+        <HelpCircle className="h-5 w-5" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

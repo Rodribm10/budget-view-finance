@@ -15,8 +15,12 @@ export default defineConfig(({ mode }) => ({
     componentTagger(),
   ].filter(Boolean),
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: [
+      // VITE_MOCK=1 no dev: dados de exemplo no lugar do Supabase, pra trabalhar no visual sem login.
+      ...(mode === 'development' && process.env.VITE_MOCK === '1'
+        ? [{ find: /^@\/integrations\/supabase\/client$/, replacement: path.resolve(__dirname, "./src/integrations/supabase/mock.ts") }]
+        : []),
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
+    ],
   },
 }));

@@ -58,7 +58,7 @@ const UserProfileButton = () => {
     <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
-          className="rounded-full py-0 ps-0 h-10 justify-start" 
+          className="h-10 w-10 justify-start rounded-full py-0 ps-0 sm:w-auto" 
           variant="outline"
           onClick={(e) => {
             e.preventDefault();
@@ -67,11 +67,11 @@ const UserProfileButton = () => {
           }}
         >
           <div className="me-2 flex aspect-square h-full p-1.5">
-            <div className="h-full w-full rounded-full bg-blue-600 flex items-center justify-center">
-              <User className="h-4 w-4 text-white" />
+            <div className="h-full w-full rounded-full bg-accent flex items-center justify-center">
+              <User className="h-4 w-4 text-accent-foreground" />
             </div>
           </div>
-          <span className="text-sm truncate">
+          <span className="hidden max-w-[16rem] truncate text-sm sm:inline">
             {userEmail || 'Usuário'}
           </span>
         </Button>

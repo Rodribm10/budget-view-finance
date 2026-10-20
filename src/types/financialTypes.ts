@@ -11,7 +11,8 @@ export interface Transaction {
   tipo: string;
   categoria: string;
   grupo_id?: string | null;
-  revisar?: boolean; // lançado pela automação do banco, aguardando descrição
+  revisar?: boolean;
+  origem?: string | null; // manual | banco | whatsapp | importado // lançado pela automação do banco, aguardando descrição
 }
 
 export interface TransactionSummary {

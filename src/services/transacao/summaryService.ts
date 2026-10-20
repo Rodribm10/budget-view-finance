@@ -317,10 +317,10 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
       query = query.eq('login', normalizedEmail);
     }
 
-    // Get full current year
-    const currentYear = new Date().getFullYear();
-    const startDate = new Date(currentYear, 0, 1); // January 1st
-    const endDate = new Date(currentYear, 11, 31); // December 31st
+    // Últimos 6 meses (o gráfico do painel mostra essa janela)
+    const hoje = new Date();
+    const startDate = new Date(hoje.getFullYear(), hoje.getMonth() - 5, 1);
+    const endDate = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
 
     query = query
       .gte('quando', startDate.toISOString().split('T')[0])
@@ -346,9 +346,10 @@ export async function getMonthlyData(): Promise<MonthlyData[]> {
 
       const valor = Math.abs(Number(transaction.valor || 0));
       
-      if (transaction.tipo?.toLowerCase() === 'receita') {
+      const tipo = transaction.tipo?.toLowerCase();
+      if (tipo === 'receita') {
         monthlyMap[monthKey].receitas += valor;
-      } else {
+      } else if (tipo === 'despesa') { // transferência não é gasto
         monthlyMap[monthKey].despesas += valor;
       }
     });

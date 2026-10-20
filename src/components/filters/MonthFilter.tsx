@@ -1,63 +1,38 @@
-
-import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface MonthFilterProps {
-  selectedMonth: string;
+  selectedMonth: string; // YYYY-MM
   onMonthChange: (month: string) => void;
   className?: string;
 }
 
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+const somar = (ym: string, delta: number) => {
+  const [a, m] = ym.split('-').map(Number);
+  const d = new Date(a, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+};
+
+export const nomeMes = (ym: string) => MESES[Number(ym.split('-')[1]) - 1] ?? '';
+
+// Navegação ‹ mês › como nos apps de finanças: um toque pra ir e voltar, sem lista fixa de meses.
 export const MonthFilter = ({ selectedMonth, onMonthChange, className }: MonthFilterProps) => {
-  const months = [
-    { value: '2024-01', label: 'Janeiro 2024' },
-    { value: '2024-02', label: 'Fevereiro 2024' },
-    { value: '2024-03', label: 'Março 2024' },
-    { value: '2024-04', label: 'Abril 2024' },
-    { value: '2024-05', label: 'Maio 2024' },
-    { value: '2024-06', label: 'Junho 2024' },
-    { value: '2024-07', label: 'Julho 2024' },
-    { value: '2024-08', label: 'Agosto 2024' },
-    { value: '2024-09', label: 'Setembro 2024' },
-    { value: '2024-10', label: 'Outubro 2024' },
-    { value: '2024-11', label: 'Novembro 2024' },
-    { value: '2024-12', label: 'Dezembro 2024' },
-    { value: '2025-01', label: 'Janeiro 2025' },
-    { value: '2025-02', label: 'Fevereiro 2025' },
-    { value: '2025-03', label: 'Março 2025' },
-    { value: '2025-04', label: 'Abril 2025' },
-    { value: '2025-05', label: 'Maio 2025' },
-    { value: '2025-06', label: 'Junho 2025' },
-    { value: '2025-07', label: 'Julho 2025' },
-    { value: '2025-08', label: 'Agosto 2025' },
-    { value: '2025-09', label: 'Setembro 2025' },
-    { value: '2025-10', label: 'Outubro 2025' },
-    { value: '2025-11', label: 'Novembro 2025' },
-    { value: '2025-12', label: 'Dezembro 2025' },
-  ];
-
-  // Função para obter o mês atual no formato YYYY-MM
-  const getCurrentMonth = () => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  };
-
+  const [ano] = selectedMonth.split('-');
+  const anoAtual = String(new Date().getFullYear());
   return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      <Calendar className="h-4 w-4 text-muted-foreground" />
-      <Select value={selectedMonth} onValueChange={onMonthChange}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Selecione o mês" />
-        </SelectTrigger>
-        <SelectContent>
-          {months.map((month) => (
-            <SelectItem key={month.value} value={month.value}>
-              {month.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+    <div className={cn('inline-flex items-center gap-1 rounded-lg border bg-card p-0.5', className)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Mês anterior" onClick={() => onMonthChange(somar(selectedMonth, -1))}>
+        <ChevronLeft className="h-4 w-4" />
+      </Button>
+      <span className="min-w-[8.5rem] text-center text-sm font-semibold tabular-nums">
+        {nomeMes(selectedMonth)}{ano !== anoAtual && ` ${ano}`}
+      </span>
+      <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Próximo mês" onClick={() => onMonthChange(somar(selectedMonth, 1))}>
+        <ChevronRight className="h-4 w-4" />
+      </Button>
     </div>
   );
 };

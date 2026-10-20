@@ -1,18 +1,19 @@
-
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useTransactions } from '@/hooks/useTransactions';
-import { TransactionSummaryCards } from '@/components/transacoes/TransactionSummaryCards';
 import { TransactionDialogs } from '@/components/transacoes/TransactionDialogs';
 import { TransactionHeader } from '@/components/transacoes/TransactionHeader';
 import TransactionsTable from '@/components/dashboard/TransactionsTable';
-import { SimpleCard } from "@/components/ui/simple-card";
 import { MonthFilter } from "@/components/filters/MonthFilter";
-import { Button } from "@/components/ui/button";
+import { reais } from '@/components/painel/dinheiro';
+import { cn } from '@/lib/utils';
+
+type Filtro = 'todas' | 'receita' | 'despesa' | 'revisar';
 
 const Transacoes = () => {
   const location = useLocation();
-  const [soRevisar, setSoRevisar] = useState(false);
+  const [filtro, setFiltro] = useState<Filtro>(() =>
+    location.state?.revisar ? 'revisar' : location.state?.filter === 'receita' || location.state?.filter === 'despesa' ? location.state.filter : 'todas');
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -30,7 +31,6 @@ const Transacoes = () => {
     totalReceitas,
     totalDespesas,
     totalCartoes,
-    formatCurrency,
     handleTransactionSuccess,
     handleDespesaCartaoSuccess,
     handleEditTransaction,
@@ -41,70 +41,74 @@ const Transacoes = () => {
     loadTransactions
   } = useTransactions({ monthFilter: selectedMonth });
 
-  // Aplicar filtro inicial se vier do dashboard
-  useEffect(() => {
-    if (location.state?.filter) {
-      // Aqui você pode implementar lógica adicional para filtrar automaticamente
-      // Por exemplo, definir um filtro inicial na tabela
-      console.log('Filtro aplicado:', location.state.filter);
-    }
-  }, [location.state]);
-
-  // Filtrar transações baseado no filtro vindo do dashboard
-  const getFilteredTransactions = () => {
-    if (soRevisar) return transactions.filter(t => t.revisar);
-    if (location.state?.filter) {
-      return transactions.filter(t => t.tipo === location.state.filter);
-    }
-    return transactions;
-  };
   const aRevisar = transactions.filter(t => t.revisar).length;
+  const visiveis = filtro === 'revisar' ? transactions.filter(t => t.revisar)
+    : filtro === 'todas' ? transactions : transactions.filter(t => t.tipo === filtro);
+  const saidas = totalDespesas + totalCartoes;
 
-  const filteredTransactions = getFilteredTransactions();
+  const opcoes: Array<[Filtro, string]> = [
+    ['todas', 'Todas'], ['receita', 'Entradas'], ['despesa', 'Saídas'],
+    ...(aRevisar ? [['revisar', `A revisar · ${aRevisar}`] as [Filtro, string]] : []),
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Transações</h1>
-        <div className="flex items-center gap-2">
-          {aRevisar > 0 && (
-            <Button variant={soRevisar ? "default" : "outline"} size="sm" onClick={() => setSoRevisar(v => !v)}>
-              A revisar ({aRevisar})
-            </Button>
-          )}
-          <MonthFilter 
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-          />
-        </div>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-xl font-semibold tracking-tight md:text-2xl">Transações</h1>
+        <MonthFilter selectedMonth={selectedMonth} onMonthChange={setSelectedMonth} />
       </div>
 
-      <TransactionHeader 
-        onOpenDialog={handleOpenDialog}
-        onOpenCartaoCreditoDialog={handleOpenCartaoCreditoDialog}
-      />
+      <dl className="grid grid-cols-3 divide-x rounded-2xl border bg-card">
+        {[
+          ['Entradas', reais(totalReceitas), 'text-income'],
+          ['Saídas', reais(saidas), 'text-expense'],
+          ['Saldo', `${totalReceitas - saidas < 0 ? '−' : ''}${reais(totalReceitas - saidas)}`, totalReceitas - saidas < 0 ? 'text-expense' : 'text-foreground'],
+        ].map(([rotulo, valor, cor]) => (
+          <div key={rotulo} className="min-w-0 px-3 py-3 md:px-5">
+            <dt className="text-xs text-muted-foreground">{rotulo}</dt>
+            <dd className={cn('mt-0.5 truncate text-[13px] font-semibold tabular-nums sm:text-sm md:text-base', cor)}>{valor}</dd>
+          </div>
+        ))}
+      </dl>
 
-      <TransactionSummaryCards 
-        totalReceitas={totalReceitas}
-        totalDespesas={totalDespesas}
-        totalCartoes={totalCartoes}
-        formatCurrency={formatCurrency}
-      />
-
-      <SimpleCard 
-        title={`${soRevisar ? 'A revisar — clique em editar para dar a descrição' : location.state?.filter ? 
-          (location.state.filter === 'receita' ? 'Receitas' : 'Despesas') 
-          : 'Todas as Transações'}`} 
-        className="border-gray-200"
-      >
-        <TransactionsTable 
-          transactions={filteredTransactions}
-          isLoading={isLoading}
-          showPagination={true}
-          onEdit={handleEditTransaction}
-          onDelete={loadTransactions}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex gap-1 overflow-x-auto rounded-lg bg-secondary p-1" role="tablist" aria-label="Filtrar lançamentos">
+          {opcoes.map(([valor, rotulo]) => (
+            <button
+              key={valor}
+              type="button"
+              role="tab"
+              aria-selected={filtro === valor}
+              onClick={() => setFiltro(valor)}
+              className={cn(
+                'whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                filtro === valor ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground',
+                valor === 'revisar' && filtro !== valor && 'text-[oklch(0.45_0.1_60)]',
+              )}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
+        <TransactionHeader
+          onOpenDialog={handleOpenDialog}
+          onOpenCartaoCreditoDialog={handleOpenCartaoCreditoDialog}
         />
-      </SimpleCard>
+      </div>
+
+      {filtro === 'revisar' && (
+        <p className="text-sm text-muted-foreground">
+          Estes vieram do banco sem descrição. Toque em um pra dar o nome certo, ou responda o resumo no grupo do WhatsApp.
+        </p>
+      )}
+
+      <TransactionsTable
+        transactions={visiveis}
+        isLoading={isLoading}
+        showPagination={true}
+        onEdit={handleEditTransaction}
+        onDelete={loadTransactions}
+      />
 
       <TransactionDialogs
         isDialogOpen={isDialogOpen}

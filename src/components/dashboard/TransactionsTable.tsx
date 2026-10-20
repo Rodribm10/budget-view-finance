@@ -1,9 +1,7 @@
 
 import { Transaction } from '@/types/financialTypes';
-import { Table } from '@/components/ui/table';
-import TransactionTableSearch from './table/TransactionTableSearch';
-import TransactionTableHeader from './table/TransactionTableHeader';
-import TransactionTableBody from './table/TransactionTableBody';
+import { Search } from 'lucide-react';
+import ListaTransacoes from '@/components/painel/ListaTransacoes';
 import TransactionTablePagination from './table/TransactionTablePagination';
 import TransactionDeleteDialog from './table/TransactionDeleteDialog';
 import { useTransactionTableLogic } from './table/useTransactionTableLogic';
@@ -52,29 +50,39 @@ const TransactionsTable = ({
   };
 
   return (
-    <div className="space-y-4">
-      <TransactionTableSearch 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+    <div className="space-y-3">
+      <section className="overflow-hidden rounded-2xl border bg-card">
+        <div className="relative border-b">
+          <Search className="pointer-events-none absolute left-5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Buscar por nome, categoria ou detalhe"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Buscar lançamentos"
+            className="h-12 w-full bg-transparent pl-12 pr-5 text-sm outline-none placeholder:text-muted-foreground focus-visible:bg-secondary/40"
+          />
+        </div>
+        {isLoading ? (
+          <div className="space-y-px">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-5 py-3">
+                <div className="h-10 w-10 animate-pulse rounded-full bg-secondary" />
+                <div className="h-3.5 flex-1 animate-pulse rounded bg-secondary" />
+                <div className="h-3.5 w-20 animate-pulse rounded bg-secondary" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ListaTransacoes
+            transacoes={paginatedTransactions}
+            onEditar={handleEditTransaction}
+            onExcluir={onDelete ? handleDeleteClick : undefined}
+            vazio={searchQuery ? 'Nada encontrado com essa busca.' : undefined}
+          />
+        )}
+      </section>
 
-      <div className="rounded-md border">
-        <Table>
-          <TransactionTableHeader 
-            sortColumn={sortColumn}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-          />
-          <TransactionTableBody 
-            transactions={paginatedTransactions}
-            isLoading={isLoading}
-            onEdit={handleEditTransaction}
-            onDelete={handleDeleteClick}
-            formatCurrency={formatCurrency}
-          />
-        </Table>
-      </div>
-      
       <TransactionTablePagination 
         showPagination={showPagination}
         currentPage={currentPage}
