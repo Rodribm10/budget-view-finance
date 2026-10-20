@@ -136,12 +136,12 @@ export async function textoAvisos(login: string): Promise<string> {
       const venc = vencimento(c.dia_vencimento, ano, mes);
       const faltam = diasEntre(hoje, venc);
       const quando = venc.slice(8, 10) + "/" + venc.slice(5, 7);
-      const valor = c.valor ? ` · ${brl(Number(c.valor))}` : "";
+      // Sem valor no lembrete: o cadastrado é estimativa e o real só se sabe na fatura/boleto.
       if (faltam >= 0 && faltam <= Math.max(c.dias_antecedencia ?? 1, 1)) {
         const rotulo = faltam === 0 ? "*hoje*" : faltam === 1 ? "amanhã" : `em ${faltam} dias (${quando})`;
-        vencendo.push([faltam, `• ${c.nome_conta}${valor} — vence ${rotulo}`]);
+        vencendo.push([faltam, `• ${c.nome_conta} — vence ${rotulo}`]);
       } else if (faltam === -1 || faltam === -3) { // lembra no dia seguinte e 3 dias depois, não todo dia
-        atrasadas.push([faltam, `• ${c.nome_conta}${valor} — venceu ${quando}`]);
+        atrasadas.push([faltam, `• ${c.nome_conta} — venceu ${quando}`]);
       }
     }
   }
