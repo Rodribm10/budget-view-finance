@@ -7,6 +7,8 @@ import TransactionsTable from '@/components/dashboard/TransactionsTable';
 import { MonthFilter } from "@/components/filters/MonthFilter";
 import { reais } from '@/components/painel/dinheiro';
 import { cn } from '@/lib/utils';
+import { X } from 'lucide-react';
+import { IconeCategoria } from '@/components/painel/ListaTransacoes';
 
 type Filtro = 'todas' | 'receita' | 'despesa' | 'revisar';
 
@@ -14,7 +16,10 @@ const Transacoes = () => {
   const location = useLocation();
   const [filtro, setFiltro] = useState<Filtro>(() =>
     location.state?.revisar ? 'revisar' : location.state?.filter === 'receita' || location.state?.filter === 'despesa' ? location.state.filter : 'todas');
+  // Vindo do painel ("Onde o dinheiro foi"): abre na categoria e no mês tocados.
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(location.state?.categoria ?? null);
   const [selectedMonth, setSelectedMonth] = useState(() => {
+    if (location.state?.mes) return location.state.mes as string;
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
@@ -42,8 +47,11 @@ const Transacoes = () => {
   } = useTransactions({ monthFilter: selectedMonth });
 
   const aRevisar = transactions.filter(t => t.revisar).length;
-  const visiveis = filtro === 'revisar' ? transactions.filter(t => t.revisar)
-    : filtro === 'todas' ? transactions : transactions.filter(t => t.tipo === filtro);
+  const daCategoria = (c?: string | null) => categoriaFiltro === 'Sem Categoria' ? !c?.trim() : c?.trim() === categoriaFiltro;
+  const visiveis = (filtro === 'revisar' ? transactions.filter(t => t.revisar)
+    : filtro === 'todas' ? transactions : transactions.filter(t => t.tipo === filtro))
+    .filter(t => !categoriaFiltro || daCategoria(t.categoria));
+  const totalCategoria = visiveis.reduce((s, t) => s + Math.abs(t.valor), 0);
   const saidas = totalDespesas + totalCartoes;
 
   const opcoes: Array<[Filtro, string]> = [
@@ -95,6 +103,20 @@ const Transacoes = () => {
           onOpenCartaoCreditoDialog={handleOpenCartaoCreditoDialog}
         />
       </div>
+
+      {categoriaFiltro && (
+        <div className="flex items-center gap-3 rounded-2xl border bg-card px-4 py-3">
+          <IconeCategoria nome={categoriaFiltro} tamanho="sm" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{categoriaFiltro}</p>
+            <p className="text-xs text-muted-foreground tabular-nums">{visiveis.length} {visiveis.length === 1 ? 'lançamento' : 'lançamentos'} · {reais(totalCategoria)}</p>
+          </div>
+          <button type="button" onClick={() => setCategoriaFiltro(null)} aria-label="Tirar filtro de categoria"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {filtro === 'revisar' && (
         <p className="text-sm text-muted-foreground">

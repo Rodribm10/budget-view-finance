@@ -105,7 +105,7 @@ const Dashboard = () => {
       <div className="grid gap-5 lg:grid-cols-5">
         <section className="rounded-2xl border bg-card p-5 lg:col-span-3">
           <h2 className="mb-4 text-sm font-semibold">Onde o dinheiro foi</h2>
-          <GastosPorCategoria categorias={categories} />
+          <GastosPorCategoria categorias={categories} mes={selectedMonth} />
         </section>
         <section className="rounded-2xl border bg-card p-5 lg:col-span-2">
           <h2 className="mb-4 text-sm font-semibold">Últimos 6 meses</h2>
