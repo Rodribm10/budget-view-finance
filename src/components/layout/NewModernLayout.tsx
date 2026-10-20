@@ -25,6 +25,7 @@ import {
   Settings,
   BellRing,
   Menu,
+  RotateCw,
   type LucideIcon,
 } from 'lucide-react';
 import UserProfileButton from '@/components/dashboard/UserProfileButton';
@@ -112,13 +113,31 @@ const AppSidebar = () => (
   </Sidebar>
 );
 
+// Instalado na tela de início do iPhone não há barra do Safari nem "puxar pra atualizar":
+// este botão recarrega dados e a versão mais nova do app.
+const Atualizar = () => {
+  const [girando, setGirando] = React.useState(false);
+  return (
+    <button
+      type="button"
+      aria-label="Atualizar"
+      onClick={() => { setGirando(true); window.location.reload(); }}
+      className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+    >
+      <RotateCw className={cn('h-[18px] w-[18px]', girando && 'animate-spin')} />
+    </button>
+  );
+};
+
 const Topo = () => (
-  <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background/90 px-4 backdrop-blur-sm md:px-6">
+  <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-sm md:px-6"
+    style={{ height: 'calc(3.5rem + env(safe-area-inset-top))' }}>
     <SidebarTrigger className="-ml-1 hidden text-muted-foreground md:inline-flex" />
     <div className="md:hidden">
       <Marca />
     </div>
-    <div className="ml-auto">
+    <div className="ml-auto flex items-center gap-1">
+      <Atualizar />
       <UserProfileButton />
     </div>
   </header>
