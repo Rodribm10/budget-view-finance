@@ -59,8 +59,13 @@ const TABELAS: Record<string, unknown[]> = {
     { id: 2, login: EMAIL, categoria: "Supermercado", valor_meta: 1500, mes: hoje.getMonth() + 1, ano: hoje.getFullYear(), created_at: mes(1) },
   ],
   contas_recorrentes: [
-    { id: 1, login: EMAIL, nome: "Condomínio", valor: 980, dia_vencimento: 25, ativo: true, created_at: mes(1) },
-    { id: 2, login: EMAIL, nome: "Internet", valor: 129.9, dia_vencimento: 22, ativo: true, created_at: mes(1) },
+    { id: "r1", email_usuario: EMAIL, nome_conta: "Escola dos filhos", valor: 2799.9, dia_vencimento: 10, dias_antecedencia: 2, apelido_extrato: "adventista", ativo: true },
+    { id: "r2", email_usuario: EMAIL, nome_conta: "Telefonia Claro", valor: 450, dia_vencimento: 15, dias_antecedencia: 1, apelido_extrato: null, ativo: true },
+    { id: "r3", email_usuario: EMAIL, nome_conta: "Condomínio", valor: 980, dia_vencimento: 25, dias_antecedencia: 2, apelido_extrato: "lima dos campos", ativo: true },
+    { id: "r4", email_usuario: EMAIL, nome_conta: "Internet usina", valor: 140, dia_vencimento: 22, dias_antecedencia: 2, apelido_extrato: null, ativo: true },
+  ],
+  contas_pagamentos: [
+    { id: 1, conta_id: "r1", pago_em: mes(9).slice(0, 10), valor: 2799.9, origem: "auto" },
   ],
 };
 

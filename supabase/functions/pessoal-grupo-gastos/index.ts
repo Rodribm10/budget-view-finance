@@ -3,9 +3,10 @@
 //  * "1 - almoço com cliente" → corrige a descrição do item 1 do último resumo do banco.
 // Uma linha = um lançamento. Responde no grupo com o que entendeu.
 import {
-  acharGrupo, brl, carregarConfig, categorizar, categorizarLote, enviar, horaBrasilia, interpretar, lerCorrecao, mensagensDesde, ROBO, salvarConfig,
+  acharGrupo, brl, carregarConfig, categorizar, categorizarLote, enviar, horaBrasilia, interpretar, lerCorrecao, lerValor, mensagensDesde, ROBO, salvarConfig,
   supabase,
 } from "../_shared/financas-pessoais.ts";
+import { pagarPeloGrupo } from "../_shared/contas.ts";
 
 Deno.serve(async (req) => {
   try {
@@ -48,6 +49,13 @@ Deno.serve(async (req) => {
 
       const linhas = texto.split("\n").map((l) => l.trim()).filter(Boolean);
       for (const [i, linha] of linhas.entries()) {
+        // "paguei claro 452" dá baixa na conta fixa; não lança gasto (o pagamento vem pelo banco).
+        const pago = await pagarPeloGrupo(cfg, linha, lerValor(linha));
+        if (pago) {
+          respostas.push(pago);
+          continue;
+        }
+
         const correcao = lerCorrecao(linha, resumo);
         if (correcao) {
           const [n, descricao] = correcao;
