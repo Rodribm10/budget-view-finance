@@ -1,0 +1,9 @@
+// Hospedagem no Cloudflare Workers (site estático do Vite). Saiu do Lovable em 19/10/2026.
+{
+  "name": "financehome",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
