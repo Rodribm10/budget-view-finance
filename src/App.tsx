@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthStore } from "@/stores/authStore";
@@ -14,22 +14,14 @@ import AuthReset from '@/pages/AuthReset';
 // Pages
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Landing from "./pages/Landing";
 import Transacoes from "./pages/Transacoes";
 import CartoesCredito from "./pages/CartoesCredito";
 import Configuracoes from "./pages/Configuracoes";
-import Metas from "./pages/Metas";
 import Calendario from "./pages/Calendario";
-import WhatsApp from "./pages/WhatsApp";
-import GruposWhatsApp from "./pages/GruposWhatsApp";
 import EmailConfirmation from "./pages/EmailConfirmation";
-import CompleteProfile from "./pages/CompleteProfile";
 import NotFound from "./pages/NotFound";
 import Categorias from "./pages/Categorias";
-import AdminFAQ from "./pages/AdminFAQ";
-import Assinatura from "./pages/Assinatura";
 import AvisosContas from "./pages/AvisosContas";
-import ImportarExtrato from "./pages/ImportarExtrato";
 
 const queryClient = new QueryClient();
 
@@ -61,28 +53,21 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* Rotas públicas */}
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/reset" element={<AuthReset />} />
             <Route path="/email-confirmation" element={<EmailConfirmation />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             
             {/* Rotas protegidas */}
-            <Route path="/" element={<ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>}>
+            <Route element={<ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>}>
               <Route path="/dashboard" element={<Index />} />
               <Route path="/transacoes" element={<Transacoes />} />
               <Route path="/cartoes" element={<CartoesCredito />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
-              <Route path="/metas" element={<Metas />} />
               <Route path="/calendario" element={<Calendario />} />
-              <Route path="/whatsapp" element={<WhatsApp />} />
-              <Route path="/grupos-whatsapp" element={<GruposWhatsApp />} />
-              <Route path="/complete-profile" element={<CompleteProfile />} />
               <Route path="/categorias" element={<Categorias />} />
-              <Route path="/admin/faq" element={<AdminFAQ />} />
-              <Route path="/assinatura" element={<Assinatura />} />
               <Route path="/avisos-contas" element={<AvisosContas />} />
-              <Route path="/importar-extrato" element={<ImportarExtrato />} />
             </Route>
 
             {/* Rota 404 */}

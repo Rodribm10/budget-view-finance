@@ -1,7 +1,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import LoadingState from '../whatsapp/LoadingState';
+import LoadingState from './LoadingState';
 import { useAuthStore } from '@/stores/authStore';
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';

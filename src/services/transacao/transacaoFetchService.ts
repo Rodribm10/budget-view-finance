@@ -23,37 +23,6 @@ export async function getTransacoes(monthFilter?: string): Promise<Transaction[]
   }
   
   try {
-    // TESTE SIMPLES PRIMEIRO - buscar QUALQUER transação na tabela
-    console.log("🧪 [DEBUG] Testando se existem transações na tabela...");
-    const { data: allTransactions, error: allError } = await supabase
-      .from('transacoes')
-      .select('*')
-      .limit(5);
-    
-    console.log("🧪 [DEBUG] Total de transações encontradas na tabela:", allTransactions?.length || 0);
-    if (allTransactions && allTransactions.length > 0) {
-      console.log("🧪 [DEBUG] Primeira transação como exemplo:", allTransactions[0]);
-      console.log("🧪 [DEBUG] Estrutura da primeira transação:", Object.keys(allTransactions[0]));
-    }
-    if (allError) {
-      console.error("🧪 [DEBUG] Erro ao buscar todas as transações:", allError);
-    }
-
-    // TESTE ESPECÍFICO - buscar por login exato
-    console.log("🧪 [DEBUG] Testando busca específica por login:", normalizedEmail);
-    const { data: specificLogin, error: loginError } = await supabase
-      .from('transacoes')
-      .select('*')
-      .eq('login', normalizedEmail);
-    
-    console.log("🧪 [DEBUG] Transações encontradas para login específico:", specificLogin?.length || 0);
-    if (loginError) {
-      console.error("🧪 [DEBUG] Erro na busca por login:", loginError);
-    }
-    if (specificLogin && specificLogin.length > 0) {
-      console.log("🧪 [DEBUG] Primeira transação do usuário:", specificLogin[0]);
-    }
-
     // First, get all user's groups by email
     console.log("👥 [getTransacoes] Buscando grupos do usuário...");
     const groupIds = await getUserGroups(normalizedEmail);

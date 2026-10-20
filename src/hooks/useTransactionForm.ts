@@ -145,10 +145,10 @@ export const useTransactionForm = (
         return;
       }
       
-      // Adjust the value based on transaction type
+      // Padrão do banco: despesa negativa, receita positiva (igual ao sync do banco)
       const valorFinal = data.tipo.toLowerCase() === 'receita' 
         ? Math.abs(valorNumerico) 
-        : Math.abs(valorNumerico);
+        : -Math.abs(valorNumerico);
       
       console.log(`💰 Valor final calculado: ${valorFinal} (tipo: ${data.tipo})`);
       console.log(`📅 Data da transação: ${data.quando}`);
@@ -185,7 +185,7 @@ export const useTransactionForm = (
           valor: valorFinal,
           detalhes: data.detalhes,
           categoria: data.categoria,
-          tipo: data.tipo,
+          tipo: data.tipo.toLowerCase(),
           quando: data.quando,
           grupo_id: data.grupo_id || null
         };

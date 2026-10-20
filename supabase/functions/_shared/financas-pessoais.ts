@@ -254,3 +254,15 @@ export function lerCorrecao(linha: string, resumo: Record<string, number>): [str
   const m = linha.match(/^\s*(\d{1,2})\s*[-–=:.)]\s*(.+)$/) ?? linha.match(/^\s*(\d{1,2})\s+([^\d]+)$/);
   return m && resumo[m[1]] ? [m[1], m[2].trim()] : null;
 }
+
+/** Categoria para vários lançamentos numa chamada só. Devolve id → categoria (só as válidas). */
+export async function categorizarLote(itens: Array<{ id: number; texto: string; tipo: string }>): Promise<Map<number, string>> {
+  const resp = await perguntarIa(
+    `Classifique cada lançamento financeiro pessoal numa categoria de ${JSON.stringify(CATEGORIAS)}.
+Regras: pagamento de fatura de cartão ou Pix entre contas do próprio dono = "Transferência"; pessoa física sem contexto = "Outros";
+receita de salário/pró-labore/aluguel recebido = "Receita Fixa". Responda SÓ um JSON: [{"id": número, "categoria": "..."}].`,
+    JSON.stringify(itens),
+  );
+  const lista = (jsonDaResposta(resp) ?? []) as Array<{ id: number; categoria: string }>;
+  return new Map(lista.filter((x) => CATEGORIAS.includes(x.categoria)).map((x) => [Number(x.id), x.categoria]));
+}

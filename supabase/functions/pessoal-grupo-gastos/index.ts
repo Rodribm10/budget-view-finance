@@ -3,15 +3,30 @@
 //  * "1 - almoço com cliente" → corrige a descrição do item 1 do último resumo do banco.
 // Uma linha = um lançamento. Responde no grupo com o que entendeu.
 import {
-  acharGrupo, brl, carregarConfig, categorizar, enviar, horaBrasilia, interpretar, lerCorrecao, mensagensDesde, ROBO, salvarConfig,
+  acharGrupo, brl, carregarConfig, categorizar, categorizarLote, enviar, horaBrasilia, interpretar, lerCorrecao, mensagensDesde, ROBO, salvarConfig,
   supabase,
 } from "../_shared/financas-pessoais.ts";
 
 Deno.serve(async (req) => {
   try {
     // Diagnóstico: {"testar": "cabeleireiro 30"} só interpreta, não grava nem lê o grupo.
-    const { testar } = await req.json().catch(() => ({}));
+    const { testar, preencher_categorias } = await req.json().catch(() => ({}));
     if (testar) return Response.json({ ok: true, lancamento: await interpretar(testar, new Date().toISOString()) });
+
+    // Manutenção: {"preencher_categorias": 50} classifica até N lançamentos SEM categoria.
+    // Nunca mexe em categoria que o Rodrigo escreveu.
+    if (preencher_categorias) {
+      const cfg = await carregarConfig();
+      const { data: vazios } = await supabase.from("transacoes").select("id, estabelecimento, detalhes, tipo")
+        .eq("login", cfg.login).is("categoria", null).limit(Math.min(Number(preencher_categorias), 80));
+      const mapa = await categorizarLote((vazios ?? []).map((t) => ({ id: t.id, texto: `${t.estabelecimento ?? ""} | ${t.detalhes ?? ""}`, tipo: t.tipo })));
+      for (const [id, categoria] of mapa) {
+        const { error } = await supabase.from("transacoes").update({ categoria }).eq("id", id).is("categoria", null);
+        if (error) throw new Error(`update ${id}: ${error.message}`);
+      }
+      const { count } = await supabase.from("transacoes").select("id", { count: "exact", head: true }).eq("login", cfg.login).is("categoria", null);
+      return Response.json({ ok: true, preenchidas: mapa.size, faltam: count });
+    }
 
     const cfg = await carregarConfig();
     cfg.grupo_jid = await acharGrupo(cfg);

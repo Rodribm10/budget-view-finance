@@ -21,20 +21,13 @@ import {
   ArrowLeftRight,
   CreditCard,
   Tags,
-  Target,
   CalendarDays,
-  Crown,
-  Users,
   Settings,
   BellRing,
-  FileUp,
   Menu,
   type LucideIcon,
 } from 'lucide-react';
-import OnboardingTour from '@/components/onboarding/OnboardingTour';
-import HelpIcon from '@/components/help/HelpIcon';
 import UserProfileButton from '@/components/dashboard/UserProfileButton';
-import { useOnboardingTour } from '@/hooks/useOnboardingTour';
 import { cn } from '@/lib/utils';
 
 interface NewModernLayoutProps {
@@ -47,24 +40,20 @@ const PRINCIPAL: Item[] = [
   { title: "Visão geral", url: "/dashboard", icon: LayoutGrid },
   { title: "Transações", url: "/transacoes", icon: ArrowLeftRight },
   { title: "Cartões", url: "/cartoes", icon: CreditCard },
-  { title: "Metas", url: "/metas", icon: Target },
   { title: "Calendário", url: "/calendario", icon: CalendarDays },
   { title: "Contas a pagar", url: "/avisos-contas", icon: BellRing },
 ];
 
 const ORGANIZAR: Item[] = [
   { title: "Categorias", url: "/categorias", icon: Tags },
-  { title: "Importar extrato", url: "/importar-extrato", icon: FileUp },
-  { title: "Grupos do WhatsApp", url: "/grupos-whatsapp", icon: Users, tour: 'grupos-menu' },
 ];
 
 const CONTA: Item[] = [
-  { title: "Assinatura", url: "/assinatura", icon: Crown },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ];
 
 // Barra de baixo no celular: as 4 telas de todo dia + o menu completo.
-const ABAS: Item[] = [PRINCIPAL[0], PRINCIPAL[1], PRINCIPAL[2], PRINCIPAL[3]];
+const ABAS: Item[] = [PRINCIPAL[0], PRINCIPAL[1], PRINCIPAL[2], PRINCIPAL[3]]; // Visão geral, Transações, Cartões, Calendário
 
 const Marca = () => (
   <Link to="/dashboard" className="flex items-center gap-2.5 px-2 py-1.5">
@@ -160,14 +149,6 @@ const AbasCelular = () => {
 };
 
 export default function NewModernLayout({ children }: NewModernLayoutProps) {
-  const {
-    isOpen: tourOpen,
-    currentStep,
-    nextStep,
-    skipTour,
-    closeTour
-  } = useOnboardingTour();
-
   return (
     <div className="flex min-h-screen w-full bg-background">
       <SidebarProvider defaultOpen>
@@ -182,16 +163,6 @@ export default function NewModernLayout({ children }: NewModernLayoutProps) {
         </SidebarInset>
         <AbasCelular />
       </SidebarProvider>
-
-      <HelpIcon />
-
-      <OnboardingTour
-        isOpen={tourOpen}
-        currentStep={currentStep}
-        onNext={nextStep}
-        onSkip={skipTour}
-        onClose={closeTour}
-      />
     </div>
   );
 }

@@ -48,7 +48,7 @@ export async function updateTransacao(transaction: Transaction): Promise<Transac
     quando: transaction.quando,
     detalhes: transaction.detalhes,
     estabelecimento: transaction.estabelecimento,
-    tipo: transaction.tipo,
+    tipo: transaction.tipo?.toLowerCase(),
     categoria: transaction.categoria,
     revisar: false // editou no app = revisado
   };
